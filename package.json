@@ -4,10 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
     "start": "next start",
+    "start:workers": "node --import tsx workers/start-all.ts",
+    "start:crawl-worker": "node --import tsx workers/crawl-worker.ts",
+    "start:logistics-worker": "node --import tsx workers/logistics-worker.ts",
     "lint": "eslint",
-    "test": "jest"
+    "test": "jest",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "node --import tsx scripts/seed-demo.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
