@@ -1,0 +1,221 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [pgvector(map: "vector"), earthdistance(schema: "public"), cube(schema: "public")]
+}
+
+// ─── ENUMS ──────────────────────────────────────────────
+
+enum MenuSource {
+  website
+  google_photos
+  ubereats
+  doordash
+  manual
+}
+
+enum PhotoSource {
+  google_maps
+  yelp
+  ubereats
+  doordash
+  user_submitted
+}
+
+enum MacroSource {
+  vision_ai
+  usda_match
+  restaurant_published
+  community_verified
+}
+
+enum DeliveryPlatform {
+  ubereats
+  doordash
+  grubhub
+  seamless
+}
+
+enum FeedbackType {
+  portion_bigger
+  portion_smaller
+  portion_accurate
+  ingredient_correction
+  dish_unavailable
+  photo_submission
+}
+
+// ─── MODELS ─────────────────────────────────────────────
+
+model Restaurant {
+  id                   String   @id @default(uuid()) @db.Uuid
+  googlePlaceId        String   @unique @map("google_place_id")
+  name                 String
+  address              String
+  latitude             Decimal  @db.Decimal(10, 7)
+  longitude            Decimal  @db.Decimal(10, 7)
+  cuisineType          String[] @map("cuisine_type")
+  priceLevel           Int?     @map("price_level")
+  phone                String?
+  websiteUrl           String?  @map("website_url")
+  googleRating         Decimal? @map("google_rating") @db.Decimal(2, 1)
+  yelpRating           Decimal? @map("yelp_rating") @db.Decimal(2, 1)
+  yelpBusinessId       String?  @map("yelp_business_id")
+  acceptsReservations  Boolean? @map("accepts_reservations")
+  lastMenuCrawl        DateTime? @map("last_menu_crawl")
+  lastReviewCrawl      DateTime? @map("last_review_crawl")
+  lastTrafficUpdate    DateTime? @map("last_traffic_update")
+  menuSource           MenuSource? @map("menu_source")
+  isActive             Boolean  @default(true) @map("is_active")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  dishes               Dish[]
+  logistics            RestaurantLogistics[]
+  deliveryOptions      RestaurantDelivery[]
+
+  @@map("restaurants")
+}
+
+model Dish {
+  id                 String      @id @default(uuid()) @db.Uuid
+  restaurantId       String      @map("restaurant_id") @db.Uuid
+  name               String
+  description        String?
+  price              Decimal?    @db.Decimal(8, 2)
+  category           String?
+  ingredientsRaw     String?     @map("ingredients_raw")
+  ingredientsParsed  Json?       @map("ingredients_parsed")
+  dietaryFlags       Json?       @map("dietary_flags")
+  dietaryConfidence  Decimal?    @map("dietary_confidence") @db.Decimal(3, 2)
+  caloriesMin        Int?        @map("calories_min")
+  caloriesMax        Int?        @map("calories_max")
+  proteinMinG        Decimal?    @map("protein_min_g") @db.Decimal(6, 1)
+  proteinMaxG        Decimal?    @map("protein_max_g") @db.Decimal(6, 1)
+  carbsMinG          Decimal?    @map("carbs_min_g") @db.Decimal(6, 1)
+  carbsMaxG          Decimal?    @map("carbs_max_g") @db.Decimal(6, 1)
+  fatMinG            Decimal?    @map("fat_min_g") @db.Decimal(6, 1)
+  fatMaxG            Decimal?    @map("fat_max_g") @db.Decimal(6, 1)
+  macroConfidence    Decimal?    @map("macro_confidence") @db.Decimal(3, 2)
+  macroSource        MacroSource? @map("macro_source")
+  photoCountAnalyzed Int         @default(0) @map("photo_count_analyzed")
+  // macro_embedding handled via raw SQL (pgvector)
+  isAvailable        Boolean     @default(true) @map("is_available")
+  lastVerified       DateTime?   @map("last_verified")
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+
+  restaurant         Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  photos             DishPhoto[]
+  reviewSummary      ReviewSummary?
+  communityFeedback  CommunityFeedback[]
+
+  @@index([restaurantId], map: "idx_dishes_restaurant")
+  @@index([caloriesMin, caloriesMax], map: "idx_dishes_calories")
+  @@map("dishes")
+}
+
+model DishPhoto {
+  id              String      @id @default(uuid()) @db.Uuid
+  dishId          String      @map("dish_id") @db.Uuid
+  sourceUrl       String      @map("source_url")
+  sourcePlatform  PhotoSource @map("source_platform")
+  macroEstimate   Json?       @map("macro_estimate")
+  volumeEstimateMl Decimal?   @map("volume_estimate_ml") @db.Decimal(8, 1)
+  analyzedAt      DateTime?   @map("analyzed_at")
+  createdAt       DateTime    @default(now()) @map("created_at")
+
+  dish            Dish        @relation(fields: [dishId], references: [id], onDelete: Cascade)
+
+  @@map("dish_photos")
+}
+
+model ReviewSummary {
+  id                    String   @id @default(uuid()) @db.Uuid
+  dishId                String   @unique @map("dish_id") @db.Uuid
+  totalReviewsAnalyzed  Int      @default(0) @map("total_reviews_analyzed")
+  googleReviewCount     Int      @default(0) @map("google_review_count")
+  yelpReviewCount       Int      @default(0) @map("yelp_review_count")
+  averageDishRating     Decimal? @map("average_dish_rating") @db.Decimal(3, 2)
+  summaryText           String?  @map("summary_text")
+  sentimentPositivePct  Decimal? @map("sentiment_positive_pct") @db.Decimal(5, 2)
+  sentimentNegativePct  Decimal? @map("sentiment_negative_pct") @db.Decimal(5, 2)
+  commonPraises         String[] @map("common_praises")
+  commonComplaints      String[] @map("common_complaints")
+  dietaryWarnings       String[] @map("dietary_warnings")
+  lastUpdated           DateTime @default(now()) @map("last_updated")
+
+  dish                  Dish     @relation(fields: [dishId], references: [id], onDelete: Cascade)
+
+  @@map("review_summaries")
+}
+
+model RestaurantLogistics {
+  id                  String   @id @default(uuid()) @db.Uuid
+  restaurantId        String   @map("restaurant_id") @db.Uuid
+  dayOfWeek           Int      @map("day_of_week")
+  hour                Int
+  typicalBusynessPct  Int?     @map("typical_busyness_pct")
+  estimatedWaitMinutes Int?    @map("estimated_wait_minutes")
+  updatedAt           DateTime @default(now()) @map("updated_at")
+
+  restaurant          Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, dayOfWeek, hour])
+  @@map("restaurant_logistics")
+}
+
+model RestaurantDelivery {
+  id                          String           @id @default(uuid()) @db.Uuid
+  restaurantId                String           @map("restaurant_id") @db.Uuid
+  platform                    DeliveryPlatform
+  isAvailable                 Boolean          @default(true) @map("is_available")
+  deliveryFeeMin              Decimal?         @map("delivery_fee_min") @db.Decimal(6, 2)
+  deliveryFeeMax              Decimal?         @map("delivery_fee_max") @db.Decimal(6, 2)
+  estimatedDeliveryMinutesMin Int?             @map("estimated_delivery_minutes_min")
+  estimatedDeliveryMinutesMax Int?             @map("estimated_delivery_minutes_max")
+  platformUrl                 String?          @map("platform_url")
+  lastChecked                 DateTime         @default(now()) @map("last_checked")
+
+  restaurant                  Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, platform])
+  @@map("restaurant_delivery")
+}
+
+model UserProfile {
+  id                   String   @id @default(uuid()) @db.Uuid
+  email                String   @unique
+  name                 String
+  dietaryRestrictions  Json?    @map("dietary_restrictions")
+  nutritionalGoals     Json?    @map("nutritional_goals")
+  maxWaitMinutes       Int      @default(30) @map("max_wait_minutes")
+  searchRadiusMiles    Decimal  @default(2.0) @map("search_radius_miles") @db.Decimal(4, 1)
+  preferredCuisines    String[] @map("preferred_cuisines")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  communityFeedback    CommunityFeedback[]
+
+  @@map("user_profiles")
+}
+
+model CommunityFeedback {
+  id           String       @id @default(uuid()) @db.Uuid
+  dishId       String       @map("dish_id") @db.Uuid
+  userId       String       @map("user_id") @db.Uuid
+  feedbackType FeedbackType @map("feedback_type")
+  details      Json?
+  photoUrl     String?      @map("photo_url")
+  createdAt    DateTime     @default(now()) @map("created_at")
+
+  dish         Dish         @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  user         UserProfile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("community_feedback")
+}
