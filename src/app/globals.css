@@ -128,3 +128,30 @@
     @apply font-sans;
   }
 }
+
+/* NutriScout custom colors */
+:root {
+  --ns-green: oklch(0.55 0.15 150);
+  --ns-green-light: oklch(0.92 0.05 150);
+  --ns-amber: oklch(0.75 0.15 75);
+  --ns-amber-light: oklch(0.93 0.05 75);
+  --ns-red: oklch(0.55 0.2 25);
+  --ns-red-light: oklch(0.92 0.05 25);
+  --ns-protein: oklch(0.55 0.15 250);
+  --ns-carbs: oklch(0.7 0.15 60);
+  --ns-fat: oklch(0.8 0.12 85);
+  --ns-calories: oklch(0.65 0 0);
+}
+
+@theme inline {
+  --color-ns-green: var(--ns-green);
+  --color-ns-green-light: var(--ns-green-light);
+  --color-ns-amber: var(--ns-amber);
+  --color-ns-amber-light: var(--ns-amber-light);
+  --color-ns-red: var(--ns-red);
+  --color-ns-red-light: var(--ns-red-light);
+  --color-ns-protein: var(--ns-protein);
+  --color-ns-carbs: var(--ns-carbs);
+  --color-ns-fat: var(--ns-fat);
+  --color-ns-calories: var(--ns-calories);
+}
