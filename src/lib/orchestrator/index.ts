@@ -70,51 +70,75 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
     orderBy: buildOrderBy(query),
   });
 
-  // 3. Build result set with enriched data
-  const dishResults: DishResult[] = dishes.map((dish) => ({
-    id: dish.id,
-    name: dish.name,
-    description: dish.description,
-    price: dish.price ? Number(dish.price) : null,
-    category: dish.category,
-    calories_min: dish.caloriesMin,
-    calories_max: dish.caloriesMax,
-    protein_min_g: dish.proteinMinG ? Number(dish.proteinMinG) : null,
-    protein_max_g: dish.proteinMaxG ? Number(dish.proteinMaxG) : null,
-    carbs_min_g: dish.carbsMinG ? Number(dish.carbsMinG) : null,
-    carbs_max_g: dish.carbsMaxG ? Number(dish.carbsMaxG) : null,
-    fat_min_g: dish.fatMinG ? Number(dish.fatMinG) : null,
-    fat_max_g: dish.fatMaxG ? Number(dish.fatMaxG) : null,
-    macro_confidence: dish.macroConfidence ? Number(dish.macroConfidence) : null,
-    dietary_flags: dish.dietaryFlags as DishResult["dietary_flags"],
-    dietary_confidence: dish.dietaryConfidence
-      ? Number(dish.dietaryConfidence)
-      : null,
-    restaurant: {
-      id: dish.restaurant.id,
-      name: dish.restaurant.name,
-      address: dish.restaurant.address,
-      distance_miles: null, // Would require PostGIS earth_distance calculation
-      google_rating: dish.restaurant.googleRating
-        ? Number(dish.restaurant.googleRating)
-        : null,
-      cuisine_type: dish.restaurant.cuisineType,
+  // 3. Fetch logistics for the restaurants in this result set
+  const now = new Date();
+  const restaurantIds = [...new Set(dishes.map((d) => d.restaurantId))];
+  const logisticsRows = await prisma.restaurantLogistics.findMany({
+    where: {
+      restaurantId: { in: restaurantIds },
+      dayOfWeek: now.getDay(),
+      hour: now.getHours(),
     },
-    review_summary: dish.reviewSummary
-      ? {
-          average_rating: dish.reviewSummary.averageDishRating
-            ? Number(dish.reviewSummary.averageDishRating)
-            : null,
-          summary_text: dish.reviewSummary.summaryText,
-          review_count: dish.reviewSummary.totalReviewsAnalyzed,
-        }
-      : null,
-    logistics: null, // Populated asynchronously if needed
-    delivery: null,
-    warnings: [],
-  }));
+  });
+  const logisticsMap = new Map(
+    logisticsRows.map((l) => [l.restaurantId, l])
+  );
 
-  // 4. Run Apollo evaluator for dietary safety
+  // 4. Build result set with enriched data
+  const dishResults: DishResult[] = dishes.map((dish) => {
+    const logistics = logisticsMap.get(dish.restaurantId);
+    return {
+      id: dish.id,
+      name: dish.name,
+      description: dish.description,
+      price: dish.price ? Number(dish.price) : null,
+      category: dish.category,
+      calories_min: dish.caloriesMin,
+      calories_max: dish.caloriesMax,
+      protein_min_g: dish.proteinMinG ? Number(dish.proteinMinG) : null,
+      protein_max_g: dish.proteinMaxG ? Number(dish.proteinMaxG) : null,
+      carbs_min_g: dish.carbsMinG ? Number(dish.carbsMinG) : null,
+      carbs_max_g: dish.carbsMaxG ? Number(dish.carbsMaxG) : null,
+      fat_min_g: dish.fatMinG ? Number(dish.fatMinG) : null,
+      fat_max_g: dish.fatMaxG ? Number(dish.fatMaxG) : null,
+      macro_confidence: dish.macroConfidence
+        ? Number(dish.macroConfidence)
+        : null,
+      dietary_flags: dish.dietaryFlags as DishResult["dietary_flags"],
+      dietary_confidence: dish.dietaryConfidence
+        ? Number(dish.dietaryConfidence)
+        : null,
+      restaurant: {
+        id: dish.restaurant.id,
+        name: dish.restaurant.name,
+        address: dish.restaurant.address,
+        distance_miles: null, // Would require PostGIS earth_distance calculation
+        google_rating: dish.restaurant.googleRating
+          ? Number(dish.restaurant.googleRating)
+          : null,
+        cuisine_type: dish.restaurant.cuisineType,
+      },
+      review_summary: dish.reviewSummary
+        ? {
+            average_rating: dish.reviewSummary.averageDishRating
+              ? Number(dish.reviewSummary.averageDishRating)
+              : null,
+            summary_text: dish.reviewSummary.summaryText,
+            review_count: dish.reviewSummary.totalReviewsAnalyzed,
+          }
+        : null,
+      logistics: logistics
+        ? {
+            current_busyness_pct: logistics.typicalBusynessPct ?? null,
+            estimated_wait_minutes: logistics.estimatedWaitMinutes ?? null,
+          }
+        : null,
+      delivery: null,
+      warnings: [],
+    };
+  });
+
+  // 5. Run Apollo evaluator for dietary safety
   const verified = verify(dishResults, query.dietary_restrictions);
 
   const result: SearchResults = {
@@ -123,7 +147,7 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
     cached: false,
   };
 
-  // 5. Cache results
+  // 6. Cache results
   if (offset === 0) {
     await setCachedQuery(cacheParams, result);
   }
