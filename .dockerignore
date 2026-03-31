@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+__tests__
+*.test.ts
+docker-compose.yml
+.env
+.env.example
+README.md
+CHANGELOG.md
+docs/
