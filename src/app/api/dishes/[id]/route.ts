@@ -20,6 +20,9 @@ export async function GET(
       return Response.json({ error: "Dish not found" }, { status: 404 });
     }
 
+    // Build source info object
+    const sourceInfo = buildSourceInfo(dish);
+
     return Response.json({
       id: dish.id,
       name: dish.name,
@@ -38,6 +41,7 @@ export async function GET(
       },
       macro_confidence: dish.macroConfidence ? Number(dish.macroConfidence) : null,
       macro_source: dish.macroSource,
+      macro_source_detail: sourceInfo,
       photo_count: dish.photoCountAnalyzed,
       restaurant: {
         id: dish.restaurant.id,
@@ -62,4 +66,63 @@ export async function GET(
   } catch {
     return Response.json({ error: "Failed to fetch dish" }, { status: 500 });
   }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildSourceInfo(dish: any) {
+  const macroSource = dish.macroSource;
+  const macroSourceName = dish.macroSourceName;
+  const macroSourceUrl = dish.macroSourceUrl;
+  const macroSourceLogCount = dish.macroSourceLogCount;
+  const crossValidated = dish.crossValidated ?? false;
+  const crossValidationSource = dish.crossValidationSource;
+  const crossValidationDeviation = dish.crossValidationDeviation
+    ? Number(dish.crossValidationDeviation)
+    : null;
+
+  // Determine tier label
+  let tierLabel = "Unknown";
+  let tierDescription = "";
+
+  switch (macroSource) {
+    case "restaurant_published":
+      tierLabel = "Restaurant Published";
+      tierDescription = "Nutrition facts provided directly by the restaurant";
+      break;
+    case "third_party_db":
+      tierLabel = "Third-Party Database";
+      tierDescription = macroSourceLogCount
+        ? `From ${macroSourceName || "nutrition database"} (${macroSourceLogCount} user entries)`
+        : `From ${macroSourceName || "nutrition database"}`;
+      break;
+    case "vision_ai":
+      tierLabel = "AI Estimated";
+      tierDescription = crossValidated
+        ? `Estimated by NutriScout AI, cross-validated against ${crossValidationSource || "external database"}`
+        : "Estimated by NutriScout AI from menu and photo analysis";
+      break;
+    case "usda_match":
+      tierLabel = "USDA Database";
+      tierDescription = "Matched to USDA FoodData Central entry";
+      break;
+    case "community_verified":
+      tierLabel = "Community Verified";
+      tierDescription = "Verified by community feedback";
+      break;
+    default:
+      tierLabel = "Estimated";
+      tierDescription = "Based on menu and photo analysis";
+  }
+
+  return {
+    tier: macroSource || "vision_ai",
+    tier_label: tierLabel,
+    tier_description: tierDescription,
+    source_name: macroSourceName || null,
+    source_url: macroSourceUrl || null,
+    log_count: macroSourceLogCount || null,
+    cross_validated: crossValidated,
+    cross_validation_source: crossValidationSource || null,
+    cross_validation_deviation_pct: crossValidationDeviation,
+  };
 }

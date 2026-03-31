@@ -9,6 +9,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { WaitBadge } from "@/components/wait-badge";
 import { DishCard, type DishCardData } from "@/components/dish-card";
+import { ExternalLink, ShieldCheck, FlaskConical, Database, Store } from "lucide-react";
+
+interface MacroSourceDetail {
+  tier: string;
+  tier_label: string;
+  tier_description: string;
+  source_name: string | null;
+  source_url: string | null;
+  log_count: number | null;
+  cross_validated: boolean;
+  cross_validation_source: string | null;
+  cross_validation_deviation_pct: number | null;
+}
 
 interface DishDetail {
   id: string;
@@ -26,6 +39,7 @@ interface DishDetail {
   };
   macro_confidence: number | null;
   macro_source: string | null;
+  macro_source_detail: MacroSourceDetail | null;
   photo_count: number;
   restaurant: {
     id: string;
@@ -49,30 +63,6 @@ interface TrafficData {
   data_available: boolean;
 }
 
-function RangeBar({ label, min, max, color, unit }: {
-  label: string; min: number | null; max: number | null; color: string; unit: string;
-}) {
-  if (min == null || max == null) return null;
-  const maxScale = label === "Calories" ? 1200 : 100;
-  const leftPct = (min / maxScale) * 100;
-  const widthPct = ((max - min) / maxScale) * 100;
-
-  return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-xs">
-        <span className="font-medium">{label}</span>
-        <span className="text-muted-foreground">{min}-{max} {unit}</span>
-      </div>
-      <div className="h-2 w-full bg-muted rounded-full overflow-hidden relative">
-        <div
-          className={`absolute h-full rounded-full ${color}`}
-          style={{ left: `${Math.min(leftPct, 95)}%`, width: `${Math.max(widthPct, 2)}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
 export default function DishDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [dish, setDish] = useState<DishDetail | null>(null);
@@ -90,11 +80,9 @@ export default function DishDetailPage({ params }: { params: Promise<{ id: strin
           const data = await res.json();
           setDish(data);
 
-          // Load traffic for the restaurant
           const tRes = await fetch(`/api/restaurants/${data.restaurant.id}/traffic`);
           if (tRes.ok) setTraffic(await tRes.json());
 
-          // Load similar dishes
           const sRes = await fetch(`/api/dishes/${id}/similar?lat=40.7264&lng=-73.9878&limit=4`);
           if (sRes.ok) {
             const sData = await sRes.json();
@@ -205,32 +193,8 @@ export default function DishDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
-        {/* Macro ranges */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              Nutrition Estimate
-              {dish.macro_confidence != null && (
-                <span className={`text-xs font-normal ${
-                  dish.macro_confidence >= 0.8 ? "text-ns-green" :
-                  dish.macro_confidence >= 0.5 ? "text-ns-amber" : "text-ns-red"
-                }`}>
-                  {Math.round(dish.macro_confidence * 100)}% confidence
-                </span>
-              )}
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Based on {dish.photo_count} photo{dish.photo_count !== 1 ? "s" : ""} analyzed
-              {dish.macro_source && ` · ${dish.macro_source}`}
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <RangeBar label="Calories" min={dish.macros.calories.min} max={dish.macros.calories.max} color="bg-ns-calories" unit="cal" />
-            <RangeBar label="Protein" min={dish.macros.protein_g.min} max={dish.macros.protein_g.max} color="bg-ns-protein" unit="g" />
-            <RangeBar label="Carbs" min={dish.macros.carbs_g.min} max={dish.macros.carbs_g.max} color="bg-ns-carbs" unit="g" />
-            <RangeBar label="Fat" min={dish.macros.fat_g.min} max={dish.macros.fat_g.max} color="bg-ns-fat" unit="g" />
-          </CardContent>
-        </Card>
+        {/* ─── Nutrition Facts Table ─── */}
+        <NutritionFactsCard dish={dish} />
 
         {/* Dietary compliance */}
         {dish.dietary_flags && (
@@ -319,4 +283,153 @@ export default function DishDetailPage({ params }: { params: Promise<{ id: strin
       </div>
     </div>
   );
+}
+
+// ─── Nutrition Facts Card ─────────────────────────────────
+
+function NutritionFactsCard({ dish }: { dish: DishDetail }) {
+  const m = dish.macros;
+  const source = dish.macro_source_detail;
+  const confidence = dish.macro_confidence;
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">Nutrition Facts</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-0">
+        {/* Nutrition table */}
+        <div className="border rounded-lg overflow-hidden">
+          <NutriRow label="Calories" min={m.calories.min} max={m.calories.max} unit="cal" bold />
+          <NutriRow label="Protein" min={m.protein_g.min} max={m.protein_g.max} unit="g" color="text-ns-protein" />
+          <NutriRow label="Carbohydrates" min={m.carbs_g.min} max={m.carbs_g.max} unit="g" color="text-ns-carbs" />
+          <NutriRow label="Fat" min={m.fat_g.min} max={m.fat_g.max} unit="g" color="text-ns-fat" last />
+        </div>
+
+        {/* Source + Confidence line */}
+        <div className="mt-3 space-y-1.5">
+          <SourceLine source={source} confidence={confidence} />
+
+          {/* Cross-validation info */}
+          {source?.cross_validated && source.cross_validation_source && (
+            <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+              <ShieldCheck className="w-3.5 h-3.5 mt-0.5 shrink-0 text-ns-green" />
+              <span>
+                Cross-validated against {source.cross_validation_source}
+                {source.cross_validation_deviation_pct != null && (
+                  <span className={source.cross_validation_deviation_pct > 25 ? "text-ns-amber" : ""}>
+                    {" "}({source.cross_validation_deviation_pct.toFixed(0)}% deviation)
+                  </span>
+                )}
+              </span>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function NutriRow({
+  label,
+  min,
+  max,
+  unit,
+  bold,
+  color,
+  last,
+}: {
+  label: string;
+  min: number | null;
+  max: number | null;
+  unit: string;
+  bold?: boolean;
+  color?: string;
+  last?: boolean;
+}) {
+  const value = formatRange(min, max, unit);
+
+  return (
+    <div className={`flex justify-between items-center px-3 py-2 ${last ? "" : "border-b"} ${bold ? "bg-muted/50" : ""}`}>
+      <span className={`text-sm ${bold ? "font-semibold" : ""} ${color || ""}`}>{label}</span>
+      <span className={`text-sm ${bold ? "font-semibold" : "text-muted-foreground"}`}>{value}</span>
+    </div>
+  );
+}
+
+function formatRange(min: number | null, max: number | null, unit: string): string {
+  if (min == null && max == null) return "—";
+  if (min != null && max != null && min === max) return `${min} ${unit}`;
+  if (min != null && max != null) return `${min}–${max} ${unit}`;
+  if (min != null) return `${min}+ ${unit}`;
+  return `≤${max} ${unit}`;
+}
+
+function SourceLine({
+  source,
+  confidence,
+}: {
+  source: MacroSourceDetail | null;
+  confidence: number | null;
+}) {
+  const SourceIcon = getSourceIcon(source?.tier);
+  const confColor = confidence != null
+    ? confidence >= 0.8 ? "text-ns-green"
+      : confidence >= 0.5 ? "text-ns-amber"
+      : "text-ns-red"
+    : "text-muted-foreground";
+
+  const confLabel = confidence != null
+    ? confidence >= 0.85 ? "High"
+      : confidence >= 0.65 ? "Medium"
+      : confidence >= 0.45 ? "Low"
+      : "Very Low"
+    : "Unknown";
+
+  return (
+    <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
+      {/* Source */}
+      <span className="flex items-center gap-1">
+        <SourceIcon className="w-3.5 h-3.5 shrink-0" />
+        <span className="font-medium">Source:</span>{" "}
+        {source?.source_url ? (
+          <a
+            href={source.source_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-foreground inline-flex items-center gap-0.5"
+          >
+            {source.source_name || source.tier_label}
+            <ExternalLink className="w-2.5 h-2.5" />
+          </a>
+        ) : (
+          <span>{source?.source_name || source?.tier_label || "Menu analysis"}</span>
+        )}
+        {source?.log_count && source.log_count > 0 && (
+          <span className="text-[10px]">({source.log_count} entries)</span>
+        )}
+      </span>
+
+      <span className="text-border">|</span>
+
+      {/* Confidence */}
+      <span className="flex items-center gap-1">
+        <span className="font-medium">Confidence:</span>
+        <span className={confColor}>
+          {confLabel}
+          {confidence != null && ` (${Math.round(confidence * 100)}%)`}
+        </span>
+      </span>
+    </div>
+  );
+}
+
+function getSourceIcon(tier: string | undefined) {
+  switch (tier) {
+    case "restaurant_published": return Store;
+    case "third_party_db":
+    case "usda_match": return Database;
+    case "vision_ai": return FlaskConical;
+    default: return FlaskConical;
+  }
 }

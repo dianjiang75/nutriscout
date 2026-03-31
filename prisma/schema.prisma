@@ -28,10 +28,11 @@ enum PhotoSource {
 }
 
 enum MacroSource {
-  vision_ai
-  usda_match
-  restaurant_published
-  community_verified
+  restaurant_published  // Tier 1: from the restaurant's own website/menu
+  third_party_db        // Tier 2: from MyFitnessPal, LoseIt, USDA, etc.
+  vision_ai             // Tier 3: our own AI estimation pipeline
+  usda_match            // Legacy: matched to USDA entry
+  community_verified    // Community-verified values
 }
 
 enum DeliveryPlatform {
@@ -103,6 +104,12 @@ model Dish {
   fatMaxG            Decimal?    @map("fat_max_g") @db.Decimal(6, 1)
   macroConfidence    Decimal?    @map("macro_confidence") @db.Decimal(3, 2)
   macroSource        MacroSource? @map("macro_source")
+  macroSourceName    String?     @map("macro_source_name")    // e.g. "Panda Express Nutrition Page", "MyFitnessPal"
+  macroSourceUrl     String?     @map("macro_source_url")     // URL to the source
+  macroSourceLogCount Int?       @map("macro_source_log_count") // For 3rd-party DB: how many users logged this entry
+  crossValidated     Boolean     @default(false) @map("cross_validated") // Was AI estimate cross-checked?
+  crossValidationSource String?  @map("cross_validation_source") // e.g. "MyFitnessPal generic tofu pad thai"
+  crossValidationDeviation Decimal? @map("cross_validation_deviation") @db.Decimal(5, 2) // % deviation from cross-val source
   photoCountAnalyzed Int         @default(0) @map("photo_count_analyzed")
   // macro_embedding handled via raw SQL (pgvector)
   isAvailable        Boolean     @default(true) @map("is_available")
