@@ -27,10 +27,10 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
           return (
             <button
               key={tab.id}
-              onClick={() => !isLocked && onChange(tab.id)}
+              onClick={() => onChange(tab.id)}
               className={`flex-1 flex flex-col items-center gap-0.5 py-2 pt-3 transition-all duration-200 relative ${
                 isLocked
-                  ? "opacity-30 cursor-not-allowed"
+                  ? "opacity-40"
                   : isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"

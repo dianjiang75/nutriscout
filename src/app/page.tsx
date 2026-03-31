@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, ChefHat } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -172,7 +172,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen pb-16">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-2xl mx-auto px-4 py-3 space-y-2.5">
           {/* Search row */}
           <div className="flex items-center gap-2">
@@ -240,9 +240,36 @@ export default function HomePage() {
         )}
 
         {activeTab === "cook" && (
-          <div className="text-center py-20 text-muted-foreground">
-            <p className="text-lg font-medium">Cook It Myself</p>
-            <p className="text-sm mt-1">Coming soon for premium users.</p>
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-6">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center">
+              <ChefHat className="w-10 h-10 text-orange-500" />
+            </div>
+            <div>
+              <p className="text-lg font-bold">Cook It Myself</p>
+              <p className="text-sm text-muted-foreground mt-1.5 max-w-xs mx-auto leading-relaxed">
+                Found a dish you love? Get the recipe with exact macros tailored to your dietary needs. AI generates step-by-step instructions.
+              </p>
+            </div>
+            <div className="grid gap-3 text-left w-full max-w-xs">
+              {[
+                { icon: "🎯", text: "Macro-matched recipes from any dish" },
+                { icon: "🔄", text: "Ingredient swaps for dietary needs" },
+                { icon: "📊", text: "Exact nutrition per serving" },
+              ].map((item) => (
+                <div key={item.text} className="flex items-start gap-2.5 text-sm">
+                  <span className="text-base shrink-0">{item.icon}</span>
+                  <span className="text-muted-foreground">{item.text}</span>
+                </div>
+              ))}
+            </div>
+            <Link href="/waitlist">
+              <Button className="mt-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold px-6">
+                Join Waitlist for Early Access
+              </Button>
+            </Link>
+            <p className="text-[11px] text-muted-foreground">
+              Premium feature. Free during beta for waitlist members.
+            </p>
           </div>
         )}
       </main>
@@ -268,16 +295,16 @@ function DishesView({
     return (
       <div className="grid gap-4 sm:grid-cols-2">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="rounded-lg border overflow-hidden animate-pulse">
-            <Skeleton className="aspect-[16/10] w-full" />
-            <div className="p-3 space-y-2">
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-3 w-1/2" />
-              <Skeleton className="h-2 w-full rounded-full" />
+          <div key={i} className="rounded-lg border overflow-hidden">
+            <div className="aspect-[16/10] w-full skeleton-shimmer" />
+            <div className="p-3 space-y-2.5">
+              <div className="h-4 w-3/4 rounded skeleton-shimmer" />
+              <div className="h-3 w-1/2 rounded skeleton-shimmer" />
+              <div className="h-2 w-full rounded-full skeleton-shimmer" />
               <div className="flex gap-2">
-                <Skeleton className="h-3 w-12" />
-                <Skeleton className="h-3 w-8" />
-                <Skeleton className="h-3 w-8" />
+                <div className="h-3 w-14 rounded skeleton-shimmer" />
+                <div className="h-3 w-10 rounded skeleton-shimmer" />
+                <div className="h-3 w-10 rounded skeleton-shimmer" />
               </div>
             </div>
           </div>

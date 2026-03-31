@@ -36,7 +36,7 @@ export function CategoryPills() {
         <Link
           key={cat.id}
           href={`/category/${cat.id}`}
-          className="text-xs px-3 py-1.5 rounded-full border whitespace-nowrap shrink-0 transition-colors border-border hover:bg-muted text-foreground"
+          className="text-xs font-medium px-3.5 py-1.5 rounded-full border whitespace-nowrap shrink-0 transition-all duration-200 border-border/70 hover:bg-primary/10 hover:border-primary/30 hover:text-primary text-muted-foreground"
         >
           {cat.label}
         </Link>

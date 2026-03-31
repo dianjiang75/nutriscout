@@ -27,6 +27,7 @@ export interface DishResult {
   id: string;
   name: string;
   description: string | null;
+  photo_url: string | null;
   price: number | null;
   category: string | null;
   calories_min: number | null;

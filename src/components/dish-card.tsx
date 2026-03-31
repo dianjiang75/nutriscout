@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { UtensilsCrossed } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MacroBar } from "@/components/macro-bar";
@@ -49,8 +50,9 @@ export function DishCard({ dish }: { dish: DishCardData }) {
             )}
           </div>
         ) : (
-          <div className="aspect-[16/10] w-full bg-muted flex items-center justify-center text-muted-foreground text-sm">
-            No photo
+          <div className="aspect-[16/10] w-full bg-gradient-to-br from-muted to-muted/60 flex flex-col items-center justify-center gap-1.5">
+            <UtensilsCrossed className="w-8 h-8 text-muted-foreground/40" />
+            <span className="text-[11px] text-muted-foreground/50 font-medium">No photo yet</span>
           </div>
         )}
         <CardContent className="p-3 space-y-2">

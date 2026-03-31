@@ -26,6 +26,7 @@ function makeDish(overrides: Partial<DishResult> = {}): DishResult {
     id: `dish-${Math.random().toString(36).slice(2)}`,
     name: "Test Dish",
     description: "A test dish",
+    photo_url: null,
     price: 12.99,
     category: "Mains",
     calories_min: 400,

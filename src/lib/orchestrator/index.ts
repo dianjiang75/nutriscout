@@ -91,6 +91,7 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
     include: {
       restaurant: true,
       reviewSummary: true,
+      photos: { take: 1, orderBy: { createdAt: "desc" } },
     },
     take: limit,
     skip: offset,
@@ -129,6 +130,7 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
       id: dish.id,
       name: dish.name,
       description: dish.description,
+      photo_url: dish.photos?.[0]?.sourceUrl ?? null,
       price: dish.price ? Number(dish.price) : null,
       category: dish.category,
       calories_min: dish.caloriesMin,
