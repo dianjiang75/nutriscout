@@ -41,8 +41,51 @@ const worker = new Worker<CrawlJobData>("menu-crawl", processCrawlJob, {
   },
 });
 
-worker.on("completed", (job) => {
+worker.on("completed", async (job) => {
   console.log(`[crawl-worker] Job ${job.id} completed`);
+
+  // Chain: queue photo analysis for dishes that have photos but no macro estimates
+  try {
+    const result = job.returnvalue;
+    if (result?.restaurantId && result?.dishesFound > 0) {
+      const { photoAnalysisQueue } = await import("./queues");
+      const { PrismaClient } = await import("../src/generated/prisma/client");
+      const { PrismaPg } = await import("@prisma/adapter-pg");
+      const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+      const prisma = new PrismaClient({ adapter });
+
+      // Find dishes from this restaurant that have photos but no macro data
+      const dishes = await prisma.dish.findMany({
+        where: {
+          restaurantId: result.restaurantId,
+          macroSource: null,
+        },
+        include: {
+          photos: { take: 1, orderBy: { createdAt: "desc" } },
+        },
+      });
+
+      let queued = 0;
+      for (const dish of dishes) {
+        const photo = dish.photos[0];
+        if (photo?.sourceUrl) {
+          await photoAnalysisQueue.add(
+            `analyze-${dish.id}`,
+            { dishId: dish.id, photoUrl: photo.sourceUrl, restaurantName: result.restaurantName },
+            { attempts: 2, backoff: { type: "exponential", delay: 5000 } }
+          );
+          queued++;
+        }
+      }
+
+      await prisma.$disconnect();
+      if (queued > 0) {
+        console.log(`[crawl-worker] Queued ${queued} photo analysis jobs for ${result.restaurantName}`);
+      }
+    }
+  } catch (err) {
+    console.error("[crawl-worker] Failed to queue photo analysis:", (err as Error).message);
+  }
 });
 
 worker.on("failed", (job, err) => {

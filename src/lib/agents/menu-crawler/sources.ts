@@ -83,12 +83,92 @@ export const websiteSource: MenuSourceStrategy = {
 
       if (!menuHtml) return null;
 
+      // Try JSON-LD structured data first (most reliable source)
+      const jsonLdItems = extractJsonLdMenu(menuHtml);
+      if (jsonLdItems.length > 0) return jsonLdItems;
+
+      // Fall back to CSS selector parsing
       return parseHtmlMenu(menuHtml);
     } catch {
       return null;
     }
   },
 };
+
+/**
+ * Extract menu items from JSON-LD (Schema.org) structured data.
+ * Many restaurant sites embed menu data as <script type="application/ld+json">.
+ * This is the cleanest data source — exact names, prices, descriptions.
+ */
+function extractJsonLdMenu(html: string): RawMenuItem[] {
+  const $ = cheerio.load(html);
+  const items: RawMenuItem[] = [];
+
+  $('script[type="application/ld+json"]').each((_, el) => {
+    try {
+      const data = JSON.parse($(el).html() || "");
+      // Handle single object or array of objects
+      const objects = Array.isArray(data) ? data : [data];
+
+      for (const obj of objects) {
+        // Direct Restaurant with hasMenu
+        if (obj["@type"] === "Restaurant" && obj.hasMenu) {
+          const menu = obj.hasMenu;
+          const sections = menu.hasMenuSection || menu.hasMenuItem ? [menu] : [];
+          if (Array.isArray(menu.hasMenuSection)) sections.push(...menu.hasMenuSection);
+
+          for (const section of sections) {
+            const category = section.name || null;
+            const menuItems = section.hasMenuItem || [];
+            const itemList = Array.isArray(menuItems) ? menuItems : [menuItems];
+
+            for (const item of itemList) {
+              if (item.name) {
+                const price = item.offers?.price
+                  || item.offers?.lowPrice
+                  || item.price
+                  || null;
+                items.push({
+                  name: item.name,
+                  description: item.description || "",
+                  price: price ? `$${price}` : null,
+                  category,
+                });
+              }
+            }
+          }
+        }
+
+        // Direct Menu type
+        if (obj["@type"] === "Menu") {
+          const sections = obj.hasMenuSection || [];
+          const sectionList = Array.isArray(sections) ? sections : [sections];
+
+          for (const section of sectionList) {
+            const category = section.name || null;
+            const menuItems = section.hasMenuItem || [];
+            const itemList = Array.isArray(menuItems) ? menuItems : [menuItems];
+
+            for (const item of itemList) {
+              if (item.name) {
+                items.push({
+                  name: item.name,
+                  description: item.description || "",
+                  price: item.offers?.price ? `$${item.offers.price}` : null,
+                  category,
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      // Invalid JSON-LD, skip
+    }
+  });
+
+  return items;
+}
 
 /**
  * Parse HTML content to extract menu items.

@@ -114,9 +114,9 @@ describe("Vision Analyzer", () => {
 
       // Total: 260+100+113 = 473 cal
       expect(result.macros.calories.best_estimate).toBe(473);
-      // High confidence (0.9) → ±15% margin
-      expect(result.macros.calories.min).toBeCloseTo(473 * 0.85, 0);
-      expect(result.macros.calories.max).toBeCloseTo(473 * 1.15, 0);
+      // High confidence (0.9) → ±20% margin (widened per NYU 2025 research)
+      expect(result.macros.calories.min).toBeCloseTo(473 * 0.80, 0);
+      expect(result.macros.calories.max).toBeCloseTo(473 * 1.20, 0);
 
       expect(result.usda_references).toHaveLength(3);
       expect(result.confidence).toBe(0.9);
@@ -161,9 +161,9 @@ describe("Vision Analyzer", () => {
 
       const result = await analyzeFoodPhoto("https://example.com/blurry.jpg");
 
-      // Low confidence (0.5) → ±30% margin
-      expect(result.macros.calories.min).toBeCloseTo(260 * 0.7, 0);
-      expect(result.macros.calories.max).toBeCloseTo(260 * 1.3, 0);
+      // Medium confidence (0.5) → ±35% margin (widened per research)
+      expect(result.macros.calories.min).toBeCloseTo(260 * 0.65, 0);
+      expect(result.macros.calories.max).toBeCloseTo(260 * 1.35, 0);
     });
   });
 
@@ -202,8 +202,8 @@ describe("Vision Analyzer", () => {
       expect(result.num_photos_analyzed).toBe(3);
       expect(result.outlier_indices).toHaveLength(0);
 
-      // Ensemble range should be tighter than individual ±30% (low-conf single photo)
-      const singleLowConfRange = 450 * 0.6; // ±30% = 60% total span
+      // Ensemble range should be tighter than individual ±35% (medium-conf single photo)
+      const singleLowConfRange = 450 * 0.7; // ±35% = 70% total span
       const ensembleRange =
         result.macros.calories.max - result.macros.calories.min;
       expect(ensembleRange).toBeLessThan(singleLowConfRange);

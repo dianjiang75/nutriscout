@@ -4,28 +4,28 @@ import Link from "next/link";
 import { Icon } from "@iconify/react";
 
 const CATEGORIES = [
-  { id: "thai", label: "Thai", icon: "tabler:bowl-chopsticks" },
-  { id: "japanese", label: "Japanese", icon: "lucide-lab:sushi-chopsticks" },
-  { id: "italian", label: "Italian", icon: "lucide:pizza" },
-  { id: "mexican", label: "Mexican", icon: "hugeicons:taco-01" },
-  { id: "indian", label: "Indian", icon: "mingcute:pot-line" },
-  { id: "chinese", label: "Chinese", icon: "mingcute:chopsticks-line" },
-  { id: "korean", label: "Korean", icon: "mingcute:bowl-line" },
-  { id: "mediterranean", label: "Mediterranean", icon: "lucide:leaf" },
-  { id: "american", label: "American", icon: "tabler:burger" },
-  { id: "vietnamese", label: "Vietnamese", icon: "hugeicons:noodles" },
-  { id: "lunch", label: "Lunch", icon: "solar:plate-outline" },
-  { id: "dinner", label: "Dinner", icon: "lucide:fork-knife" },
-  { id: "breakfast", label: "Breakfast", icon: "lucide:coffee" },
-  { id: "pizza", label: "Pizza", icon: "tabler:pizza" },
-  { id: "sushi", label: "Sushi", icon: "tabler:fish" },
-  { id: "bowls", label: "Bowls", icon: "mingcute:bowl-2-line" },
-  { id: "salads", label: "Salads", icon: "lucide:salad" },
-  { id: "sandwiches", label: "Sandwiches", icon: "lucide:sandwich" },
-  { id: "burgers", label: "Burgers", icon: "hugeicons:steak" },
-  { id: "noodles", label: "Noodles", icon: "hugeicons:noodles" },
-  { id: "soup", label: "Soup", icon: "tabler:soup" },
-  { id: "tacos", label: "Tacos", icon: "hugeicons:taco-02" },
+  { id: "thai", label: "Thai", icon: "fluent-emoji-flat:curry-rice" },
+  { id: "japanese", label: "Japanese", icon: "fluent-emoji-flat:sushi" },
+  { id: "italian", label: "Italian", icon: "fluent-emoji-flat:spaghetti" },
+  { id: "mexican", label: "Mexican", icon: "fluent-emoji-flat:taco" },
+  { id: "indian", label: "Indian", icon: "fluent-emoji-flat:curry-rice" },
+  { id: "chinese", label: "Chinese", icon: "fluent-emoji-flat:dumpling" },
+  { id: "korean", label: "Korean", icon: "fluent-emoji-flat:bento-box" },
+  { id: "mediterranean", label: "Mediterranean", icon: "fluent-emoji-flat:green-salad" },
+  { id: "american", label: "American", icon: "fluent-emoji-flat:hamburger" },
+  { id: "vietnamese", label: "Vietnamese", icon: "fluent-emoji-flat:steaming-bowl" },
+  { id: "lunch", label: "Lunch", icon: "fluent-emoji-flat:fork-and-knife" },
+  { id: "dinner", label: "Dinner", icon: "fluent-emoji-flat:fork-and-knife-with-plate" },
+  { id: "breakfast", label: "Breakfast", icon: "fluent-emoji-flat:pancakes" },
+  { id: "pizza", label: "Pizza", icon: "fluent-emoji-flat:pizza" },
+  { id: "sushi", label: "Sushi", icon: "fluent-emoji-flat:sushi" },
+  { id: "bowls", label: "Bowls", icon: "fluent-emoji-flat:bowl-with-spoon" },
+  { id: "salads", label: "Salads", icon: "fluent-emoji-flat:green-salad" },
+  { id: "sandwiches", label: "Sandwiches", icon: "fluent-emoji-flat:sandwich" },
+  { id: "burgers", label: "Burgers", icon: "fluent-emoji-flat:hamburger" },
+  { id: "noodles", label: "Noodles", icon: "fluent-emoji-flat:steaming-bowl" },
+  { id: "soup", label: "Soup", icon: "fluent-emoji-flat:pot-of-food" },
+  { id: "tacos", label: "Tacos", icon: "fluent-emoji-flat:taco" },
 ] as const;
 
 export function CategoryPills() {
@@ -37,8 +37,8 @@ export function CategoryPills() {
           href={`/category/${cat.id}`}
           className="flex flex-col items-center gap-1.5 shrink-0 group"
         >
-          <div className="w-14 h-14 rounded-2xl bg-card border border-border/50 flex items-center justify-center transition-all duration-200 group-hover:scale-105 group-hover:shadow-md group-hover:border-primary/30 group-active:scale-95">
-            <Icon icon={cat.icon} width={26} height={26} className="text-foreground/70 group-hover:text-primary transition-colors" />
+          <div className="w-14 h-14 rounded-2xl bg-card border border-border/40 shadow-sm flex items-center justify-center transition-all duration-200 group-hover:scale-105 group-hover:shadow-md group-active:scale-95">
+            <Icon icon={cat.icon} width={32} height={32} />
           </div>
           <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap">
             {cat.label}

@@ -33,8 +33,8 @@ async function cachedFetch<T>(cacheKey: string, fetcher: () => Promise<T>): Prom
 /**
  * Search USDA FoodData Central for foods matching a query.
  */
-export async function searchFood(query: string, pageSize = 5): Promise<USDAFoodItem[]> {
-  const cacheKey = `usda:search:${query.toLowerCase().trim()}:${pageSize}`;
+export async function searchFood(query: string, pageSize = 5, requireAllWords = true): Promise<USDAFoodItem[]> {
+  const cacheKey = `usda:search:${query.toLowerCase().trim()}:${pageSize}:${requireAllWords}`;
 
   return cachedFetch(cacheKey, async () => {
     await checkRateLimit();
@@ -44,6 +44,7 @@ export async function searchFood(query: string, pageSize = 5): Promise<USDAFoodI
       query,
       pageSize: String(pageSize),
       dataType: "Foundation,SR Legacy",
+      requireAllWords: String(requireAllWords),
     });
 
     const res = await fetch(`${BASE_URL}/foods/search?${params}`);
@@ -52,6 +53,12 @@ export async function searchFood(query: string, pageSize = 5): Promise<USDAFoodI
     }
 
     const data: USDASearchResponse = await res.json();
+
+    // If requireAllWords returned no results, retry without it
+    if (data.foods.length === 0 && requireAllWords) {
+      return searchFood(query, pageSize, false);
+    }
+
     return data.foods;
   });
 }

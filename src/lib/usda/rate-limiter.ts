@@ -1,11 +1,13 @@
 /**
  * Simple sliding-window rate limiter using Redis.
- * USDA allows 3600 requests/hour with an API key.
+ * USDA FoodData Central allows 1,000 requests/hour per IP (not 3,600).
+ * https://fdc.nal.usda.gov/api-guide/
+ * We use 900 as the limit to leave a buffer.
  */
 import { redis } from "@/lib/cache/redis";
 
 const RATE_LIMIT_KEY = "usda:rate_limit";
-const MAX_REQUESTS = 3600;
+const MAX_REQUESTS = 900; // USDA actual limit: 1000/hour, using 900 for safety buffer
 const WINDOW_SECONDS = 3600;
 
 export async function checkRateLimit(): Promise<void> {

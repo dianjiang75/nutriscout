@@ -4,12 +4,28 @@ const globalForRedis = globalThis as unknown as {
   redis: Redis | undefined;
 };
 
-export const redis =
-  globalForRedis.redis ??
-  new Redis(process.env.REDIS_URL || "redis://localhost:6379", {
+function createRedisClient(): Redis {
+  const client = new Redis(process.env.REDIS_URL || "redis://localhost:6379", {
     maxRetriesPerRequest: 3,
     lazyConnect: true,
+    enableReadyCheck: true,
+    retryStrategy(times: number) {
+      // Exponential backoff: 100ms, 200ms, 400ms... max 30s
+      return Math.min(times * 100, 30000);
+    },
+    reconnectOnError(err: Error) {
+      return err.message.includes("READONLY");
+    },
   });
+
+  client.on("error", (err: Error) => {
+    console.error("[redis] Connection error:", err.message);
+  });
+
+  return client;
+}
+
+export const redis = globalForRedis.redis ?? createRedisClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForRedis.redis = redis;
