@@ -181,19 +181,52 @@ const ICON_MAP: Record<string, LucideIcon | (({ className }: { className?: strin
   tacos: TacoIcon,
 };
 
+// Color palette for category circles
+const ICON_COLORS: Record<string, { bg: string; fg: string }> = {
+  thai: { bg: "bg-orange-100 dark:bg-orange-950/40", fg: "text-orange-600 dark:text-orange-400" },
+  japanese: { bg: "bg-red-100 dark:bg-red-950/40", fg: "text-red-600 dark:text-red-400" },
+  italian: { bg: "bg-green-100 dark:bg-green-950/40", fg: "text-green-600 dark:text-green-400" },
+  mexican: { bg: "bg-amber-100 dark:bg-amber-950/40", fg: "text-amber-600 dark:text-amber-400" },
+  indian: { bg: "bg-yellow-100 dark:bg-yellow-950/40", fg: "text-yellow-700 dark:text-yellow-400" },
+  chinese: { bg: "bg-rose-100 dark:bg-rose-950/40", fg: "text-rose-600 dark:text-rose-400" },
+  korean: { bg: "bg-pink-100 dark:bg-pink-950/40", fg: "text-pink-600 dark:text-pink-400" },
+  mediterranean: { bg: "bg-emerald-100 dark:bg-emerald-950/40", fg: "text-emerald-600 dark:text-emerald-400" },
+  american: { bg: "bg-blue-100 dark:bg-blue-950/40", fg: "text-blue-600 dark:text-blue-400" },
+  vietnamese: { bg: "bg-lime-100 dark:bg-lime-950/40", fg: "text-lime-700 dark:text-lime-400" },
+  lunch: { bg: "bg-sky-100 dark:bg-sky-950/40", fg: "text-sky-600 dark:text-sky-400" },
+  dinner: { bg: "bg-indigo-100 dark:bg-indigo-950/40", fg: "text-indigo-600 dark:text-indigo-400" },
+  breakfast: { bg: "bg-amber-100 dark:bg-amber-950/40", fg: "text-amber-700 dark:text-amber-400" },
+  pizza: { bg: "bg-red-100 dark:bg-red-950/40", fg: "text-red-500 dark:text-red-400" },
+  sushi: { bg: "bg-teal-100 dark:bg-teal-950/40", fg: "text-teal-600 dark:text-teal-400" },
+  bowls: { bg: "bg-violet-100 dark:bg-violet-950/40", fg: "text-violet-600 dark:text-violet-400" },
+  salads: { bg: "bg-green-100 dark:bg-green-950/40", fg: "text-green-600 dark:text-green-400" },
+  sandwiches: { bg: "bg-orange-100 dark:bg-orange-950/40", fg: "text-orange-600 dark:text-orange-400" },
+  burgers: { bg: "bg-amber-100 dark:bg-amber-950/40", fg: "text-amber-700 dark:text-amber-400" },
+  noodles: { bg: "bg-yellow-100 dark:bg-yellow-950/40", fg: "text-yellow-700 dark:text-yellow-400" },
+  soup: { bg: "bg-cyan-100 dark:bg-cyan-950/40", fg: "text-cyan-600 dark:text-cyan-400" },
+  tacos: { bg: "bg-orange-100 dark:bg-orange-950/40", fg: "text-orange-600 dark:text-orange-400" },
+};
+
+const DEFAULT_COLOR = { bg: "bg-muted", fg: "text-muted-foreground" };
+
 export function CategoryPills() {
   return (
-    <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar -mx-4 px-4">
+    <div className="flex gap-3 overflow-x-auto pb-1 no-scrollbar -mx-4 px-4">
       {CATEGORIES.map((cat) => {
         const Icon = ICON_MAP[cat.id] || UtensilsCrossed;
+        const color = ICON_COLORS[cat.id] || DEFAULT_COLOR;
         return (
           <Link
             key={cat.id}
             href={`/category/${cat.id}`}
-            className="text-[11px] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap shrink-0 transition-all duration-200 bg-muted/50 hover:bg-primary/10 hover:text-primary text-muted-foreground flex items-center gap-1.5"
+            className="flex flex-col items-center gap-1.5 shrink-0 group"
           >
-            <Icon className="w-3.5 h-3.5" />
-            {cat.label}
+            <div className={`w-14 h-14 rounded-2xl ${color.bg} flex items-center justify-center transition-all duration-200 group-hover:scale-105 group-hover:shadow-md group-active:scale-95`}>
+              <Icon className={`w-6 h-6 ${color.fg}`} />
+            </div>
+            <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap">
+              {cat.label}
+            </span>
           </Link>
         );
       })}
