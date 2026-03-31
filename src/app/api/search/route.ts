@@ -1,50 +1,57 @@
 import { search } from "@/lib/orchestrator";
+import { validateSearchParams, DIETARY_OPTIONS } from "@/lib/validation/search";
+import { checkApiRateLimit } from "@/lib/middleware/rate-limiter";
 import type { DietaryFlags } from "@/types";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
+    // Rate limit: 60 req/min per IP
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+    const rl = await checkApiRateLimit(ip, "search");
+    if (!rl.allowed) {
+      return Response.json(
+        { error: "Too many requests", retryAfterSeconds: rl.retryAfterSeconds },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds ?? 60) } }
+      );
+    }
     const { searchParams } = new URL(request.url);
 
-    const lat = parseFloat(searchParams.get("lat") || "");
-    const lng = parseFloat(searchParams.get("lng") || "");
-
-    if (isNaN(lat) || isNaN(lng)) {
-      return Response.json({ error: "lat and lng are required" }, { status: 400 });
+    // Validate all input params
+    const parsed = validateSearchParams(searchParams);
+    if (!parsed.success) {
+      return Response.json(
+        { error: "Invalid search parameters", details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
     }
 
-    const dietStr = searchParams.get("diet") || "";
-    const dietaryRestrictions: DietaryFlags = {
-      vegan: dietStr.includes("vegan") ? true : null,
-      vegetarian: dietStr.includes("vegetarian") ? true : null,
-      gluten_free: dietStr.includes("gluten_free") ? true : null,
-      halal: dietStr.includes("halal") ? true : null,
-      kosher: dietStr.includes("kosher") ? true : null,
-      dairy_free: dietStr.includes("dairy_free") ? true : null,
-      nut_free: dietStr.includes("nut_free") ? true : null,
-      pescatarian: dietStr.includes("pescatarian") ? true : null,
-      keto: dietStr.includes("keto") ? true : null,
-      paleo: dietStr.includes("paleo") ? true : null,
-    };
+    const p = parsed.data;
+
+    // Build dietary flags from comma-separated string
+    const dietaryRestrictions: DietaryFlags = {} as DietaryFlags;
+    for (const option of DIETARY_OPTIONS) {
+      dietaryRestrictions[option] = p.diet.includes(option) ? true : null;
+    }
 
     const results = await search({
-      latitude: lat,
-      longitude: lng,
-      radius_miles: parseFloat(searchParams.get("radius") || "2"),
+      latitude: p.lat,
+      longitude: p.lng,
+      radius_miles: p.radius,
       dietary_restrictions: dietaryRestrictions,
-      nutritional_goal: (searchParams.get("goal") as "max_protein" | "min_calories" | "min_fat" | "min_carbs" | "balanced") || undefined,
-      calorie_limit: searchParams.get("calorie_limit") ? parseInt(searchParams.get("calorie_limit")!) : undefined,
-      protein_min_g: searchParams.get("protein_min") ? parseInt(searchParams.get("protein_min")!) : undefined,
-      cuisine_preferences: searchParams.get("cuisines")?.split(",").filter(Boolean) || undefined,
-      max_wait_minutes: searchParams.get("max_wait") ? parseInt(searchParams.get("max_wait")!) : undefined,
-      include_delivery: searchParams.get("delivery") === "true",
-      sort_by: (searchParams.get("sort") as "macro_match" | "distance" | "rating" | "wait_time") || undefined,
-      limit: parseInt(searchParams.get("limit") || "20"),
-      offset: parseInt(searchParams.get("offset") || "0"),
-      query: searchParams.get("q") || undefined,
-      categories: searchParams.get("categories")?.split(",").filter(Boolean) || undefined,
-      allergens: searchParams.get("allergens")?.split(",").filter(Boolean) || undefined,
+      nutritional_goal: p.goal,
+      calorie_limit: p.calorie_limit,
+      protein_min_g: p.protein_min,
+      cuisine_preferences: p.cuisines ? p.cuisines.split(",").filter(Boolean) : undefined,
+      max_wait_minutes: p.max_wait,
+      include_delivery: p.delivery === "true",
+      sort_by: p.sort,
+      limit: p.limit,
+      offset: p.offset,
+      query: p.q || undefined,
+      categories: p.categories ? p.categories.split(",").filter(Boolean) : undefined,
+      allergens: p.allergens ? p.allergens.split(",").filter(Boolean) : undefined,
     });
 
     return Response.json(results);

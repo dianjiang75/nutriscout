@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -80,14 +81,17 @@ export default function DishDetailPage({ params }: { params: Promise<{ id: strin
           const data = await res.json();
           setDish(data);
 
-          const tRes = await fetch(`/api/restaurants/${data.restaurant.id}/traffic`);
-          if (tRes.ok) setTraffic(await tRes.json());
+          // Fetch traffic and similar dishes in parallel
+          const [tRes, sRes] = await Promise.all([
+            fetch(`/api/restaurants/${data.restaurant.id}/traffic`).catch(() => null),
+            fetch(`/api/dishes/${id}/similar?lat=40.7264&lng=-73.9878&limit=4`).catch(() => null),
+          ]);
 
-          const sRes = await fetch(`/api/dishes/${id}/similar?lat=40.7264&lng=-73.9878&limit=4`);
-          if (sRes.ok) {
+          if (tRes?.ok) setTraffic(await tRes.json());
+
+          if (sRes?.ok) {
             const sData = await sRes.json();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            setSimilar((sData.dishes || []).map((d: any) => ({
+            setSimilar((sData.dishes || []).map((d: { id: string; name: string; restaurant_name?: string; calories_min?: number; calories_max?: number; protein_max_g?: number }) => ({
               id: d.id, name: d.name,
               restaurant_name: d.restaurant_name || "",
               macros: {
@@ -140,10 +144,13 @@ export default function DishDetailPage({ params }: { params: Promise<{ id: strin
       {/* Photo carousel */}
       {dish.photos.length > 0 ? (
         <div className="relative aspect-video bg-muted overflow-hidden">
-          <img
+          <Image
             src={dish.photos[photoIndex]?.url}
             alt={dish.name}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 672px) 100vw, 672px"
+            className="object-cover"
+            priority
           />
           {dish.photos.length > 1 && (
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">

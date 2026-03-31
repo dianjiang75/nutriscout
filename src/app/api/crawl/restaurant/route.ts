@@ -1,5 +1,17 @@
+import { checkApiRateLimit } from "@/lib/middleware/rate-limiter";
+
 export async function POST(request: Request) {
   try {
+    // Rate limit: 5 req/min per IP (crawling is expensive)
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+    const rl = await checkApiRateLimit(ip, "crawl");
+    if (!rl.allowed) {
+      return Response.json(
+        { error: "Too many requests", retryAfterSeconds: rl.retryAfterSeconds },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds ?? 60) } }
+      );
+    }
+
     const { google_place_id } = await request.json();
 
     if (!google_place_id) {

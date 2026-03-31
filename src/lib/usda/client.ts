@@ -92,42 +92,131 @@ function computeConfidence(food: USDAFoodItem, query: string): number {
   const queryLower = query.toLowerCase().trim();
   const queryWords = queryLower.split(/\s+/);
 
-  // All query words appear in description → high base confidence
-  const wordMatches = queryWords.filter((w) => descLower.includes(w)).length;
+  // Word boundary matching — prevents "pad" matching "iPad"
+  const wordMatches = queryWords.filter((w) => {
+    const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`\\b${escaped}\\b`).test(descLower);
+  }).length;
   const wordMatchRatio = wordMatches / queryWords.length;
 
   // Foundation data is higher quality than SR Legacy or Branded
   const dataTypeBonus = food.dataType === "Foundation" ? 0.1 : 0;
 
-  // Exact substring match bonus
-  const exactMatchBonus = descLower.includes(queryLower) ? 0.15 : 0;
+  // Exact phrase match bonus (with word boundaries)
+  const escapedQuery = queryLower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const exactMatchBonus = new RegExp(`\\b${escapedQuery}\\b`).test(descLower) ? 0.15 : 0;
 
-  return Math.min(1, wordMatchRatio * 0.75 + dataTypeBonus + exactMatchBonus);
+  // Penalize if description is much longer than query (less specific match)
+  const descWords = descLower.split(/[\s,]+/).filter(Boolean);
+  const specificityPenalty = queryWords.length < descWords.length * 0.3 ? -0.1 : 0;
+
+  return Math.min(1, Math.max(0, wordMatchRatio * 0.75 + dataTypeBonus + exactMatchBonus + specificityPenalty));
+}
+
+/**
+ * Decompose compound food names into simpler search terms.
+ * "Pad Thai shrimp with peanuts" → ["shrimp", "pad thai", "peanuts"]
+ * "Grilled chicken Caesar salad" → ["chicken breast", "romaine lettuce", "caesar dressing"]
+ */
+function decomposeIngredientName(name: string): string[] {
+  const normalized = name.toLowerCase().trim();
+
+  // Common cooking modifiers to strip for cleaner USDA searches
+  const modifiers = /\b(grilled|fried|baked|roasted|steamed|sauteed|sautéed|raw|fresh|organic|homemade|crispy|spicy|smoked|braised|poached|blanched)\b/gi;
+  const cleaned = normalized.replace(modifiers, "").replace(/\s+/g, " ").trim();
+
+  // If short enough, try the full name first then individual words
+  if (cleaned.split(/\s+/).length <= 3) {
+    return [cleaned];
+  }
+
+  // For compound names, try the full name first, then meaningful sub-phrases
+  const words = cleaned.split(/\s+/).filter(
+    (w) => w.length > 2 && !["with", "and", "the", "in", "on", "over", "served"].includes(w)
+  );
+
+  const queries = [cleaned];
+  // Add 2-word sub-phrases (often match USDA entries better)
+  for (let i = 0; i < words.length - 1; i++) {
+    queries.push(`${words[i]} ${words[i + 1]}`);
+  }
+  // Add individual significant words as fallback
+  for (const word of words) {
+    if (word.length > 4) queries.push(word);
+  }
+
+  return [...new Set(queries)];
+}
+
+/**
+ * Pick the best matching food from search results using confidence scoring.
+ */
+function pickBestMatch(
+  allResults: { food: USDAFoodItem; query: string }[]
+): { food: USDAFoodItem; query: string } | null {
+  if (allResults.length === 0) return null;
+
+  let bestScore = -1;
+  let bestResult = allResults[0];
+
+  for (const result of allResults) {
+    const score = computeConfidence(result.food, result.query);
+    // Prefer Foundation data even with slightly lower text match
+    const typeBonus = result.food.dataType === "Foundation" ? 0.05 : 0;
+    const finalScore = score + typeBonus;
+
+    if (finalScore > bestScore) {
+      bestScore = finalScore;
+      bestResult = result;
+    }
+  }
+
+  return bestResult;
 }
 
 /**
  * Search for a food, pick the best match, and return macros scaled
- * to the specified portion size in grams.
+ * to the specified portion size in grams. Uses query decomposition
+ * for compound ingredient names that don't match USDA directly.
  */
 export async function estimateMacros(
   foodName: string,
   portionGrams: number
 ): Promise<USDAMacroEstimate> {
-  const foods = await searchFood(foodName, 5);
+  const queries = decomposeIngredientName(foodName);
 
-  if (foods.length === 0) {
+  // Try each decomposed query, collect all results
+  const allResults: { food: USDAFoodItem; query: string }[] = [];
+
+  for (const query of queries) {
+    try {
+      const foods = await searchFood(query, 3);
+      for (const food of foods) {
+        allResults.push({ food, query });
+      }
+    } catch {
+      // Skip failed queries, try next decomposition
+      continue;
+    }
+    // If we got good results from full name, don't bother with sub-phrases
+    if (allResults.length > 0 && query === queries[0]) {
+      const topConf = computeConfidence(allResults[0].food, query);
+      if (topConf >= 0.7) break;
+    }
+  }
+
+  if (allResults.length === 0) {
     throw new Error(`No USDA results for "${foodName}"`);
   }
 
-  // Pick the best match (first result is typically best by USDA relevance)
-  const best = foods[0];
+  const best = pickBestMatch(allResults)!;
   const scale = portionGrams / 100; // USDA values are per 100g
 
-  const calories = getNutrientFromSearchItem(best, NUTRIENT_IDS.ENERGY) * scale;
-  const protein = getNutrientFromSearchItem(best, NUTRIENT_IDS.PROTEIN) * scale;
-  const carbs = getNutrientFromSearchItem(best, NUTRIENT_IDS.CARBS) * scale;
-  const fat = getNutrientFromSearchItem(best, NUTRIENT_IDS.FAT) * scale;
-  const fiber = getNutrientFromSearchItem(best, NUTRIENT_IDS.FIBER) * scale;
+  const calories = getNutrientFromSearchItem(best.food, NUTRIENT_IDS.ENERGY) * scale;
+  const protein = getNutrientFromSearchItem(best.food, NUTRIENT_IDS.PROTEIN) * scale;
+  const carbs = getNutrientFromSearchItem(best.food, NUTRIENT_IDS.CARBS) * scale;
+  const fat = getNutrientFromSearchItem(best.food, NUTRIENT_IDS.FAT) * scale;
+  const fiber = getNutrientFromSearchItem(best.food, NUTRIENT_IDS.FIBER) * scale;
 
   return {
     calories: Math.round(calories * 10) / 10,
@@ -135,8 +224,8 @@ export async function estimateMacros(
     carbs_g: Math.round(carbs * 10) / 10,
     fat_g: Math.round(fat * 10) / 10,
     fiber_g: Math.round(fiber * 10) / 10,
-    serving_description: `${portionGrams}g of ${best.description}`,
-    confidence: computeConfidence(best, foodName),
-    usda_fdc_id: best.fdcId,
+    serving_description: `${portionGrams}g of ${best.food.description}`,
+    confidence: computeConfidence(best.food, best.query),
+    usda_fdc_id: best.food.fdcId,
   };
 }

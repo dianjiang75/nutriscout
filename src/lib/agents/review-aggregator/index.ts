@@ -87,37 +87,52 @@ export async function fetchYelpReviews(
 }
 
 /**
- * Filter reviews that mention a specific dish using fuzzy matching.
+ * Filter reviews that mention a specific dish using tiered matching.
+ *
+ * Tier 1: Full dish name appears in review (exact substring)
+ * Tier 2: Word-boundary match for significant words (>=4 chars, not stop words)
+ *   - Single significant word: requires exact word boundary match
+ *   - Multi-word: requires 70%+ words matching with word boundaries
+ *
+ * Uses word boundaries (\b) instead of plain .includes() to prevent
+ * false positives like "pad" matching "iPad" or "padded".
  */
 export function filterReviewsForDish(
   dishName: string,
   reviews: RawReview[]
 ): RawReview[] {
-  const nameLower = dishName.toLowerCase();
-  // Generate variants: full name, individual significant words
+  const nameLower = dishName.toLowerCase().trim();
+
+  const stopWords = new Set([
+    "with", "and", "the", "their", "from", "style", "house",
+    "special", "chef", "served", "fresh", "our", "new",
+    "bowl", "plate", "sandwich", "wrap", "salad", "soup",
+  ]);
+
   const words = nameLower
     .split(/\s+/)
-    .filter((w) => w.length > 3 && !["with", "and", "the", "their", "from"].includes(w));
+    .filter((w) => w.length >= 4 && !stopWords.has(w));
+
+  // If no significant words, require exact full-name match
+  if (words.length === 0) {
+    return reviews.filter((r) => r.text.toLowerCase().includes(nameLower));
+  }
+
+  // Pre-build word boundary regexes
+  const fullNameRegex = new RegExp(`\\b${escapeRegex(nameLower)}\\b`, "i");
+  const wordRegexes = words.map(
+    (w) => new RegExp(`\\b${escapeRegex(w)}\\b`, "i")
+  );
 
   return reviews.filter((review) => {
-    const textLower = review.text.toLowerCase();
+    // Tier 1: Full dish name with word boundaries (not plain substring)
+    if (fullNameRegex.test(review.text)) return true;
 
-    // Exact match (case-insensitive)
-    if (textLower.includes(nameLower)) return true;
+    // Tier 2: Word boundary matching — require 85%+ for multi-word dishes
+    const matches = wordRegexes.filter((rx) => rx.test(review.text)).length;
 
-    // Fuzzy: if 2+ significant words from the dish name appear in the review
-    if (words.length >= 2) {
-      const matchCount = words.filter((w) => textLower.includes(w)).length;
-      return matchCount >= Math.ceil(words.length * 0.6);
-    }
-
-    // Single-word dish names: exact word boundary match
-    if (words.length === 1 && words[0]) {
-      const regex = new RegExp(`\\b${escapeRegex(words[0])}\\b`, "i");
-      return regex.test(review.text);
-    }
-
-    return false;
+    if (words.length === 1) return matches === 1;
+    return matches >= Math.ceil(words.length * 0.85);
   });
 }
 

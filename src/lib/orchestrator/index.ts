@@ -29,8 +29,13 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
   };
 
   const cached = await getCachedQuery<SearchResults>(cacheParams);
-  if (cached && offset === 0) {
-    return { ...cached, cached: true };
+  if (cached) {
+    // Serve paginated slice from cache
+    return {
+      ...cached,
+      dishes: cached.dishes.slice(offset, offset + limit),
+      cached: true,
+    };
   }
 
   // 2. Build and execute database query

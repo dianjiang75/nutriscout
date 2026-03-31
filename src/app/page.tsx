@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import Link from "next/link";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -187,11 +188,11 @@ export default function HomePage() {
               />
             </div>
             <FilterDrawer filters={filters} onChange={setFilters} />
-            <a href="/profile">
+            <Link href="/profile">
               <Button variant="ghost" size="sm" className="shrink-0 text-xs px-2">
                 Profile
               </Button>
-            </a>
+            </Link>
           </div>
 
           {/* Category pills — each links to its own page */}

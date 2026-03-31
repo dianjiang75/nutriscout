@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MacroBar } from "@/components/macro-bar";
@@ -32,11 +33,13 @@ export function DishCard({ dish }: { dish: DishCardData }) {
     <Link href={`/dish/${dish.id}`}>
       <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
         {dish.photo_url && (
-          <div className="aspect-video w-full bg-muted overflow-hidden">
-            <img
+          <div className="aspect-video w-full bg-muted overflow-hidden relative">
+            <Image
               src={dish.photo_url}
               alt={dish.name}
-              className="w-full h-full object-cover"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover"
             />
           </div>
         )}
