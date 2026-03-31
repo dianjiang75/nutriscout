@@ -92,9 +92,10 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
     orderBy: buildOrderBy(query),
   });
 
-  // 3. Fetch logistics for the restaurants in this result set
+  // 3. Fetch logistics and distances for the restaurants in this result set
   const now = new Date();
   const restaurantIds = [...new Set(dishes.map((d) => d.restaurantId))];
+
   const logisticsRows = await prisma.restaurantLogistics.findMany({
     where: {
       restaurantId: { in: restaurantIds },
@@ -105,6 +106,16 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
   const logisticsMap = new Map(
     logisticsRows.map((l) => [l.restaurantId, l])
   );
+
+  // Calculate distances using haversine formula
+  const distanceMap = new Map<string, number>();
+  for (const dish of dishes) {
+    if (!distanceMap.has(dish.restaurantId)) {
+      const rLat = Number(dish.restaurant.latitude);
+      const rLng = Number(dish.restaurant.longitude);
+      distanceMap.set(dish.restaurantId, haversine(query.latitude, query.longitude, rLat, rLng));
+    }
+  }
 
   // 4. Build result set with enriched data
   const dishResults: DishResult[] = dishes.map((dish) => {
@@ -134,7 +145,7 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
         id: dish.restaurant.id,
         name: dish.restaurant.name,
         address: dish.restaurant.address,
-        distance_miles: null, // Would require PostGIS earth_distance calculation
+        distance_miles: distanceMap.get(dish.restaurantId) ?? null,
         google_rating: dish.restaurant.googleRating
           ? Number(dish.restaurant.googleRating)
           : null,
@@ -160,14 +171,31 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
     };
   });
 
+  // 4b. Filter by radius
+  const radiusFiltered = query.radius_miles
+    ? dishResults.filter((d) => {
+        const dist = d.restaurant.distance_miles;
+        return dist == null || dist <= query.radius_miles;
+      })
+    : dishResults;
+
   // 5. Run Apollo evaluator for dietary safety
-  const verified = verify(dishResults, query.dietary_restrictions);
+  const verified = verify(radiusFiltered, query.dietary_restrictions);
 
   const result: SearchResults = {
     dishes: verified,
     total_count: verified.length,
     cached: false,
   };
+
+  // 5b. Sort by distance if requested (DB can't sort by computed distance)
+  if (query.sort_by === "distance") {
+    verified.sort((a, b) => {
+      const da = a.restaurant.distance_miles ?? Infinity;
+      const db = b.restaurant.distance_miles ?? Infinity;
+      return da - db;
+    });
+  }
 
   // 6. Cache results
   if (offset === 0) {
@@ -220,7 +248,7 @@ function buildOrderBy(
       case "wait_time":
         return { createdAt: "asc" };
       case "distance":
-        return { createdAt: "desc" }; // distance requires PostGIS, fallback
+        return { createdAt: "desc" }; // distance sorted in-memory after query
       case "macro_match":
         // Fall through to nutritional goal ordering
         break;
@@ -239,6 +267,17 @@ function buildOrderBy(
     default:
       return { createdAt: "desc" };
   }
+}
+
+/** Haversine distance in miles between two lat/lng points. */
+function haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 3959; // Earth radius in miles
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 100) / 100;
 }
 
 export type { UserSearchQuery, DishResult, SearchResults } from "./types";

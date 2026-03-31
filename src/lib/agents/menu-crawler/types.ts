@@ -3,6 +3,7 @@ export interface RawMenuItem {
   description: string;
   price: string | null;
   category: string | null;
+  photoUrl?: string | null;
 }
 
 export interface AnalyzedDish {

@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/db/client";
 import { menuSources } from "./sources";
+import { batchAnalyzePhotos } from "@/lib/agents/vision-analyzer";
+import type { BatchJob } from "@/lib/agents/vision-analyzer/types";
 import type {
   AnalyzedDish,
   CrawlResult,
@@ -187,7 +189,9 @@ export async function crawlRestaurant(
   // Analyze ingredients and dietary flags
   const analyzed = await analyzeIngredients(rawItems);
 
-  // Upsert dishes into database
+  // Upsert dishes into database and collect photo jobs
+  const photoJobs: BatchJob[] = [];
+
   for (let i = 0; i < rawItems.length; i++) {
     const raw = rawItems[i];
     const analysis = analyzed.find(
@@ -196,7 +200,7 @@ export async function crawlRestaurant(
 
     const price = raw.price ? parseFloat(raw.price.replace(/[^0-9.]/g, "")) : null;
 
-    await prisma.dish.create({
+    const dish = await prisma.dish.create({
       data: {
         restaurantId: restaurant.id,
         name: raw.name,
@@ -211,6 +215,11 @@ export async function crawlRestaurant(
         isAvailable: true,
       },
     });
+
+    // Queue photo for vision analysis if available
+    if (raw.photoUrl) {
+      photoJobs.push({ dishId: dish.id, imageUrl: raw.photoUrl });
+    }
   }
 
   // Update restaurant menu source
@@ -222,13 +231,20 @@ export async function crawlRestaurant(
     },
   });
 
+  // Queue photo analysis in background (don't await — runs async)
+  if (photoJobs.length > 0) {
+    batchAnalyzePhotos(photoJobs).catch((err) =>
+      console.error("Photo batch analysis failed:", (err as Error).message)
+    );
+  }
+
   return {
     restaurantId: restaurant.id,
     restaurantName: restaurant.name,
     menuSource: usedSource,
     dishesFound: rawItems.length,
     dishesAnalyzed: analyzed.length,
-    photosQueued: 0,
+    photosQueued: photoJobs.length,
   };
 }
 

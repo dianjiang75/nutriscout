@@ -107,8 +107,6 @@ export function parseHtmlMenu(html: string): RawMenuItem[] {
     '[data-testid*="menu"]',
   ];
 
-  const currentCategory: string | null = null;
-
   // Try structured selectors first
   for (const selector of selectors) {
     $(selector).each((_, el) => {
@@ -125,11 +123,19 @@ export function parseHtmlMenu(html: string): RawMenuItem[] {
       const priceText =
         $el.find(".price, [class*='price']").first().text().trim() || null;
 
+      // Find the nearest preceding heading to use as category
+      const closestSection = $el.closest("[class*='section'], [class*='category'], [data-category]");
+      const sectionHeading = closestSection.find("h2, h3, [class*='heading'], [class*='title']").first().text().trim();
+      // Also check preceding siblings for headings
+      const prevHeading = $el.prevAll("h2, h3").first().text().trim()
+        || $el.parent().prevAll("h2, h3").first().text().trim();
+      const category = sectionHeading || prevHeading || null;
+
       items.push({
         name,
         description,
         price: priceText,
-        category: currentCategory,
+        category,
       });
     });
 
@@ -207,7 +213,7 @@ export const googlePhotosSource: MenuSourceStrategy = {
           if (textBlock && textBlock.type === "text") {
             const parsed = JSON.parse(textBlock.text);
             if (Array.isArray(parsed)) {
-              allItems.push(...parsed);
+              allItems.push(...parsed.map((item: RawMenuItem) => ({ ...item, photoUrl })));
             }
           }
         } catch {
