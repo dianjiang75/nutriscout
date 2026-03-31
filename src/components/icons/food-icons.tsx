@@ -6,6 +6,7 @@
  * Each icon uses currentColor for strokes and warm accent fills.
  */
 
+import React from "react";
 import type { SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number };
@@ -308,7 +309,7 @@ export function TacosIcon(props: IconProps) {
 
 // ─── Mapping ─────────────────────────────────────────
 
-export const FOOD_ICON_MAP: Record<string, (props: IconProps) => JSX.Element> = {
+export const FOOD_ICON_MAP: Record<string, (props: IconProps) => React.ReactElement> = {
   thai: ThaiIcon,
   japanese: JapaneseIcon,
   italian: ItalianIcon,
