@@ -31,20 +31,25 @@ export interface DishCardData {
 export function DishCard({ dish }: { dish: DishCardData }) {
   return (
     <Link href={`/dish/${dish.id}`}>
-      <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
-        {dish.photo_url && (
-          <div className="aspect-video w-full bg-muted overflow-hidden relative">
+      <Card className="overflow-hidden transition-all duration-200 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-md">
+        {dish.photo_url ? (
+          <div className="aspect-[16/10] w-full bg-muted overflow-hidden relative group">
             <Image
               src={dish.photo_url}
               alt={dish.name}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
+            {/* Rating overlay on photo */}
+            {dish.rating != null && (
+              <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-1.5 py-0.5 rounded-md">
+                {dish.rating.toFixed(1)}
+              </div>
+            )}
           </div>
-        )}
-        {!dish.photo_url && (
-          <div className="aspect-video w-full bg-muted flex items-center justify-center text-muted-foreground text-sm">
+        ) : (
+          <div className="aspect-[16/10] w-full bg-muted flex items-center justify-center text-muted-foreground text-sm">
             No photo
           </div>
         )}
@@ -54,19 +59,14 @@ export function DishCard({ dish }: { dish: DishCardData }) {
               <h3 className="font-semibold text-sm truncate">{dish.name}</h3>
               <p className="text-xs text-muted-foreground truncate">{dish.restaurant_name}</p>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <ConfidenceDot confidence={dish.macro_confidence} source={dish.macro_source} />
-              {dish.rating != null && (
-                <span className="text-xs font-medium">{dish.rating.toFixed(1)}</span>
-              )}
-            </div>
+            <ConfidenceDot confidence={dish.macro_confidence} source={dish.macro_source} />
           </div>
 
-          <MacroBar {...dish.macros} highlight={dish.highlight} />
+          <MacroBar {...dish.macros} highlight={dish.highlight} compact />
 
           <div className="flex items-center gap-2 flex-wrap">
             {dish.distance_miles != null && (
-              <span className="text-xs text-muted-foreground">{dish.distance_miles.toFixed(1)} mi</span>
+              <span className="text-[11px] text-muted-foreground font-mono tabular-nums">{dish.distance_miles.toFixed(1)} mi</span>
             )}
             <WaitBadge minutes={dish.wait_minutes ?? null} />
             {dish.delivery_platforms?.map((p) => (

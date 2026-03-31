@@ -176,7 +176,9 @@ export default function HomePage() {
         <div className="max-w-2xl mx-auto px-4 py-3 space-y-2.5">
           {/* Search row */}
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold text-ns-green shrink-0">FoodClaw</h1>
+            <h1 className="text-lg font-extrabold tracking-tight shrink-0">
+              <span className="text-primary">Food</span><span className="text-accent">Claw</span>
+            </h1>
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -204,10 +206,10 @@ export default function HomePage() {
               {SORT_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
-                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors whitespace-nowrap ${
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-200 whitespace-nowrap font-medium ${
                     search.sort === opt.value
-                      ? "bg-foreground text-background border-foreground"
-                      : "border-border hover:bg-muted"
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                      : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                   onClick={() => setSearch((s) => ({ ...s, sort: opt.value, offset: 0 }))}
                 >
@@ -266,11 +268,18 @@ function DishesView({
     return (
       <div className="grid gap-4 sm:grid-cols-2">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="space-y-2">
-            <Skeleton className="aspect-video w-full rounded-lg" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-3 w-1/2" />
-            <Skeleton className="h-2.5 w-full" />
+          <div key={i} className="rounded-lg border overflow-hidden animate-pulse">
+            <Skeleton className="aspect-[16/10] w-full" />
+            <div className="p-3 space-y-2">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
+              <Skeleton className="h-2 w-full rounded-full" />
+              <div className="flex gap-2">
+                <Skeleton className="h-3 w-12" />
+                <Skeleton className="h-3 w-8" />
+                <Skeleton className="h-3 w-8" />
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -279,9 +288,14 @@ function DishesView({
 
   if (dishes.length === 0) {
     return (
-      <div className="text-center py-20 text-muted-foreground">
-        <p className="text-lg font-medium">No dishes found</p>
-        <p className="text-sm mt-1">Try adjusting your filters or search terms.</p>
+      <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+          <Search className="w-7 h-7 text-muted-foreground" />
+        </div>
+        <p className="text-base font-semibold">No dishes found</p>
+        <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+          Try broadening your search, removing some dietary filters, or expanding the radius.
+        </p>
       </div>
     );
   }

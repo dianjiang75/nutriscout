@@ -70,13 +70,16 @@ export async function GET(request: Request) {
 
     const result = restaurants.map((r) => {
       const logistics = logisticsMap.get(r.id);
+      const rLat = Number(r.latitude);
+      const rLng = Number(r.longitude);
+      const dist = haversine(lat, lng, rLat, rLng);
       return {
         id: r.id,
         name: r.name,
         address: r.address,
         cuisineType: r.cuisineType,
         googleRating: r.googleRating ? Number(r.googleRating) : null,
-        distanceMiles: null, // Would need PostGIS
+        distanceMiles: dist,
         estimatedWait: logistics?.estimatedWaitMinutes ?? null,
         topDishes: r.dishes.map((d) => ({
           id: d.id,
@@ -89,9 +92,22 @@ export async function GET(request: Request) {
       };
     });
 
+    // Sort by distance
+    result.sort((a, b) => (a.distanceMiles ?? Infinity) - (b.distanceMiles ?? Infinity));
+
     return Response.json({ restaurants: result });
   } catch (error) {
     console.error("Restaurants error:", error);
     return Response.json({ error: "Failed to fetch restaurants" }, { status: 500 });
   }
+}
+
+function haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 3959;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 100) / 100;
 }

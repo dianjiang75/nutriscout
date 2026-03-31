@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, Clock } from "lucide-react";
@@ -24,6 +25,7 @@ export interface RestaurantCardData {
 
 export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData }) {
   return (
+    <Link href={`/restaurant/${restaurant.id}`} className="block">
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <CardContent className="p-3 space-y-2.5">
         <div className="flex items-start justify-between gap-2">
@@ -80,5 +82,6 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData 
         )}
       </CardContent>
     </Card>
+    </Link>
   );
 }

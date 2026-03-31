@@ -199,6 +199,7 @@ model UserProfile {
   id                   String   @id @default(uuid()) @db.Uuid
   email                String   @unique
   name                 String
+  passwordHash         String?  @map("password_hash")
   dietaryRestrictions  Json?    @map("dietary_restrictions")
   nutritionalGoals     Json?    @map("nutritional_goals")
   maxWaitMinutes       Int      @default(30) @map("max_wait_minutes")

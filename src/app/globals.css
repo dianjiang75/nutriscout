@@ -8,7 +8,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -49,72 +49,100 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* Surfaces — warm white, not pure white (food photos look better) */
+  --background: oklch(0.985 0.002 110);
+  --foreground: oklch(0.145 0.005 260);
+  --card: oklch(1.0 0 0);
+  --card-foreground: oklch(0.145 0.005 260);
+  --popover: oklch(1.0 0 0);
+  --popover-foreground: oklch(0.145 0.005 260);
+
+  /* Brand — warm emerald green (health + freshness, not clinical) */
+  --primary: oklch(0.59 0.17 160);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.97 0.008 80);
+  --secondary-foreground: oklch(0.25 0.02 30);
+  /* Accent — warm coral (appetizing, food-associated) */
+  --accent: oklch(0.68 0.17 25);
+  --accent-foreground: oklch(0.99 0 0);
+
+  /* Utility */
+  --muted: oklch(0.965 0.002 110);
+  --muted-foreground: oklch(0.50 0.005 260);
+  --destructive: oklch(0.55 0.22 25);
+  --border: oklch(0.90 0.005 110);
+  --input: oklch(0.90 0.005 110);
+  --ring: oklch(0.55 0.18 155);
+
+  /* Charts — macro-coded */
+  --chart-1: oklch(0.55 0.20 265);
+  --chart-2: oklch(0.72 0.16 65);
+  --chart-3: oklch(0.65 0.18 25);
+  --chart-4: oklch(0.55 0.15 150);
+  --chart-5: oklch(0.60 0.15 200);
+
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.985 0.002 110);
+  --sidebar-foreground: oklch(0.145 0.005 260);
+  --sidebar-primary: oklch(0.55 0.18 155);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.965 0.005 155);
+  --sidebar-accent-foreground: oklch(0.35 0.14 155);
+  --sidebar-border: oklch(0.90 0.005 110);
+  --sidebar-ring: oklch(0.55 0.18 155);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Surfaces — deep blue-black, not pure black (feels premium for health data) */
+  --background: oklch(0.13 0.005 260);
+  --foreground: oklch(0.95 0.005 260);
+  --card: oklch(0.18 0.005 260);
+  --card-foreground: oklch(0.95 0.005 260);
+  --popover: oklch(0.18 0.005 260);
+  --popover-foreground: oklch(0.95 0.005 260);
+
+  /* Brand — slightly brighter green for dark backgrounds */
+  --primary: oklch(0.65 0.18 155);
+  --primary-foreground: oklch(0.13 0.005 260);
+  --secondary: oklch(0.22 0.005 260);
+  --secondary-foreground: oklch(0.90 0.005 260);
+  --accent: oklch(0.22 0.01 155);
+  --accent-foreground: oklch(0.65 0.18 155);
+
+  /* Utility */
+  --muted: oklch(0.22 0.005 260);
+  --muted-foreground: oklch(0.60 0.005 260);
+  --destructive: oklch(0.65 0.20 25);
+  --border: oklch(0.28 0.005 260);
+  --input: oklch(0.25 0.005 260);
+  --ring: oklch(0.65 0.18 155);
+
+  /* Charts */
+  --chart-1: oklch(0.65 0.18 265);
+  --chart-2: oklch(0.78 0.14 65);
+  --chart-3: oklch(0.72 0.16 25);
+  --chart-4: oklch(0.65 0.15 150);
+  --chart-5: oklch(0.65 0.12 200);
+
+  --sidebar: oklch(0.15 0.005 260);
+  --sidebar-foreground: oklch(0.95 0.005 260);
+  --sidebar-primary: oklch(0.65 0.18 155);
+  --sidebar-primary-foreground: oklch(0.13 0.005 260);
+  --sidebar-accent: oklch(0.22 0.01 155);
+  --sidebar-accent-foreground: oklch(0.65 0.18 155);
+  --sidebar-border: oklch(0.28 0.005 260);
+  --sidebar-ring: oklch(0.65 0.18 155);
+
+  /* Semantic colors in dark — brighter for contrast */
+  --ns-green: oklch(0.65 0.15 150);
+  --ns-green-light: oklch(0.22 0.05 150);
+  --ns-amber: oklch(0.80 0.14 75);
+  --ns-amber-light: oklch(0.25 0.05 75);
+  --ns-red: oklch(0.65 0.18 25);
+  --ns-red-light: oklch(0.22 0.05 25);
+  --ns-protein: oklch(0.65 0.18 265);
+  --ns-carbs: oklch(0.78 0.14 65);
+  --ns-fat: oklch(0.72 0.16 25);
 }
 
 @layer base {
@@ -136,18 +164,37 @@
 /* Safe area padding for bottom nav on notched devices */
 .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
 
-/* FoodClaw custom colors */
+/* NutriScout semantic colors */
 :root {
-  --ns-green: oklch(0.55 0.15 150);
-  --ns-green-light: oklch(0.92 0.05 150);
-  --ns-amber: oklch(0.75 0.15 75);
-  --ns-amber-light: oklch(0.93 0.05 75);
-  --ns-red: oklch(0.55 0.2 25);
-  --ns-red-light: oklch(0.92 0.05 25);
-  --ns-protein: oklch(0.55 0.15 250);
-  --ns-carbs: oklch(0.7 0.15 60);
-  --ns-fat: oklch(0.8 0.12 85);
-  --ns-calories: oklch(0.65 0 0);
+  --ns-green: oklch(0.60 0.16 155);
+  --ns-green-light: oklch(0.94 0.04 155);
+  --ns-amber: oklch(0.78 0.14 75);
+  --ns-amber-light: oklch(0.95 0.04 75);
+  --ns-red: oklch(0.58 0.20 25);
+  --ns-red-light: oklch(0.94 0.04 25);
+  /* Accent coral for CTAs and highlights */
+  --ns-coral: oklch(0.68 0.17 25);
+  --ns-coral-light: oklch(0.94 0.05 25);
+  /* Macro colors — matches fitness app conventions (MFP, Fitia, MacroFactor) */
+  --ns-protein: oklch(0.55 0.20 265);
+  --ns-carbs: oklch(0.75 0.15 65);
+  --ns-fat: oklch(0.68 0.16 30);
+  --ns-calories: oklch(0.50 0.005 260);
+}
+
+/* Tabular numbers for macro data alignment */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @theme inline {
@@ -161,4 +208,6 @@
   --color-ns-carbs: var(--ns-carbs);
   --color-ns-fat: var(--ns-fat);
   --color-ns-calories: var(--ns-calories);
+  --color-ns-coral: var(--ns-coral);
+  --color-ns-coral-light: var(--ns-coral-light);
 }
