@@ -19,8 +19,11 @@ function makeParams(id: string) {
   return { params: Promise.resolve({ id }) };
 }
 
+const VALID_UUID = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+const VALID_UUID2 = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
+
 const mockRestaurant = {
-  id: "r1",
+  id: VALID_UUID,
   name: "Thai House",
   address: "123 Main St",
   latitude: 40.7,
@@ -51,7 +54,7 @@ describe("GET /api/restaurants/[id]", () => {
   it("returns restaurant detail", async () => {
     (prisma.restaurant.findUnique as jest.Mock).mockResolvedValue(mockRestaurant);
 
-    const res = await getRestaurant(new Request("http://localhost"), makeParams("r1"));
+    const res = await getRestaurant(new Request("http://localhost"), makeParams(VALID_UUID));
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -64,7 +67,7 @@ describe("GET /api/restaurants/[id]", () => {
   it("returns 404 when not found", async () => {
     (prisma.restaurant.findUnique as jest.Mock).mockResolvedValue(null);
 
-    const res = await getRestaurant(new Request("http://localhost"), makeParams("nope"));
+    const res = await getRestaurant(new Request("http://localhost"), makeParams(VALID_UUID2));
     expect(res.status).toBe(404);
   });
 });
@@ -78,11 +81,11 @@ describe("GET /api/restaurants/[id]/menu", () => {
       { id: "d2", name: "Spring Rolls", description: "Fried rolls", price: 6, category: "Appetizers", dietaryFlags: {}, caloriesMin: 200, caloriesMax: 280, proteinMaxG: 5 },
     ]);
 
-    const res = await getMenu(new Request("http://localhost"), makeParams("r1"));
+    const res = await getMenu(new Request("http://localhost"), makeParams(VALID_UUID));
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.restaurant_id).toBe("r1");
+    expect(body.restaurant_id).toBe(VALID_UUID);
     expect(body.categories).toHaveLength(2);
     const mains = body.categories.find((c: { name: string }) => c.name === "Mains");
     expect(mains.dishes[0].name).toBe("Pad Thai");
@@ -98,7 +101,7 @@ describe("GET /api/restaurants/[id]/traffic", () => {
       updatedAt: new Date("2024-01-01"),
     });
 
-    const res = await getTraffic(new Request("http://localhost"), makeParams("r1"));
+    const res = await getTraffic(new Request("http://localhost"), makeParams(VALID_UUID));
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -110,7 +113,7 @@ describe("GET /api/restaurants/[id]/traffic", () => {
   it("returns null data when not available", async () => {
     (prisma.restaurantLogistics.findUnique as jest.Mock).mockResolvedValue(null);
 
-    const res = await getTraffic(new Request("http://localhost"), makeParams("r1"));
+    const res = await getTraffic(new Request("http://localhost"), makeParams(VALID_UUID));
     const body = await res.json();
 
     expect(res.status).toBe(200);

@@ -1,4 +1,7 @@
 import { prisma } from "@/lib/db/client";
+import { apiBadRequest, apiNotFound, apiError } from "@/lib/utils/api-response";
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function GET(
   _request: Request,
@@ -7,13 +10,17 @@ export async function GET(
   try {
     const { id } = await params;
 
+    if (!UUID_REGEX.test(id)) {
+      return apiBadRequest("Invalid restaurant ID format");
+    }
+
     const restaurant = await prisma.restaurant.findUnique({
       where: { id },
       include: { deliveryOptions: true },
     });
 
     if (!restaurant) {
-      return Response.json({ error: "Restaurant not found" }, { status: 404 });
+      return apiNotFound("Restaurant not found");
     }
 
     return Response.json({
@@ -38,6 +45,6 @@ export async function GET(
       })),
     });
   } catch {
-    return Response.json({ error: "Failed to fetch restaurant" }, { status: 500 });
+    return apiError("Failed to fetch restaurant");
   }
 }

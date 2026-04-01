@@ -1,4 +1,15 @@
+import { z } from "zod";
 import { findSimilarDishes } from "@/lib/similarity";
+import { apiSuccess, apiBadRequest, apiError } from "@/lib/utils/api-response";
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const similarParamsSchema = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
+  radius: z.coerce.number().min(0.1).max(50).default(2),
+  limit: z.coerce.number().int().min(1).max(20).default(5),
+});
 
 export async function GET(
   request: Request,
@@ -6,12 +17,23 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const { searchParams } = new URL(request.url);
 
-    const lat = parseFloat(searchParams.get("lat") || "0");
-    const lng = parseFloat(searchParams.get("lng") || "0");
-    const radius = parseFloat(searchParams.get("radius") || "2");
-    const limit = parseInt(searchParams.get("limit") || "5");
+    if (!UUID_REGEX.test(id)) {
+      return apiBadRequest("Invalid dish ID format");
+    }
+
+    const { searchParams } = new URL(request.url);
+    const raw: Record<string, string> = {};
+    for (const [key, value] of searchParams.entries()) {
+      raw[key] = value;
+    }
+
+    const parsed = similarParamsSchema.safeParse(raw);
+    if (!parsed.success) {
+      return apiBadRequest("Invalid parameters", parsed.error.flatten().fieldErrors as Record<string, unknown>);
+    }
+
+    const { lat, lng, radius, limit } = parsed.data;
 
     const similar = await findSimilarDishes(id, {
       latitude: lat,
@@ -20,11 +42,8 @@ export async function GET(
       limit,
     });
 
-    return Response.json({ dishes: similar });
+    return apiSuccess({ dishes: similar });
   } catch (error) {
-    return Response.json(
-      { error: (error as Error).message },
-      { status: 500 }
-    );
+    return apiError((error as Error).message);
   }
 }

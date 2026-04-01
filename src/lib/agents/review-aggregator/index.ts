@@ -1,5 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/db/client";
+import { fetchWithRetry } from "@/lib/utils/fetch-retry";
+import { extractJson } from "@/lib/utils/parse-json";
 import type {
   DishReviewSummary,
   RawReview,
@@ -22,7 +24,7 @@ export async function fetchGoogleReviews(
 
   try {
     const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(googlePlaceId)}&fields=reviews&key=${apiKey}`;
-    const res = await fetch(url);
+    const res = await fetchWithRetry(url, undefined, { maxRetries: 2 });
     if (!res.ok) return [];
 
     const data = await res.json();
@@ -59,9 +61,9 @@ export async function fetchYelpReviews(
 
   try {
     const url = `https://api.yelp.com/v3/businesses/${encodeURIComponent(yelpBusinessId)}/reviews?limit=3&sort_by=yelp_sort`;
-    const res = await fetch(url, {
+    const res = await fetchWithRetry(url, {
       headers: { Authorization: `Bearer ${apiKey}` },
-    });
+    }, { maxRetries: 2 });
     if (!res.ok) return [];
 
     const data = await res.json();
@@ -202,7 +204,7 @@ Return ONLY valid JSON, no markdown fences or extra text.`;
     throw new Error("No text response from review summarization");
   }
 
-  return JSON.parse(textBlock.text);
+  return extractJson<DishReviewSummary>(textBlock.text);
 }
 
 /**

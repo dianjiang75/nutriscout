@@ -44,11 +44,14 @@ export async function cacheDel(key: string): Promise<void> {
 // ─── Semantic Query Cache ────────────────────────────────
 
 export interface QueryCacheParams {
+  searchText: string | null;
   dietaryFilters: string[];
   nutritionalGoal: string | null;
   latitude: number;
   longitude: number;
   radiusMiles: number;
+  categories: string[];
+  sortBy: string | null;
 }
 
 /**
@@ -58,14 +61,17 @@ export interface QueryCacheParams {
  * Format: query:<dietary_filters_sorted>:<goal>:<lat3>,<lng3>:r<radius>
  */
 export function buildQueryCacheKey(params: QueryCacheParams): string {
+  const text = params.searchText?.toLowerCase().trim() || "all";
   const filters = [...params.dietaryFilters].sort().join("|") || "none";
   const goal = params.nutritionalGoal || "none";
   // Round to 3 decimal places (~100m precision)
   const lat = params.latitude.toFixed(3);
   const lng = params.longitude.toFixed(3);
   const radius = params.radiusMiles.toFixed(1);
+  const cats = [...params.categories].sort().join("|") || "none";
+  const sort = params.sortBy || "default";
 
-  return `query:${filters}:${goal}:${lat},${lng}:r${radius}`;
+  return `query:${text}:${filters}:${goal}:${cats}:${sort}:${lat},${lng}:r${radius}`;
 }
 
 /**
@@ -93,7 +99,9 @@ export async function setCachedQuery(
 
 /**
  * Invalidate all cached data for a specific restaurant.
- * Scans for matching keys and deletes them.
+ * Uses prefix-based scan (restaurant:<id>:*) instead of full wildcard (*<id>*)
+ * which is much faster as it narrows the keyspace.
+ * Also invalidates all query caches since they may reference this restaurant.
  */
 export async function invalidateRestaurant(
   restaurantId: string
@@ -101,13 +109,14 @@ export async function invalidateRestaurant(
   let deleted = 0;
   let cursor = "0";
 
+  // Scan only keys with the restaurant prefix pattern
   do {
     const [nextCursor, keys] = await redis.scan(
       cursor,
       "MATCH",
-      `*${restaurantId}*`,
+      `restaurant:${restaurantId}:*`,
       "COUNT",
-      100
+      200
     );
     cursor = nextCursor;
 
@@ -116,6 +125,9 @@ export async function invalidateRestaurant(
       deleted += keys.length;
     }
   } while (cursor !== "0");
+
+  // Also invalidate query cache since search results may include this restaurant
+  deleted += await invalidateAllQueries();
 
   return deleted;
 }

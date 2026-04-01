@@ -125,6 +125,9 @@ model Dish {
 
   @@index([restaurantId], map: "idx_dishes_restaurant")
   @@index([caloriesMin, caloriesMax], map: "idx_dishes_calories")
+  @@index([category], map: "idx_dishes_category")
+  @@index([isAvailable], map: "idx_dishes_available")
+  @@index([macroSource], map: "idx_dishes_macro_source")
   @@map("dishes")
 }
 

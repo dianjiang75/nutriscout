@@ -30,3 +30,16 @@ export const redis = globalForRedis.redis ?? createRedisClient();
 if (process.env.NODE_ENV !== "production") {
   globalForRedis.redis = redis;
 }
+
+/**
+ * Check Redis connectivity. Returns latency in ms on success, throws on failure.
+ * Use in health check endpoints and startup validation.
+ */
+export async function checkRedisHealth(): Promise<{ ok: true; latencyMs: number }> {
+  const start = Date.now();
+  const pong = await redis.ping();
+  if (pong !== "PONG") {
+    throw new Error(`Redis health check failed: expected PONG, got ${pong}`);
+  }
+  return { ok: true, latencyMs: Date.now() - start };
+}

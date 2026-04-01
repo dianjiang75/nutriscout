@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -20,6 +20,12 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "FoodClaw — Discover Dishes by Nutrition",
   description: "Find restaurant dishes that match your dietary needs and nutritional goals.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

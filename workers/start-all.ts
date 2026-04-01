@@ -1,10 +1,14 @@
 import "dotenv/config";
 
-// Start both workers in a single process for simple deployments
+// Start all workers in a single process for simple deployments
 console.log("[workers] Starting all workers...");
 
 import("./crawl-worker").then(() => {
   console.log("[workers] Menu crawl worker started");
+});
+
+import("./photo-worker").then(() => {
+  console.log("[workers] Photo analysis worker started");
 });
 
 import("./logistics-worker").then(() => {

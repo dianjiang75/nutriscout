@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
 import { estimateMacros } from "@/lib/usda/client";
+import { extractJson } from "@/lib/utils/parse-json";
 import { prisma } from "@/lib/db/client";
 import type {
   BatchJob,
@@ -131,7 +132,7 @@ export async function analyzeFoodPhoto(
     throw new Error("No text response from Claude vision analysis");
   }
 
-  const visionResult: ClaudeVisionResponse = JSON.parse(textBlock.text);
+  const visionResult = extractJson<ClaudeVisionResponse>(textBlock.text);
 
   // Cross-reference each ingredient against USDA
   const ingredients: IngredientEstimate[] = [];
@@ -300,60 +301,68 @@ function detectOutliers(values: number[]): number[] {
 
 /**
  * Batch process photos using Claude Haiku (cheaper model for background jobs).
- * Writes results directly to the database.
+ * Writes results directly to the database. Processes up to 3 concurrently
+ * to balance throughput with API rate limits.
  */
 export async function batchAnalyzePhotos(jobs: BatchJob[]): Promise<void> {
-  for (const job of jobs) {
-    try {
-      const analysis = await analyzeFoodPhoto(
-        job.imageUrl,
-        "claude-haiku-4-5-20251001"
-      );
+  const CONCURRENCY = 3;
 
-      const bestCal = analysis.macros.calories.best_estimate;
-      const bestProtein = analysis.macros.protein_g.best_estimate;
-      const bestCarbs = analysis.macros.carbs_g.best_estimate;
-      const bestFat = analysis.macros.fat_g.best_estimate;
+  for (let i = 0; i < jobs.length; i += CONCURRENCY) {
+    const batch = jobs.slice(i, i + CONCURRENCY);
+    await Promise.allSettled(batch.map((job) => processPhotoJob(job)));
+  }
+}
 
-      await prisma.dish.update({
-        where: { id: job.dishId },
-        data: {
-          caloriesMin: analysis.macros.calories.min,
-          caloriesMax: analysis.macros.calories.max,
-          proteinMinG: analysis.macros.protein_g.min,
-          proteinMaxG: analysis.macros.protein_g.max,
-          carbsMinG: analysis.macros.carbs_g.min,
-          carbsMaxG: analysis.macros.carbs_g.max,
-          fatMinG: analysis.macros.fat_g.min,
-          fatMaxG: analysis.macros.fat_g.max,
-          macroConfidence: analysis.confidence,
-          macroSource: "vision_ai",
-          photoCountAnalyzed: { increment: 1 },
-          lastVerified: new Date(),
+async function processPhotoJob(job: BatchJob): Promise<void> {
+  try {
+    const analysis = await analyzeFoodPhoto(
+      job.imageUrl,
+      "claude-haiku-4-5-20251001"
+    );
+
+    const bestCal = analysis.macros.calories.best_estimate;
+    const bestProtein = analysis.macros.protein_g.best_estimate;
+    const bestCarbs = analysis.macros.carbs_g.best_estimate;
+    const bestFat = analysis.macros.fat_g.best_estimate;
+
+    await prisma.dish.update({
+      where: { id: job.dishId },
+      data: {
+        caloriesMin: analysis.macros.calories.min,
+        caloriesMax: analysis.macros.calories.max,
+        proteinMinG: analysis.macros.protein_g.min,
+        proteinMaxG: analysis.macros.protein_g.max,
+        carbsMinG: analysis.macros.carbs_g.min,
+        carbsMaxG: analysis.macros.carbs_g.max,
+        fatMinG: analysis.macros.fat_g.min,
+        fatMaxG: analysis.macros.fat_g.max,
+        macroConfidence: analysis.confidence,
+        macroSource: "vision_ai",
+        photoCountAnalyzed: { increment: 1 },
+        lastVerified: new Date(),
+      },
+    });
+
+    // Store the photo analysis
+    await prisma.dishPhoto.create({
+      data: {
+        dishId: job.dishId,
+        sourceUrl: job.imageUrl,
+        sourcePlatform: "google_maps",
+        macroEstimate: {
+          calories: bestCal,
+          protein_g: bestProtein,
+          carbs_g: bestCarbs,
+          fat_g: bestFat,
         },
-      });
-
-      // Store the photo analysis
-      await prisma.dishPhoto.create({
-        data: {
-          dishId: job.dishId,
-          sourceUrl: job.imageUrl,
-          sourcePlatform: "google_maps",
-          macroEstimate: {
-            calories: bestCal,
-            protein_g: bestProtein,
-            carbs_g: bestCarbs,
-            fat_g: bestFat,
-          },
-          analyzedAt: new Date(),
-        },
-      });
-    } catch (error) {
-      console.error(
-        `Failed to analyze photo for dish ${job.dishId}:`,
-        (error as Error).message
-      );
-    }
+        analyzedAt: new Date(),
+      },
+    });
+  } catch (error) {
+    console.error(
+      `Failed to analyze photo for dish ${job.dishId}:`,
+      (error as Error).message
+    );
   }
 }
 

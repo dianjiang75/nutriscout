@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/db/client";
 import { menuSources } from "./sources";
+import { extractJson } from "@/lib/utils/parse-json";
+import { fetchWithRetry } from "@/lib/utils/fetch-retry";
 import { batchAnalyzePhotos } from "@/lib/agents/vision-analyzer";
 import type { BatchJob } from "@/lib/agents/vision-analyzer/types";
 import type {
@@ -82,9 +84,30 @@ export async function analyzeIngredients(
 
       const textBlock = response.content.find((b) => b.type === "text");
       if (textBlock && textBlock.type === "text") {
-        const parsed = JSON.parse(textBlock.text);
-        if (Array.isArray(parsed)) {
-          results.push(...parsed);
+        try {
+          const parsed = extractJson<AnalyzedDish[]>(textBlock.text);
+          if (Array.isArray(parsed)) {
+            results.push(...parsed);
+          }
+        } catch (parseErr) {
+          const batchNames = batch.map((item) => item.name).join(", ");
+          console.warn(
+            `Failed to parse ingredient analysis JSON for batch at index ${i} (${batchNames}):`,
+            (parseErr as Error).message
+          );
+          // Return placeholder entries so callers know these items were attempted
+          for (const item of batch) {
+            results.push({
+              dish_name: item.name,
+              ingredients_parsed: [],
+              dietary_flags: {
+                vegan: null, vegetarian: null, gluten_free: null,
+                dairy_free: null, nut_free: null, halal: null, kosher: null,
+              },
+              dietary_confidence: 0,
+              dietary_warnings: ["Automated dietary analysis failed — manual review needed"],
+            });
+          }
         }
       }
     } catch (error) {
@@ -111,7 +134,7 @@ export async function crawlRestaurant(
 
   // Fetch restaurant details from Google Places
   const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(googlePlaceId)}&fields=name,formatted_address,geometry,website,price_level,rating,types,formatted_phone_number&key=${apiKey}`;
-  const detailsRes = await fetch(detailsUrl);
+  const detailsRes = await fetchWithRetry(detailsUrl, undefined, { maxRetries: 2 });
 
   if (!detailsRes.ok) {
     throw new Error(`Google Places API failed: ${detailsRes.status}`);
@@ -198,23 +221,37 @@ export async function crawlRestaurant(
       (a) => a.dish_name.toLowerCase() === raw.name.toLowerCase()
     );
 
-    const price = raw.price ? parseFloat(raw.price.replace(/[^0-9.]/g, "")) : null;
+    const price = raw.price ? parsePriceString(raw.price) : null;
 
-    const dish = await prisma.dish.create({
-      data: {
-        restaurantId: restaurant.id,
-        name: raw.name,
-        description: raw.description || null,
-        price: price && !isNaN(price) ? price : null,
-        category: raw.category || null,
-        ingredientsRaw: raw.description || null,
-        ingredientsParsed: analysis?.ingredients_parsed ?? undefined,
-        dietaryFlags: analysis?.dietary_flags ?? undefined,
-        dietaryConfidence: analysis?.dietary_confidence ?? null,
-        macroSource: null,
-        isAvailable: true,
-      },
+    const dishData = {
+      name: raw.name,
+      description: raw.description || null,
+      price: price,
+      category: raw.category || null,
+      ingredientsRaw: raw.description || null,
+      ingredientsParsed: analysis?.ingredients_parsed ?? undefined,
+      dietaryFlags: analysis?.dietary_flags ?? undefined,
+      dietaryConfidence: analysis?.dietary_confidence ?? null,
+      isAvailable: true,
+    };
+
+    // Check if dish already exists for this restaurant to avoid duplicates on re-crawl
+    const existing = await prisma.dish.findFirst({
+      where: { restaurantId: restaurant.id, name: raw.name },
     });
+
+    const dish = existing
+      ? await prisma.dish.update({
+          where: { id: existing.id },
+          data: dishData,
+        })
+      : await prisma.dish.create({
+          data: {
+            restaurantId: restaurant.id,
+            ...dishData,
+            macroSource: null,
+          },
+        });
 
     // Queue photo for vision analysis if available
     if (raw.photoUrl) {
@@ -246,6 +283,24 @@ export async function crawlRestaurant(
     dishesAnalyzed: analyzed.length,
     photosQueued: photoJobs.length,
   };
+}
+
+/**
+ * Parse a price string robustly. Handles "$12.99", "$10 - $15" (takes lower bound),
+ * "Market Price" (returns null), "$$$" (returns null).
+ */
+function parsePriceString(raw: string): number | null {
+  // Skip non-numeric price indicators
+  if (/^[\s$]*$/.test(raw) || /market\s*price/i.test(raw) || /^\$+$/.test(raw.trim())) {
+    return null;
+  }
+
+  // For ranges like "$10 - $15" or "10.99-15.99", take the first number
+  const numbers = raw.match(/\d+(?:\.\d+)?/g);
+  if (!numbers || numbers.length === 0) return null;
+
+  const value = parseFloat(numbers[0]);
+  return isNaN(value) || value <= 0 ? null : value;
 }
 
 function extractCuisineTypes(googleTypes: string[]): string[] {

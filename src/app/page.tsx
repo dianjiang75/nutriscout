@@ -174,7 +174,7 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen pb-16">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/30">
-        <div className="max-w-2xl mx-auto px-4 pt-3 pb-2.5 space-y-2">
+        <div className="max-w-3xl mx-auto px-4 pt-3 pb-2.5 space-y-2.5">
           {/* Search row */}
           <div className="flex items-center gap-2.5">
             <h1 className="text-xl font-black tracking-tight shrink-0">
@@ -184,7 +184,7 @@ export default function HomePage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
               <Input
                 ref={searchInputRef}
-                placeholder={activeTab === "dishes" ? "Search dishes... e.g. udon, pad thai" : "Search restaurants..."}
+                placeholder={activeTab === "dishes" ? "What are you craving?" : "Find a restaurant..."}
                 className="h-10 text-sm pl-9 rounded-xl bg-muted/50 border-border/30 focus:bg-background"
                 value={search.q}
                 onChange={(e) => handleSearchInput(e.target.value)}
@@ -210,6 +210,8 @@ export default function HomePage() {
                 return (
                   <button
                     key={opt.value}
+                    aria-label={`Sort by ${opt.label}`}
+                    aria-pressed={search.sort === opt.value}
                     className={`inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full transition-all duration-200 whitespace-nowrap font-semibold ${
                       search.sort === opt.value
                         ? "bg-primary text-primary-foreground shadow-sm shadow-primary/25"
@@ -228,13 +230,15 @@ export default function HomePage() {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-4">
+      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-5 space-y-6">
         {activeTab === "dishes" && (
           <DishesView
             dishes={dishes}
             loading={loading}
             hasMore={hasMore}
             onLoadMore={loadMore}
+            sortBy={search.sort}
+            searchQuery={search.q}
           />
         )}
 
@@ -291,11 +295,15 @@ function DishesView({
   loading,
   hasMore,
   onLoadMore,
+  sortBy,
+  searchQuery,
 }: {
   dishes: DishCardData[];
   loading: boolean;
   hasMore: boolean;
   onLoadMore: () => void;
+  sortBy?: string;
+  searchQuery?: string;
 }) {
   if (loading && dishes.length === 0) {
     return (
@@ -317,7 +325,7 @@ function DishesView({
           </div>
         </div>
         {/* Grid skeleton */}
-        <div className="grid gap-3.5 sm:grid-cols-2">
+        <div className="grid grid-cols-3 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={`gs-${i}`} className="rounded-2xl overflow-hidden border border-border/30">
               <div className="aspect-[3/2] w-full skeleton-shimmer" />
@@ -347,23 +355,38 @@ function DishesView({
     );
   }
 
-  // Split dishes into sections for curated feel
-  const topRated = [...dishes].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0)).slice(0, 8);
-  const highProtein = [...dishes].sort((a, b) => {
-    const pa = avg(a.macros.protein_g);
-    const pb = avg(b.macros.protein_g);
-    return pb - pa;
-  }).slice(0, 8);
-  const isSearching = dishes.length < 20; // User applied filters or searched
+  // Show curated carousels only on default browse (Best Match, no search)
+  const showCarousels = sortBy === "macro_match" && !searchQuery?.trim();
+
+  const topRated = showCarousels
+    ? [...dishes].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0)).slice(0, 8)
+    : [];
+  const highProtein = showCarousels
+    ? [...dishes].sort((a, b) => avg(b.macros.protein_g) - avg(a.macros.protein_g)).slice(0, 8)
+    : [];
+
+  // Sort label for non-default sorts
+  const sortLabels: Record<string, string> = {
+    distance: "📍 Nearest First",
+    rating: "⭐ Top Rated",
+    wait_time: "⏱ Shortest Wait",
+  };
 
   return (
     <div className="space-y-6">
-      {/* Horizontal carousels only on default browse (no search query) */}
-      {!isSearching && (
+      {/* Sort label when not on default Best Match */}
+      {sortBy && sortBy !== "macro_match" && sortLabels[sortBy] && (
+        <h2 className="text-base font-bold flex items-center gap-2">
+          {sortLabels[sortBy]}
+        </h2>
+      )}
+
+      {/* Horizontal carousels only on default browse (Best Match, no search) */}
+      {showCarousels && topRated.length > 0 && (
         <>
           {/* Top Rated carousel */}
           <section>
-            <h2 className="text-sm font-bold mb-2.5 flex items-center gap-1.5">
+            <h2 className="text-base font-bold mb-3 flex items-center gap-2">
               <span className="text-amber-500">★</span> Top Rated Near You
             </h2>
             <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 snap-x snap-mandatory">
@@ -377,7 +400,7 @@ function DishesView({
 
           {/* High Protein carousel */}
           <section>
-            <h2 className="text-sm font-bold mb-2.5 flex items-center gap-1.5">
+            <h2 className="text-base font-bold mb-3 flex items-center gap-2">
               <span className="text-indigo-500">💪</span> High Protein
             </h2>
             <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 snap-x snap-mandatory">
@@ -399,7 +422,7 @@ function DishesView({
       )}
 
       {/* Main grid */}
-      <div className="grid gap-3.5 sm:grid-cols-2">
+      <div className="grid grid-cols-3 gap-3">
         {dishes.map((dish) => (
           <DishCard key={dish.id} dish={dish} />
         ))}

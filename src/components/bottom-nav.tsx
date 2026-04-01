@@ -28,6 +28,9 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
             <button
               key={tab.id}
               onClick={() => onChange(tab.id)}
+              aria-label={tab.label}
+              aria-current={isActive ? "page" : undefined}
+              role="tab"
               className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 pt-3 transition-all duration-300 relative ${
                 isLocked
                   ? "opacity-40"

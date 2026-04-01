@@ -1,9 +1,19 @@
 import { Worker, type Job } from "bullmq";
 import IORedis from "ioredis";
+import { PrismaClient } from "../src/generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 const connection = new IORedis(process.env.REDIS_URL || "redis://localhost:6379", {
   maxRetriesPerRequest: null,
 });
+
+// Singleton Prisma client for the worker process — avoids creating a new connection per job
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL!,
+  max: 5,
+  idleTimeoutMillis: 30000,
+});
+const prisma = new PrismaClient({ adapter });
 
 interface PhotoJobData {
   dishId: string;
@@ -17,41 +27,33 @@ async function processPhotoJob(job: Job<PhotoJobData>) {
   console.log(`[photo-worker] Analyzing photo for dish ${dishId} at ${restaurantName}`);
 
   const { analyzeFoodPhoto } = await import("../src/lib/agents/vision-analyzer");
-  const { PrismaClient } = await import("../src/generated/prisma/client");
-  const { PrismaPg } = await import("@prisma/adapter-pg");
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
-  const prisma = new PrismaClient({ adapter });
 
-  try {
-    // Use Haiku for cost efficiency on batch analysis
-    const analysis = await analyzeFoodPhoto(photoUrl, "claude-haiku-4-5-20251001");
+  // Use Haiku for cost efficiency on batch analysis
+  const analysis = await analyzeFoodPhoto(photoUrl, "claude-haiku-4-5-20251001");
 
-    // Update dish with macro estimates from vision analysis
-    await prisma.dish.update({
-      where: { id: dishId },
-      data: {
-        caloriesMin: analysis.macros.calories.min,
-        caloriesMax: analysis.macros.calories.max,
-        proteinMinG: analysis.macros.protein_g.min,
-        proteinMaxG: analysis.macros.protein_g.max,
-        carbsMinG: analysis.macros.carbs_g.min,
-        carbsMaxG: analysis.macros.carbs_g.max,
-        fatMinG: analysis.macros.fat_g.min,
-        fatMaxG: analysis.macros.fat_g.max,
-        macroSource: "vision_ai",
-        macroConfidence: analysis.confidence,
-        photoCountAnalyzed: 1,
-      },
-    });
+  // Update dish with macro estimates from vision analysis
+  await prisma.dish.update({
+    where: { id: dishId },
+    data: {
+      caloriesMin: analysis.macros.calories.min,
+      caloriesMax: analysis.macros.calories.max,
+      proteinMinG: analysis.macros.protein_g.min,
+      proteinMaxG: analysis.macros.protein_g.max,
+      carbsMinG: analysis.macros.carbs_g.min,
+      carbsMaxG: analysis.macros.carbs_g.max,
+      fatMinG: analysis.macros.fat_g.min,
+      fatMaxG: analysis.macros.fat_g.max,
+      macroSource: "vision_ai",
+      macroConfidence: analysis.confidence,
+      photoCountAnalyzed: { increment: 1 },
+    },
+  });
 
-    console.log(
-      `[photo-worker] Done: ${analysis.dish_name} — ${analysis.macros.calories.best_estimate} cal, confidence ${(analysis.confidence * 100).toFixed(0)}%`
-    );
+  console.log(
+    `[photo-worker] Done: ${analysis.dish_name} — ${analysis.macros.calories.best_estimate} cal, confidence ${(analysis.confidence * 100).toFixed(0)}%`
+  );
 
-    return { dishId, dishName: analysis.dish_name, confidence: analysis.confidence };
-  } finally {
-    await prisma.$disconnect();
-  }
+  return { dishId, dishName: analysis.dish_name, confidence: analysis.confidence };
 }
 
 const worker = new Worker<PhotoJobData>("photo-analysis", processPhotoJob, {

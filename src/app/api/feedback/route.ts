@@ -1,38 +1,38 @@
+import { z } from "zod";
 import { prisma } from "@/lib/db/client";
 import { checkApiRateLimit } from "@/lib/middleware/rate-limiter";
+import { apiSuccess, apiBadRequest, apiError, apiRateLimited } from "@/lib/utils/api-response";
+
+const feedbackSchema = z.object({
+  dish_id: z.string().uuid("Invalid dish_id"),
+  user_id: z.string().uuid("Invalid user_id"),
+  feedback_type: z.enum([
+    "portion_bigger", "portion_smaller", "portion_accurate",
+    "ingredient_correction", "dish_unavailable", "photo_submission",
+  ]),
+  details: z.any().optional(),
+  photo_url: z.string().url("Invalid photo URL").max(2048).nullable().optional(),
+});
 
 export async function POST(request: Request) {
   try {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
     const rl = await checkApiRateLimit(ip, "write");
     if (!rl.allowed) {
-      return Response.json(
-        { error: "Too many requests", retryAfterSeconds: rl.retryAfterSeconds },
-        { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds ?? 60) } }
-      );
+      return apiRateLimited(rl.retryAfterSeconds);
     }
 
-    const body = await request.json();
-    const { dish_id, user_id, feedback_type, details, photo_url } = body;
-
-    if (!dish_id || !user_id || !feedback_type) {
-      return Response.json(
-        { error: "dish_id, user_id, and feedback_type are required" },
-        { status: 400 }
-      );
+    const body = await request.json().catch(() => null);
+    if (!body) {
+      return apiBadRequest("Invalid JSON body");
     }
 
-    const validTypes = [
-      "portion_bigger", "portion_smaller", "portion_accurate",
-      "ingredient_correction", "dish_unavailable", "photo_submission",
-    ];
-
-    if (!validTypes.includes(feedback_type)) {
-      return Response.json(
-        { error: `Invalid feedback_type. Must be one of: ${validTypes.join(", ")}` },
-        { status: 400 }
-      );
+    const parsed = feedbackSchema.safeParse(body);
+    if (!parsed.success) {
+      return apiBadRequest("Validation failed", parsed.error.flatten().fieldErrors as Record<string, unknown>);
     }
+
+    const { dish_id, user_id, feedback_type, details, photo_url } = parsed.data;
 
     const feedback = await prisma.communityFeedback.create({
       data: {
@@ -44,8 +44,8 @@ export async function POST(request: Request) {
       },
     });
 
-    return Response.json({ id: feedback.id }, { status: 201 });
+    return apiSuccess({ id: feedback.id }, 201);
   } catch {
-    return Response.json({ error: "Failed to submit feedback" }, { status: 500 });
+    return apiError("Failed to submit feedback");
   }
 }

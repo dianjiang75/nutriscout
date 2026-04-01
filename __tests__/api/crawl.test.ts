@@ -4,6 +4,10 @@ jest.mock("@/../workers/queues", () => ({
   },
 }));
 
+jest.mock("@/lib/middleware/rate-limiter", () => ({
+  checkApiRateLimit: jest.fn().mockResolvedValue({ allowed: true, remaining: 10, retryAfterSeconds: null }),
+}));
+
 // Mock global fetch for area crawl
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
@@ -27,8 +31,9 @@ describe("POST /api/crawl/restaurant", () => {
     const body = await res.json();
 
     expect(res.status).toBe(202);
-    expect(body.job_id).toBe("job-1");
-    expect(body.status).toBe("queued");
+    expect(body.success).toBe(true);
+    expect(body.data.job_id).toBe("job-1");
+    expect(body.data.status).toBe("queued");
   });
 
   it("returns 400 when google_place_id is missing", async () => {

@@ -121,12 +121,56 @@ function computeConfidence(food: USDAFoodItem, query: string): number {
 }
 
 /**
+ * Map common ingredient names to USDA-friendly search terms.
+ * USDA describes foods in a specific way — this bridges the gap.
+ */
+const USDA_SYNONYMS: Record<string, string> = {
+  "shrimp": "shrimp, cooked",
+  "chicken": "chicken breast, cooked",
+  "beef": "beef, ground, cooked",
+  "pork": "pork, cooked",
+  "salmon": "salmon, cooked",
+  "tuna": "tuna, cooked",
+  "tofu": "tofu, firm",
+  "rice": "rice, white, cooked",
+  "brown rice": "rice, brown, cooked",
+  "pasta": "pasta, cooked",
+  "noodles": "noodles, cooked",
+  "egg": "egg, whole, cooked",
+  "cheese": "cheese, cheddar",
+  "butter": "butter, salted",
+  "cream": "cream, heavy",
+  "olive oil": "oil, olive",
+  "vegetable oil": "oil, vegetable",
+  "avocado": "avocado, raw",
+  "potato": "potato, cooked",
+  "sweet potato": "sweet potato, cooked",
+  "broccoli": "broccoli, cooked",
+  "spinach": "spinach, raw",
+  "kale": "kale, raw",
+  "tomato": "tomato, raw",
+  "onion": "onion, raw",
+  "garlic": "garlic, raw",
+  "ginger": "ginger root, raw",
+  "peanuts": "peanuts, dry-roasted",
+  "almonds": "almonds",
+  "coconut milk": "coconut milk, canned",
+  "soy sauce": "soy sauce",
+  "fish sauce": "fish sauce",
+};
+
+/**
  * Decompose compound food names into simpler search terms.
- * "Pad Thai shrimp with peanuts" → ["shrimp", "pad thai", "peanuts"]
- * "Grilled chicken Caesar salad" → ["chicken breast", "romaine lettuce", "caesar dressing"]
+ * "Pad Thai shrimp with peanuts" → ["shrimp, cooked", "pad thai", "peanuts"]
+ * Uses USDA synonym mapping to improve match quality.
  */
 function decomposeIngredientName(name: string): string[] {
   const normalized = name.toLowerCase().trim();
+
+  // Check synonym map first for exact matches
+  if (USDA_SYNONYMS[normalized]) {
+    return [USDA_SYNONYMS[normalized]];
+  }
 
   // Common cooking modifiers to strip for cleaner USDA searches
   const modifiers = /\b(grilled|fried|baked|roasted|steamed|sauteed|sautéed|raw|fresh|organic|homemade|crispy|spicy|smoked|braised|poached|blanched)\b/gi;
@@ -145,11 +189,12 @@ function decomposeIngredientName(name: string): string[] {
   const queries = [cleaned];
   // Add 2-word sub-phrases (often match USDA entries better)
   for (let i = 0; i < words.length - 1; i++) {
-    queries.push(`${words[i]} ${words[i + 1]}`);
+    const phrase = `${words[i]} ${words[i + 1]}`;
+    queries.push(USDA_SYNONYMS[phrase] || phrase);
   }
-  // Add individual significant words as fallback
+  // Add individual significant words as fallback (with synonym mapping)
   for (const word of words) {
-    if (word.length > 4) queries.push(word);
+    if (word.length > 4) queries.push(USDA_SYNONYMS[word] || word);
   }
 
   return [...new Set(queries)];

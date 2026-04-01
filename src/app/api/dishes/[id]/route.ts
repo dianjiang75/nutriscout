@@ -1,4 +1,7 @@
 import { prisma } from "@/lib/db/client";
+import { apiBadRequest, apiNotFound, apiError } from "@/lib/utils/api-response";
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function GET(
   _request: Request,
@@ -6,6 +9,10 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+
+    if (!UUID_REGEX.test(id)) {
+      return apiBadRequest("Invalid dish ID format");
+    }
 
     const dish = await prisma.dish.findUnique({
       where: { id },
@@ -17,7 +24,7 @@ export async function GET(
     });
 
     if (!dish) {
-      return Response.json({ error: "Dish not found" }, { status: 404 });
+      return apiNotFound("Dish not found");
     }
 
     // Build source info object
@@ -64,7 +71,7 @@ export async function GET(
       })),
     });
   } catch {
-    return Response.json({ error: "Failed to fetch dish" }, { status: 500 });
+    return apiError("Failed to fetch dish");
   }
 }
 

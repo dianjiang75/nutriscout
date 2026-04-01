@@ -1,18 +1,36 @@
 import { Worker, type Job } from "bullmq";
 import IORedis from "ioredis";
+import { PrismaClient } from "../src/generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 const connection = new IORedis(process.env.REDIS_URL || "redis://localhost:6379", {
   maxRetriesPerRequest: null,
 });
 
+// Singleton Prisma client for the worker process
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL!,
+  max: 5,
+  idleTimeoutMillis: 30000,
+});
+const prisma = new PrismaClient({ adapter });
+
 interface CrawlJobData {
   googlePlaceId: string;
 }
 
+/**
+ * To add a crawl job with deduplication, use:
+ *   menuCrawlQueue.add('crawl', { googlePlaceId }, {
+ *     jobId: `crawl-${googlePlaceId}`,
+ *     ...
+ *   })
+ * BullMQ will silently ignore duplicates with the same jobId.
+ */
 async function processCrawlJob(job: Job<CrawlJobData>) {
   const { googlePlaceId } = job.data;
 
-  console.log(`[crawl-worker] Processing: ${googlePlaceId} (attempt ${job.attemptsMade + 1})`);
+  console.log(`[crawl-worker] Processing: ${googlePlaceId} (job ${job.id}, attempt ${job.attemptsMade + 1})`);
 
   // Dynamic import to allow path alias resolution at runtime
   const { crawlRestaurant } = await import("../src/lib/agents/menu-crawler");
@@ -49,10 +67,6 @@ worker.on("completed", async (job) => {
     const result = job.returnvalue;
     if (result?.restaurantId && result?.dishesFound > 0) {
       const { photoAnalysisQueue } = await import("./queues");
-      const { PrismaClient } = await import("../src/generated/prisma/client");
-      const { PrismaPg } = await import("@prisma/adapter-pg");
-      const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
-      const prisma = new PrismaClient({ adapter });
 
       // Find dishes from this restaurant that have photos but no macro data
       const dishes = await prisma.dish.findMany({
@@ -72,13 +86,16 @@ worker.on("completed", async (job) => {
           await photoAnalysisQueue.add(
             `analyze-${dish.id}`,
             { dishId: dish.id, photoUrl: photo.sourceUrl, restaurantName: result.restaurantName },
-            { attempts: 2, backoff: { type: "exponential", delay: 5000 } }
+            {
+              jobId: `photo-${dish.id}`, // Deduplication: same dish won't be analyzed twice
+              attempts: 2,
+              backoff: { type: "exponential", delay: 5000 },
+            }
           );
           queued++;
         }
       }
 
-      await prisma.$disconnect();
       if (queued > 0) {
         console.log(`[crawl-worker] Queued ${queued} photo analysis jobs for ${result.restaurantName}`);
       }

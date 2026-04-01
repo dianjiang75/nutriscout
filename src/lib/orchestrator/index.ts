@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/client";
+import { logger } from "@/lib/utils/logger";
 import {
   getCachedQuery,
   setCachedQuery,
@@ -17,21 +18,25 @@ import type {
  * Queries for dishes matching dietary, nutritional, and geographic criteria.
  */
 export async function search(query: UserSearchQuery): Promise<SearchResults> {
+  const start = Date.now();
   const limit = query.limit ?? 20;
   const offset = query.offset ?? 0;
 
   // 1. Check semantic cache
   const cacheParams: QueryCacheParams = {
+    searchText: query.query ?? null,
     dietaryFilters: extractDietaryFilters(query.dietary_restrictions),
     nutritionalGoal: query.nutritional_goal ?? null,
     latitude: query.latitude,
     longitude: query.longitude,
     radiusMiles: query.radius_miles,
+    categories: query.categories ?? [],
+    sortBy: query.sort_by ?? null,
   };
 
   const cached = await getCachedQuery<SearchResults>(cacheParams);
   if (cached) {
-    // Serve paginated slice from cache
+    logger.debug("Search cache hit", { query: query.query, durationMs: Date.now() - start });
     return {
       ...cached,
       dishes: cached.dishes.slice(offset, offset + limit),
@@ -202,8 +207,16 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
       })
     : dishResults;
 
+  // 4c. Filter by max wait time if specified
+  const waitFiltered = query.max_wait_minutes
+    ? radiusFiltered.filter((d) => {
+        const wait = d.logistics?.estimated_wait_minutes;
+        return wait == null || wait <= query.max_wait_minutes!;
+      })
+    : radiusFiltered;
+
   // 5. Run Apollo evaluator for dietary safety
-  const verified = verify(radiusFiltered, query.dietary_restrictions);
+  const verified = verify(waitFiltered, query.dietary_restrictions);
 
   // 5b. In-memory sorts for fields that can't be sorted at DB level
   if (query.sort_by === "distance") {
@@ -218,6 +231,10 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
       const wb = b.logistics?.estimated_wait_minutes ?? Infinity;
       return wa - wb;
     });
+  } else if (query.sort_by === "macro_match" && query.nutritional_goal) {
+    verified.sort((a, b) => {
+      return macroMatchScore(b, query.nutritional_goal!) - macroMatchScore(a, query.nutritional_goal!);
+    });
   }
 
   // 6. Cache full result set, then return paginated slice
@@ -228,6 +245,12 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
   };
 
   await setCachedQuery(cacheParams, fullResult);
+
+  logger.debug("Search completed", {
+    query: query.query,
+    results: verified.length,
+    durationMs: Date.now() - start,
+  });
 
   return {
     dishes: verified.slice(offset, offset + limit),
@@ -277,12 +300,10 @@ function buildOrderBy(
       case "rating":
         return { reviewSummary: { averageDishRating: "desc" } };
       case "wait_time":
-        return { createdAt: "asc" };
       case "distance":
-        return { createdAt: "desc" }; // distance sorted in-memory after query
       case "macro_match":
-        // Fall through to nutritional goal ordering
-        break;
+        // These are sorted in-memory after query; use reasonable DB ordering
+        return { createdAt: "desc" };
     }
   }
 
@@ -297,6 +318,40 @@ function buildOrderBy(
       return { carbsMinG: "asc" };
     default:
       return { createdAt: "desc" };
+  }
+}
+
+/**
+ * Score a dish's match to a nutritional goal (higher is better).
+ * Used for macro_match sorting.
+ */
+function macroMatchScore(dish: DishResult, goal: string): number {
+  switch (goal) {
+    case "max_protein":
+      return dish.protein_max_g ?? 0;
+    case "min_calories":
+      // Invert: lower calories = higher score
+      return dish.calories_min != null ? 2000 - dish.calories_min : 0;
+    case "min_fat":
+      return dish.fat_min_g != null ? 100 - dish.fat_min_g : 0;
+    case "min_carbs":
+      return dish.carbs_min_g != null ? 200 - dish.carbs_min_g : 0;
+    case "balanced": {
+      // Balanced: favor dishes near 30% protein, 40% carbs, 30% fat by calorie
+      const cal = dish.calories_min ?? 500;
+      const pCal = (dish.protein_max_g ?? 25) * 4;
+      const cCal = (dish.carbs_max_g ?? 45) * 4;
+      const fCal = (dish.fat_max_g ?? 20) * 9;
+      const total = pCal + cCal + fCal || 1;
+      const pRatio = pCal / total;
+      const cRatio = cCal / total;
+      const fRatio = fCal / total;
+      // Lower deviation from ideal = higher score
+      const deviation = Math.abs(pRatio - 0.3) + Math.abs(cRatio - 0.4) + Math.abs(fRatio - 0.3);
+      return (1 - deviation) * cal;
+    }
+    default:
+      return 0;
   }
 }
 

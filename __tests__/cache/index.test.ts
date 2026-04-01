@@ -70,30 +70,39 @@ describe("Cache Layer", () => {
   describe("buildQueryCacheKey", () => {
     it("builds canonical key with sorted dietary filters", () => {
       const key = buildQueryCacheKey({
+        searchText: null,
         dietaryFilters: ["gluten_free", "vegan"],
         nutritionalGoal: "max_protein",
         latitude: 40.7357,
         longitude: -73.9911,
         radiusMiles: 2.0,
+        categories: [],
+        sortBy: null,
       });
 
-      expect(key).toBe("query:gluten_free|vegan:max_protein:40.736,-73.991:r2.0");
+      expect(key).toBe("query:all:gluten_free|vegan:max_protein:none:default:40.736,-73.991:r2.0");
     });
 
     it("sorts filters alphabetically regardless of input order", () => {
       const key1 = buildQueryCacheKey({
+        searchText: null,
         dietaryFilters: ["vegan", "gluten_free"],
         nutritionalGoal: "max_protein",
         latitude: 40.735,
         longitude: -73.991,
         radiusMiles: 2.0,
+        categories: [],
+        sortBy: null,
       });
       const key2 = buildQueryCacheKey({
+        searchText: null,
         dietaryFilters: ["gluten_free", "vegan"],
         nutritionalGoal: "max_protein",
         latitude: 40.735,
         longitude: -73.991,
         radiusMiles: 2.0,
+        categories: [],
+        sortBy: null,
       });
 
       expect(key1).toBe(key2);
@@ -101,37 +110,61 @@ describe("Cache Layer", () => {
 
     it("handles no filters and no goal", () => {
       const key = buildQueryCacheKey({
+        searchText: null,
         dietaryFilters: [],
         nutritionalGoal: null,
         latitude: 40.735,
         longitude: -73.991,
         radiusMiles: 1.5,
+        categories: [],
+        sortBy: null,
       });
 
-      expect(key).toBe("query:none:none:40.735,-73.991:r1.5");
+      expect(key).toBe("query:all:none:none:none:default:40.735,-73.991:r1.5");
     });
 
     it("rounds lat/lng to 3 decimal places (~100m)", () => {
       const key = buildQueryCacheKey({
+        searchText: null,
         dietaryFilters: ["vegan"],
         nutritionalGoal: null,
         latitude: 40.73578923,
         longitude: -73.99123456,
         radiusMiles: 2.0,
+        categories: [],
+        sortBy: null,
       });
 
-      expect(key).toBe("query:vegan:none:40.736,-73.991:r2.0");
+      expect(key).toBe("query:all:vegan:none:none:default:40.736,-73.991:r2.0");
+    });
+
+    it("includes search text in cache key", () => {
+      const key = buildQueryCacheKey({
+        searchText: "pad thai",
+        dietaryFilters: [],
+        nutritionalGoal: null,
+        latitude: 40.735,
+        longitude: -73.991,
+        radiusMiles: 2.0,
+        categories: [],
+        sortBy: null,
+      });
+
+      expect(key).toContain("pad thai");
     });
   });
 
   describe("getCachedQuery / setCachedQuery", () => {
     it("returns cached query results on hit", async () => {
       const params = {
+        searchText: null,
         dietaryFilters: ["vegan"],
         nutritionalGoal: "max_protein" as const,
         latitude: 40.735,
         longitude: -73.991,
         radiusMiles: 2.0,
+        categories: [] as string[],
+        sortBy: null,
       };
 
       const expectedData = [{ dish: "Tofu Pad Thai", score: 0.95 }];
@@ -143,17 +176,20 @@ describe("Cache Layer", () => {
 
     it("sets query cache with QUERY TTL", async () => {
       const params = {
+        searchText: null,
         dietaryFilters: ["vegan"],
         nutritionalGoal: "max_protein" as const,
         latitude: 40.735,
         longitude: -73.991,
         radiusMiles: 2.0,
+        categories: [] as string[],
+        sortBy: null,
       };
 
       await setCachedQuery(params, [{ dish: "test" }]);
 
       expect(mockRedis.set).toHaveBeenCalledWith(
-        expect.stringContaining("query:vegan:max_protein:"),
+        expect.stringContaining("query:all:vegan:max_protein:"),
         expect.any(String),
         "EX",
         TTL.QUERY

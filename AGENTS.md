@@ -63,3 +63,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `getSourceIcon()` returns JSX elements (not component references) to avoid React render-phase component creation
 - `optimizePackageImports: ["lucide-react"]` in next.config.ts for tree-shaking
 - Profile page uses `next/link` `<Link>` for internal nav (not `<a>`)
+- Cache key for search must include `searchText`, `categories`, `sortBy` — not just dietary + geo
+- BullMQ job deduplication via `jobId: crawl-${googlePlaceId}` and `jobId: photo-${dishId}`
+- USDA ingredient matching uses synonym map (e.g., "shrimp" → "shrimp, cooked") in `usda/client.ts`
+- API routes use `apiSuccess()`/`apiError()` from `src/lib/utils/api-response.ts` for consistent responses
+- UUID validation on path params via regex before Prisma query (prevents DB errors on bad IDs)
+- Worker files use singleton PrismaClient (module-level), not per-job instantiation
+- `viewportFit: "cover"` in layout.tsx is required for iOS safe-area-inset CSS to work
+- Price parsing: use `parsePriceString()` for ranges, "Market Price", "$$$" — never raw `parseFloat`
+- Vision batch analysis uses `Promise.allSettled` with `CONCURRENCY=3` — tests must account for non-sequential execution
