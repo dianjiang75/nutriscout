@@ -1,7 +1,17 @@
 import { prisma } from "@/lib/db/client";
+import { checkApiRateLimit } from "@/lib/middleware/rate-limiter";
 
 export async function PATCH(request: Request) {
   try {
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+    const rl = await checkApiRateLimit(ip, "write");
+    if (!rl.allowed) {
+      return Response.json(
+        { error: "Too many requests", retryAfterSeconds: rl.retryAfterSeconds },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds ?? 60) } }
+      );
+    }
+
     const body = await request.json();
     const { user_id, dietary_restrictions, nutritional_goals, max_wait_minutes, search_radius_miles, preferred_cuisines } = body;
 

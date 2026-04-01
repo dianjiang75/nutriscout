@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import { Search, ChefHat } from "lucide-react";
+import { Search, ChefHat, Store } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +10,7 @@ import { DishCard, type DishCardData } from "@/components/dish-card";
 import { BottomNav, type NavTab } from "@/components/bottom-nav";
 import { CategoryPills } from "@/components/category-pills";
 import { FilterDrawer, type FilterState } from "@/components/filter-drawer";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { RestaurantCard, type RestaurantCardData } from "@/components/restaurant-card";
 
 const SORT_OPTIONS = [
@@ -190,6 +191,7 @@ export default function HomePage() {
               />
             </div>
             <FilterDrawer filters={filters} onChange={setFilters} />
+            <ThemeToggle />
             <Link href="/profile">
               <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm hover:bg-primary/20 transition-colors">
                 P
@@ -435,9 +437,14 @@ function RestaurantsView({
 
   if (restaurants.length === 0) {
     return (
-      <div className="text-center py-20 text-muted-foreground">
-        <p className="text-lg font-medium">No restaurants found</p>
-        <p className="text-sm mt-1">Try adjusting your filters or expanding your search.</p>
+      <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+          <Store className="w-7 h-7 text-muted-foreground" />
+        </div>
+        <p className="text-base font-semibold">No restaurants found</p>
+        <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+          Try expanding your search radius, removing cuisine filters, or searching in a different area.
+        </p>
       </div>
     );
   }

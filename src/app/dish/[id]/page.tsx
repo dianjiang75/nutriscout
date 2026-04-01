@@ -141,28 +141,50 @@ export default function DishDetailPage({ params }: { params: Promise<{ id: strin
         <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">&larr; Back</Link>
       </div>
 
-      {/* Photo carousel */}
+      {/* Photo carousel with swipe support */}
       {dish.photos.length > 0 ? (
-        <div className="relative aspect-video bg-muted overflow-hidden">
-          <Image
-            src={dish.photos[photoIndex]?.url}
-            alt={dish.name}
-            fill
-            sizes="(max-width: 672px) 100vw, 672px"
-            className="object-cover"
-            priority
-          />
+        <div className="relative bg-muted">
+          {/* Swipeable container using CSS scroll-snap */}
+          <div
+            className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar"
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              const idx = Math.round(el.scrollLeft / el.clientWidth);
+              if (idx !== photoIndex) setPhotoIndex(idx);
+            }}
+          >
+            {dish.photos.map((photo, i) => (
+              <div key={i} className="relative aspect-video w-full shrink-0 snap-center">
+                <Image
+                  src={photo.url}
+                  alt={`${dish.name} photo ${i + 1}`}
+                  fill
+                  sizes="(max-width: 672px) 100vw, 672px"
+                  className="object-cover"
+                  priority={i === 0}
+                />
+              </div>
+            ))}
+          </div>
+          {/* Dot indicators */}
           {dish.photos.length > 1 && (
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
               {dish.photos.map((_, i) => (
                 <button
                   key={i}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    i === photoIndex ? "bg-white" : "bg-white/40"
+                  className={`rounded-full transition-all duration-200 ${
+                    i === photoIndex ? "w-4 h-2 bg-white" : "w-2 h-2 bg-white/50"
                   }`}
                   onClick={() => setPhotoIndex(i)}
+                  aria-label={`Photo ${i + 1}`}
                 />
               ))}
+            </div>
+          )}
+          {/* Photo counter */}
+          {dish.photos.length > 1 && (
+            <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
+              {photoIndex + 1}/{dish.photos.length}
             </div>
           )}
         </div>

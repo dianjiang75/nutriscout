@@ -8,6 +8,10 @@ jest.mock("@/lib/db/client", () => ({
   },
 }));
 
+jest.mock("@/lib/middleware/rate-limiter", () => ({
+  checkApiRateLimit: jest.fn().mockResolvedValue({ allowed: true, remaining: 99, retryAfterSeconds: null }),
+}));
+
 import { prisma } from "@/lib/db/client";
 
 function jsonRequest(body: unknown): Request {

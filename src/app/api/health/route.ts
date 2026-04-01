@@ -3,30 +3,62 @@ import { redis } from "@/lib/cache/redis";
 
 export const dynamic = "force-dynamic";
 
+/** Run a check with a timeout. Returns "ok", "error", or "timeout". */
+async function timedCheck(name: string, fn: () => Promise<void>, timeoutMs = 3000): Promise<string> {
+  try {
+    await Promise.race([
+      fn(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`${name} timeout`)), timeoutMs)
+      ),
+    ]);
+    return "ok";
+  } catch {
+    return "error";
+  }
+}
+
 export async function GET() {
-  const checks: Record<string, string> = {};
+  const start = Date.now();
 
-  // Check PostgreSQL
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    checks.database = "ok";
-  } catch {
-    checks.database = "error";
-  }
+  // Run all checks in parallel with 3s timeout each
+  const [database, redisStatus, googleApi, usdaApi] = await Promise.all([
+    timedCheck("database", async () => { await prisma.$queryRaw`SELECT 1`; }),
+    timedCheck("redis", async () => { await redis.ping(); }),
+    timedCheck("google_places", async () => {
+      const key = process.env.GOOGLE_PLACES_API_KEY;
+      if (!key || key === "placeholder") throw new Error("not configured");
+      // Lightweight metadata check — doesn't consume quota
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=ChIJN1t_tDeuEmsRUsoyG83frY4&fields=name&key=${key}`,
+        { signal: AbortSignal.timeout(3000) }
+      );
+      if (!res.ok) throw new Error(`status ${res.status}`);
+    }),
+    timedCheck("usda", async () => {
+      const key = process.env.USDA_API_KEY;
+      if (!key || key === "placeholder") throw new Error("not configured");
+      const res = await fetch(
+        `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${key}&query=test&pageSize=1`,
+        { signal: AbortSignal.timeout(3000) }
+      );
+      if (!res.ok) throw new Error(`status ${res.status}`);
+    }),
+  ]);
 
-  // Check Redis
-  try {
-    await redis.ping();
-    checks.redis = "ok";
-  } catch {
-    checks.redis = "error";
-  }
+  const checks = { database, redis: redisStatus, google_places: googleApi, usda: usdaApi };
+  const durationMs = Date.now() - start;
 
-  const allHealthy =
-    checks.database === "ok" && checks.redis === "ok";
+  // Core services (DB + Redis) must be healthy; external APIs are "degraded" if down
+  const coreHealthy = database === "ok" && redisStatus === "ok";
+  const allHealthy = coreHealthy && googleApi === "ok" && usdaApi === "ok";
 
   return Response.json(
-    { status: allHealthy ? "healthy" : "degraded", checks },
-    { status: allHealthy ? 200 : 503 }
+    {
+      status: allHealthy ? "healthy" : coreHealthy ? "degraded" : "unhealthy",
+      checks,
+      durationMs,
+    },
+    { status: coreHealthy ? 200 : 503 }
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 
 interface User {
   id: string;
@@ -24,22 +24,20 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 });
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // Check for existing session on mount
-  useEffect(() => {
+function getStoredUser(): User | null {
+  if (typeof window === "undefined") return null;
+  try {
     const stored = localStorage.getItem("foodclaw_user");
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch {
-        localStorage.removeItem("foodclaw_user");
-      }
-    }
-    setLoading(false);
-  }, []);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    localStorage.removeItem("foodclaw_user");
+    return null;
+  }
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(getStoredUser);
+  const loading = false; // synchronous init from localStorage, no async loading needed
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await fetch("/api/auth/login", {

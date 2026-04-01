@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/client";
 import { authenticateRequest } from "@/lib/auth/jwt";
+import { checkApiRateLimit } from "@/lib/middleware/rate-limiter";
 
 export async function GET(request: Request) {
   const auth = await authenticateRequest(request);
@@ -34,6 +35,15 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+  const rl = await checkApiRateLimit(ip, "write");
+  if (!rl.allowed) {
+    return Response.json(
+      { error: "Too many requests", retryAfterSeconds: rl.retryAfterSeconds },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds ?? 60) } }
+    );
+  }
+
   const auth = await authenticateRequest(request);
   if (!auth) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });

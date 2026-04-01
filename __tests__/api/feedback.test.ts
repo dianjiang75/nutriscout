@@ -4,6 +4,10 @@ jest.mock("@/lib/db/client", () => ({
   },
 }));
 
+jest.mock("@/lib/middleware/rate-limiter", () => ({
+  checkApiRateLimit: jest.fn().mockResolvedValue({ allowed: true, remaining: 99, retryAfterSeconds: null }),
+}));
+
 import { POST } from "@/app/api/feedback/route";
 import { prisma } from "@/lib/db/client";
 
