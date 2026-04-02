@@ -25,6 +25,7 @@ export interface DishCardData {
   wait_minutes?: number | null;
   delivery_platforms?: string[];
   highlight?: "protein" | "calories" | "carbs" | "fat";
+  warnings?: string[];
 }
 
 function avg(range: { min: number | null; max: number | null } | null): number {
@@ -156,6 +157,15 @@ export function DishCard({ dish, initialFavorited = false }: { dish: DishCardDat
               <span className="text-[10px] text-rose-500 dark:text-rose-400 font-medium tabular-nums">{fat}f</span>
             </div>
           </div>
+
+          {/* Dietary warnings */}
+          {dish.warnings && dish.warnings.length > 0 && (
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/30 rounded-md px-2 py-1">
+              <p className="text-[9px] text-amber-700 dark:text-amber-400 leading-tight">
+                ⚠ {dish.warnings[0]}
+              </p>
+            </div>
+          )}
 
           {/* Distance/wait when no photo */}
           {!dish.photo_url && (

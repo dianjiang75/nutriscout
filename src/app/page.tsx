@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import { Search, ChefHat, Store, Sparkles, MapPin, Star, Clock, Heart } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { ChefHat, Store, Sparkles, MapPin, Star, Clock, Heart } from "lucide-react";
+import { SearchTypeahead } from "@/components/search-typeahead";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DishCard, type DishCardData } from "@/components/dish-card";
@@ -49,7 +49,6 @@ export default function HomePage() {
     goal: "", sort: "macro_match",
     limit: 20, offset: 0,
   });
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Auto-detect location
@@ -113,6 +112,7 @@ export default function HomePage() {
             wait_minutes: d.logistics?.estimated_wait_minutes ?? null,
             delivery_platforms: (d.delivery || []).map((del: { platform: string }) => del.platform).filter(Boolean),
             highlight: goalToHighlight(s.goal),
+            warnings: d.warnings || [],
           };
         });
         setDishes(append ? (prev) => [...prev, ...items] : items);
@@ -180,16 +180,14 @@ export default function HomePage() {
             <h1 className="text-xl font-black tracking-tight shrink-0">
               <span className="text-primary">Food</span><span className="bg-gradient-to-r from-rose-500 to-amber-500 bg-clip-text text-transparent">Claw</span>
             </h1>
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-              <Input
-                ref={searchInputRef}
-                placeholder={activeTab === "dishes" ? "What are you craving?" : "Find a restaurant..."}
-                className="h-10 text-sm pl-9 rounded-xl bg-muted/50 border-border/30 focus:bg-background"
-                value={search.q}
-                onChange={(e) => handleSearchInput(e.target.value)}
-              />
-            </div>
+            <SearchTypeahead
+              value={search.q}
+              onChange={(v) => handleSearchInput(v)}
+              onSelect={(v) => {
+                setSearch((s) => ({ ...s, q: v, offset: 0 }));
+              }}
+              placeholder={activeTab === "dishes" ? "What are you craving?" : "Find a restaurant..."}
+            />
             <FilterDrawer filters={filters} onChange={setFilters} />
             <Link href="/favorites" className="w-9 h-9 rounded-full bg-rose-500/10 flex items-center justify-center hover:bg-rose-500/20 transition-colors" aria-label="Favorites">
               <Heart className="w-4 h-4 text-rose-500" />
@@ -215,7 +213,7 @@ export default function HomePage() {
                     key={opt.value}
                     aria-label={`Sort by ${opt.label}`}
                     aria-pressed={search.sort === opt.value}
-                    className={`inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full transition-all duration-200 whitespace-nowrap font-semibold ${
+                    className={`inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 min-h-[44px] rounded-full transition-all duration-200 whitespace-nowrap font-semibold ${
                       search.sort === opt.value
                         ? "bg-primary text-primary-foreground shadow-sm shadow-primary/25"
                         : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -308,6 +306,35 @@ function DishesView({
   sortBy?: string;
   searchQuery?: string;
 }) {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadingTriggeredRef = useRef(false);
+
+  // Reset the guard when loading finishes
+  useEffect(() => {
+    if (!loading) {
+      loadingTriggeredRef.current = false;
+    }
+  }, [loading]);
+
+  // IntersectionObserver for infinite scroll
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingTriggeredRef.current) {
+          loadingTriggeredRef.current = true;
+          onLoadMore();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, onLoadMore]);
+
   if (loading && dishes.length === 0) {
     return (
       <div className="space-y-6">
@@ -328,7 +355,7 @@ function DishesView({
           </div>
         </div>
         {/* Grid skeleton */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-3 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={`gs-${i}`} className="rounded-2xl overflow-hidden border border-border/30">
               <div className="aspect-[3/2] w-full skeleton-shimmer" />
@@ -425,16 +452,17 @@ function DishesView({
       )}
 
       {/* Main grid */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-3 gap-3">
         {dishes.map((dish) => (
           <DishCard key={dish.id} dish={dish} />
         ))}
       </div>
+      {/* Infinite scroll sentinel */}
       {hasMore && (
-        <div className="text-center mt-4 pb-2">
-          <Button variant="outline" onClick={onLoadMore} disabled={loading} className="rounded-full px-8">
-            {loading ? "Loading..." : "Load more dishes"}
-          </Button>
+        <div ref={sentinelRef} className="flex justify-center py-6">
+          {loading && dishes.length > 0 && (
+            <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          )}
         </div>
       )}
     </div>
