@@ -45,8 +45,34 @@ reviewWorker.on("completed", (job) => {
   console.log(`[review-worker] Completed: ${job.id} — ${JSON.stringify(job.returnvalue)}`);
 });
 
-reviewWorker.on("failed", (job, err) => {
+reviewWorker.on("failed", async (job, err) => {
   console.error(`[review-worker] Failed: ${job?.id} — ${err.message}`);
+
+  // Move to dead letter queue after all retries exhausted
+  if (job && job.attemptsMade >= (job.opts.attempts ?? 2)) {
+    try {
+      const { deadLetterQueue } = await import("./queues");
+      await deadLetterQueue.add("review-failed", {
+        originalQueue: "review-aggregation",
+        jobId: job.id,
+        data: job.data,
+        error: err.message,
+        attempts: job.attemptsMade,
+        failedAt: new Date().toISOString(),
+      });
+      console.warn(`[review-worker] Job ${job.id} moved to dead letter queue`);
+    } catch {
+      // DLQ add failed — just log
+    }
+  }
 });
+
+async function shutdown() {
+  console.log("[review-worker] Shutting down gracefully...");
+  await reviewWorker.close();
+  process.exit(0);
+}
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
 export { reviewQueue };

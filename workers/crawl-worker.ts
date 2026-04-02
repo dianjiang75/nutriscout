@@ -55,8 +55,9 @@ const worker = new Worker<CrawlJobData>("menu-crawl", processCrawlJob, {
   removeOnFail: { count: 500 },
   settings: {
     backoffStrategy: (attemptsMade: number) => {
-      // Exponential backoff: 5s, 25s, 125s
-      return Math.pow(5, attemptsMade) * 1000;
+      const base = Math.pow(5, attemptsMade) * 1000; // 5s, 25s, 125s
+      const jitter = Math.random() * 1000;
+      return base + jitter; // + jitter to prevent thundering herd
     },
   },
 });
@@ -77,7 +78,7 @@ worker.on("completed", async (job) => {
           macroSource: null,
         },
         include: {
-          photos: { take: 1, orderBy: { createdAt: "desc" } },
+          photos: { take: 5, orderBy: { createdAt: "desc" } },
         },
       });
 
@@ -85,6 +86,9 @@ worker.on("completed", async (job) => {
       for (const dish of dishes) {
         const photo = dish.photos[0];
         if (photo?.sourceUrl) {
+          const allPhotoUrls = dish.photos
+            .map((p) => p.sourceUrl)
+            .filter((url): url is string => !!url);
           // Priority: lower number = higher priority
           // Re-analysis of low-confidence dishes (< 0.7) gets priority 1
           // New dishes without analysis get priority 2
@@ -94,7 +98,12 @@ worker.on("completed", async (job) => {
 
           await photoAnalysisQueue.add(
             `analyze-${dish.id}`,
-            { dishId: dish.id, photoUrl: photo.sourceUrl, restaurantName: result.restaurantName },
+            {
+              dishId: dish.id,
+              photoUrl: photo.sourceUrl,
+              photoUrls: allPhotoUrls.length > 1 ? allPhotoUrls : undefined,
+              restaurantName: result.restaurantName,
+            },
             {
               jobId: `photo-${dish.id}`, // Deduplication: same dish won't be analyzed twice
               priority,
@@ -136,5 +145,13 @@ worker.on("failed", async (job, err) => {
     }
   }
 });
+
+async function shutdown() {
+  console.log("[crawl-worker] Shutting down gracefully...");
+  await worker.close();
+  process.exit(0);
+}
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
 export { worker };

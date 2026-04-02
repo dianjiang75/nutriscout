@@ -18,18 +18,22 @@ const prisma = new PrismaClient({ adapter });
 interface PhotoJobData {
   dishId: string;
   photoUrl: string;
+  photoUrls?: string[]; // Multiple photos for ensemble analysis
   restaurantName: string;
 }
 
 async function processPhotoJob(job: Job<PhotoJobData>) {
-  const { dishId, photoUrl, restaurantName } = job.data;
+  const { dishId, photoUrl, photoUrls, restaurantName } = job.data;
 
-  console.log(`[photo-worker] Analyzing photo for dish ${dishId} at ${restaurantName}`);
+  const urls = photoUrls && photoUrls.length > 1 ? photoUrls : [photoUrl];
+  console.log(`[photo-worker] Analyzing ${urls.length} photo(s) for dish ${dishId} at ${restaurantName}`);
 
-  const { analyzeFoodPhoto } = await import("../src/lib/agents/vision-analyzer");
+  const { analyzeFoodPhoto, analyzeMultiplePhotos } = await import("../src/lib/agents/vision-analyzer");
 
-  // Uses Gemini Flash for best vision accuracy per dollar
-  const analysis = await analyzeFoodPhoto(photoUrl);
+  // Use ensemble analysis when multiple photos available
+  const analysis = urls.length > 1
+    ? await analyzeMultiplePhotos(urls)
+    : await analyzeFoodPhoto(urls[0]);
 
   // Skip low-confidence results — worse than no estimate
   // Research (2025) uses 0.5 threshold; we use 0.4 to be slightly more permissive
@@ -76,7 +80,9 @@ const worker = new Worker<PhotoJobData>("photo-analysis", processPhotoJob, {
   removeOnFail: { count: 500 },
   settings: {
     backoffStrategy: (attemptsMade: number) => {
-      return Math.pow(5, attemptsMade) * 1000; // 5s, 25s
+      const base = Math.pow(5, attemptsMade) * 1000;
+      const jitter = Math.random() * 1000;
+      return base + jitter; // 5s, 25s + jitter to prevent thundering herd
     },
   },
 });
@@ -85,8 +91,34 @@ worker.on("completed", (job) => {
   console.log(`[photo-worker] Job ${job.id} completed`);
 });
 
-worker.on("failed", (job, err) => {
+worker.on("failed", async (job, err) => {
   console.error(`[photo-worker] Job ${job?.id} failed:`, err.message);
+
+  // Move to dead letter queue after all retries exhausted
+  if (job && job.attemptsMade >= (job.opts.attempts ?? 2)) {
+    try {
+      const { deadLetterQueue } = await import("./queues");
+      await deadLetterQueue.add("photo-failed", {
+        originalQueue: "photo-analysis",
+        jobId: job.id,
+        data: job.data,
+        error: err.message,
+        attempts: job.attemptsMade,
+        failedAt: new Date().toISOString(),
+      });
+      console.warn(`[photo-worker] Job ${job.id} moved to dead letter queue`);
+    } catch {
+      // DLQ add failed — just log
+    }
+  }
 });
+
+async function shutdown() {
+  console.log("[photo-worker] Shutting down gracefully...");
+  await worker.close();
+  process.exit(0);
+}
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
 export { worker };
