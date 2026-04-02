@@ -35,11 +35,32 @@ export async function POST(request: Request) {
 
     const { menuCrawlQueue } = await import("@/../workers/queues");
 
+    // Also lookup Yelp business IDs for each restaurant
+    const yelpKey = process.env.YELP_API_KEY;
+
     let queued = 0;
     for (const place of places) {
+      let yelpBusinessId: string | null = null;
+
+      // Auto-lookup Yelp business ID using Yelp Business Match API
+      if (yelpKey && yelpKey !== "placeholder") {
+        try {
+          const yelpRes = await fetch(
+            `https://api.yelp.com/v3/businesses/matches?name=${encodeURIComponent(place.name)}&address1=${encodeURIComponent(place.vicinity || "")}&city=New York&state=NY&country=US&limit=1`,
+            { headers: { Authorization: `Bearer ${yelpKey}` } }
+          );
+          if (yelpRes.ok) {
+            const yelpData = await yelpRes.json();
+            yelpBusinessId = yelpData.businesses?.[0]?.id || null;
+          }
+        } catch {
+          // Yelp lookup failed — continue without it
+        }
+      }
+
       await menuCrawlQueue.add(
         "area-crawl",
-        { googlePlaceId: place.place_id },
+        { googlePlaceId: place.place_id, yelpBusinessId },
         { attempts: 3, backoff: { type: "exponential", delay: 5000 } }
       );
       queued++;

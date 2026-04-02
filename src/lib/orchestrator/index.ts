@@ -34,6 +34,7 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
     sortBy: query.sort_by ?? null,
     calorieLimit: query.calorie_limit ?? null,
     proteinMin: query.protein_min_g ?? null,
+    allergens: query.allergens ?? [],
   };
 
   const cached = await getCachedQuery<SearchResults>(cacheParams);
@@ -122,6 +123,9 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
         isActive: true,
         ...(allCuisines.length
           ? { cuisineType: { hasSome: allCuisines } }
+          : {}),
+        ...(query.include_delivery
+          ? { deliveryPlatforms: { some: { isAvailable: true } } }
           : {}),
       },
     },
@@ -258,11 +262,17 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
     verified.sort((a, b) => {
       return macroMatchScore(b, query.nutritional_goal!) - macroMatchScore(a, query.nutritional_goal!);
     });
+  } else if (!query.sort_by || (query.sort_by === "macro_match" && !query.nutritional_goal)) {
+    // Default "Best Match" — multi-factor relevance scoring
+    verified.sort((a, b) => relevanceScore(b) - relevanceScore(a));
   }
+
+  // 5c. Restaurant diversity cap: max 3 dishes per restaurant, interleaved
+  const diversified = applyRestaurantDiversityCap(verified, 3);
 
   // 6. Cache full result set, then return paginated slice
   const fullResult: SearchResults = {
-    dishes: verified,
+    dishes: diversified,
     total_count: verified.length,
     cached: false,
   };
@@ -271,13 +281,13 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
 
   logger.debug("Search completed", {
     query: query.query,
-    results: verified.length,
+    results: diversified.length,
     durationMs: Date.now() - start,
   });
 
   return {
-    dishes: verified.slice(offset, offset + limit),
-    total_count: verified.length,
+    dishes: diversified.slice(offset, offset + limit),
+    total_count: diversified.length,
     cached: false,
   };
 }
@@ -388,6 +398,63 @@ function haversine(lat1: number, lng1: number, lat2: number, lng2: number): numb
     Math.sin(dLat / 2) ** 2 +
     Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
   return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 100) / 100;
+}
+
+/**
+ * Multi-factor relevance score for default "Best Match" sorting.
+ * Combines rating, proximity, data completeness, and review coverage.
+ */
+function relevanceScore(dish: DishResult): number {
+  const rating = dish.review_summary?.average_rating ?? 0;
+  const dist = dish.restaurant.distance_miles ?? 10;
+  const hasPhoto = dish.photo_url ? 1 : 0;
+  const hasReview = dish.review_summary ? 1 : 0;
+  const confidence = dish.macro_confidence ?? 0;
+
+  return (
+    (rating / 5) * 0.35 +           // 35% weight: dish quality
+    (1 / (1 + dist)) * 0.25 +       // 25% weight: proximity (closer = higher)
+    hasReview * 0.15 +               // 15% weight: has review data
+    confidence * 0.15 +              // 15% weight: macro data confidence
+    hasPhoto * 0.10                  // 10% weight: has photo
+  );
+}
+
+/**
+ * Restaurant diversity cap: limits dishes per restaurant and interleaves
+ * results so no single restaurant dominates a page of results.
+ *
+ * Algorithm: round-robin across restaurants in the order they first appear,
+ * picking one dish per restaurant per round, up to `maxPerRestaurant` rounds.
+ */
+function applyRestaurantDiversityCap(
+  dishes: DishResult[],
+  maxPerRestaurant: number
+): DishResult[] {
+  // Group dishes by restaurant, preserving sort order within each group
+  const buckets = new Map<string, DishResult[]>();
+  for (const dish of dishes) {
+    const rid = dish.restaurant.id;
+    if (!buckets.has(rid)) buckets.set(rid, []);
+    const bucket = buckets.get(rid)!;
+    if (bucket.length < maxPerRestaurant) {
+      bucket.push(dish);
+    }
+  }
+
+  // Interleave: round-robin across restaurants in first-appearance order
+  const result: DishResult[] = [];
+  const restaurantOrder = [...buckets.keys()];
+  for (let round = 0; round < maxPerRestaurant; round++) {
+    for (const rid of restaurantOrder) {
+      const bucket = buckets.get(rid)!;
+      if (round < bucket.length) {
+        result.push(bucket[round]);
+      }
+    }
+  }
+
+  return result;
 }
 
 export type { UserSearchQuery, DishResult, SearchResults } from "./types";
