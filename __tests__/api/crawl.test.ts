@@ -8,7 +8,13 @@ jest.mock("@/lib/middleware/rate-limiter", () => ({
   checkApiRateLimit: jest.fn().mockResolvedValue({ allowed: true, remaining: 10, retryAfterSeconds: null }),
 }));
 
-// Mock global fetch for area crawl
+// Mock Google Places v2 client
+const mockSearchNearby = jest.fn();
+jest.mock("@/lib/google-places/client", () => ({
+  searchNearby: (...args: unknown[]) => mockSearchNearby(...args),
+}));
+
+// Mock global fetch for Yelp API calls
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
@@ -60,10 +66,7 @@ describe("POST /api/crawl/area", () => {
   });
 
   it("accepts latitude=0 and longitude=0 as valid", async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ results: [] }),
-    });
+    mockSearchNearby.mockResolvedValue([]);
 
     const res = await crawlArea(jsonRequest({ latitude: 0, longitude: 0 }));
     expect(res.status).toBe(202);
@@ -76,15 +79,10 @@ describe("POST /api/crawl/area", () => {
   });
 
   it("discovers restaurants and queues jobs", async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({
-        results: [
-          { place_id: "p1" },
-          { place_id: "p2" },
-        ],
-      }),
-    });
+    mockSearchNearby.mockResolvedValue([
+      { id: "p1", displayName: { text: "Restaurant A" }, formattedAddress: "123 St" },
+      { id: "p2", displayName: { text: "Restaurant B" }, formattedAddress: "456 Ave" },
+    ]);
 
     const res = await crawlArea(jsonRequest({ latitude: 40.7, longitude: -74, radius_miles: 1 }));
     const body = await res.json();
@@ -94,10 +92,10 @@ describe("POST /api/crawl/area", () => {
     expect(body.jobs_queued).toBe(2);
   });
 
-  it("returns 502 when Google Places API fails", async () => {
-    mockFetch.mockResolvedValue({ ok: false, status: 500 });
+  it("returns 500 when Google Places API fails", async () => {
+    mockSearchNearby.mockRejectedValue(new Error("API failed"));
 
     const res = await crawlArea(jsonRequest({ latitude: 40.7, longitude: -74 }));
-    expect(res.status).toBe(502);
+    expect(res.status).toBe(500);
   });
 });

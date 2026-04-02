@@ -130,28 +130,23 @@ export async function crawlRestaurant(
     throw new Error("GOOGLE_PLACES_API_KEY is not configured");
   }
 
-  // Fetch restaurant details from Google Places
-  const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(googlePlaceId)}&fields=name,formatted_address,geometry,website,price_level,rating,types,formatted_phone_number&key=${apiKey}`;
-  const detailsRes = await fetchWithRetry(detailsUrl, undefined, { maxRetries: 2 });
-
-  if (!detailsRes.ok) {
-    throw new Error(`Google Places API failed: ${detailsRes.status}`);
-  }
-
-  const placeDetails = await detailsRes.json();
-  const place = placeDetails.result;
+  // Fetch restaurant details from Google Places API v2 (New)
+  const { getPlaceDetails, priceLevelToNumber } = await import("@/lib/google-places/client");
+  const place = await getPlaceDetails(googlePlaceId, "core");
 
   if (!place) {
     throw new Error(`No result for place ID: ${googlePlaceId}`);
   }
 
+  const priceLevelNum = priceLevelToNumber(place.priceLevel);
+
   const restaurantInfo: RestaurantInfo = {
     googlePlaceId,
-    name: place.name,
-    address: place.formatted_address,
-    websiteUrl: place.website || null,
-    latitude: place.geometry?.location?.lat ?? 0,
-    longitude: place.geometry?.location?.lng ?? 0,
+    name: place.displayName?.text ?? "",
+    address: place.formattedAddress ?? "",
+    websiteUrl: place.websiteUri || null,
+    latitude: place.location?.latitude ?? 0,
+    longitude: place.location?.longitude ?? 0,
   };
 
   // Upsert restaurant
@@ -163,9 +158,9 @@ export async function crawlRestaurant(
       latitude: restaurantInfo.latitude,
       longitude: restaurantInfo.longitude,
       websiteUrl: restaurantInfo.websiteUrl,
-      priceLevel: place.price_level ?? null,
+      priceLevel: priceLevelNum ?? null,
       googleRating: place.rating ?? null,
-      phone: place.formatted_phone_number ?? null,
+      phone: place.nationalPhoneNumber ?? null,
       lastMenuCrawl: new Date(),
     },
     create: {
@@ -175,9 +170,9 @@ export async function crawlRestaurant(
       latitude: restaurantInfo.latitude,
       longitude: restaurantInfo.longitude,
       websiteUrl: restaurantInfo.websiteUrl,
-      priceLevel: place.price_level ?? null,
+      priceLevel: priceLevelNum ?? null,
       googleRating: place.rating ?? null,
-      phone: place.formatted_phone_number ?? null,
+      phone: place.nationalPhoneNumber ?? null,
       cuisineType: extractCuisineTypes(place.types || []),
       lastMenuCrawl: new Date(),
     },

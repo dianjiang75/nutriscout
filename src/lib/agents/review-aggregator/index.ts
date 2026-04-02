@@ -21,24 +21,17 @@ export async function fetchGoogleReviews(
   if (!apiKey || apiKey === "placeholder") return [];
 
   try {
-    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(googlePlaceId)}&fields=reviews&key=${apiKey}`;
-    const res = await fetchWithRetry(url, undefined, { maxRetries: 2 });
-    if (!res.ok) return [];
-
-    const data = await res.json();
-    const reviews = data.result?.reviews || [];
+    // Google Places API v2 (New) — Place Details with reviews
+    const { getPlaceDetails } = await import("@/lib/google-places/client");
+    const placeData = await getPlaceDetails(googlePlaceId, "reviews");
+    const reviews = placeData.reviews || [];
 
     return reviews.map(
-      (r: {
-        text: string;
-        rating: number;
-        author_name: string;
-        relative_time_description: string;
-      }) => ({
-        text: r.text,
+      (r) => ({
+        text: r.text?.text || "",
         rating: r.rating,
-        author: r.author_name,
-        date: r.relative_time_description,
+        author: r.authorAttribution?.displayName || "Anonymous",
+        date: r.relativePublishTimeDescription || "",
         source: "google" as const,
       })
     );

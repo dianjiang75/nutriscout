@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/client";
 import { redis } from "@/lib/cache/redis";
 import { apiSuccess, apiError } from "@/lib/utils/api-response";
+import { healthCheck as googlePlacesHealthCheck } from "@/lib/google-places/client";
 
 export const dynamic = "force-dynamic";
 
@@ -29,12 +30,9 @@ export async function GET() {
     timedCheck("google_places", async () => {
       const key = process.env.GOOGLE_PLACES_API_KEY;
       if (!key || key === "placeholder") throw new Error("not configured");
-      // Lightweight metadata check — doesn't consume quota
-      const res = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?place_id=ChIJN1t_tDeuEmsRUsoyG83frY4&fields=name&key=${key}`,
-        { signal: AbortSignal.timeout(3000) }
-      );
-      if (!res.ok) throw new Error(`status ${res.status}`);
+      // Google Places API v2 health check
+      const ok = await googlePlacesHealthCheck();
+      if (!ok) throw new Error("API check failed");
     }),
     timedCheck("usda", async () => {
       const key = process.env.USDA_API_KEY;

@@ -256,13 +256,10 @@ export const googlePhotosSource: MenuSourceStrategy = {
     if (!apiKey || apiKey === "placeholder") return null;
 
     try {
-      // Get place details with photos
-      const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${restaurant.googlePlaceId}&fields=photos&key=${apiKey}`;
-      const detailsRes = await fetchWithRetry(detailsUrl, undefined, { maxRetries: 2 });
-      if (!detailsRes.ok) return null;
-
-      const details = await detailsRes.json();
-      const photos = details.result?.photos || [];
+      // Get place photos via Google Places API v2 (New)
+      const { getPlaceDetails, getPhotoUrl } = await import("@/lib/google-places/client");
+      const placeData = await getPlaceDetails(restaurant.googlePlaceId, "photos");
+      const photos = placeData.photos || [];
 
       if (photos.length === 0) return null;
 
@@ -271,7 +268,7 @@ export const googlePhotosSource: MenuSourceStrategy = {
       const client = getAnthropicClient();
 
       for (const photo of photos.slice(0, 3)) {
-        const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1600&photo_reference=${photo.photo_reference}&key=${apiKey}`;
+        const photoUrl = getPhotoUrl(photo.name, 1600);
 
         try {
           const response = await client.messages.create({

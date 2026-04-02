@@ -1,5 +1,6 @@
 import { withRateLimit } from "@/lib/middleware/with-rate-limit";
 import { fetchWithRetry } from "@/lib/utils/fetch-retry";
+import { searchNearby } from "@/lib/google-places/client";
 
 export const POST = withRateLimit("crawl", async (request) => {
   try {
@@ -15,15 +16,11 @@ export const POST = withRateLimit("crawl", async (request) => {
     }
 
     const radiusMeters = Math.round((radius_miles || 0.5) * 1609.34);
-    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radiusMeters}&type=restaurant&key=${apiKey}`;
 
-    const res = await fetchWithRetry(url, undefined, { maxRetries: 2 });
-    if (!res.ok) {
-      return Response.json({ error: "Google Places API failed" }, { status: 502 });
-    }
-
-    const data = await res.json();
-    const places = data.results || [];
+    // Google Places API v2 (New) — POST-based nearby search
+    const places = await searchNearby(latitude, longitude, radiusMeters, {
+      type: "restaurant",
+    });
 
     const { menuCrawlQueue } = await import("@/../workers/queues");
 
@@ -38,7 +35,7 @@ export const POST = withRateLimit("crawl", async (request) => {
       if (yelpKey && yelpKey !== "placeholder") {
         try {
           const yelpRes = await fetchWithRetry(
-            `https://api.yelp.com/v3/businesses/matches?name=${encodeURIComponent(place.name)}&address1=${encodeURIComponent(place.vicinity || "")}&city=New York&state=NY&country=US&limit=1`,
+            `https://api.yelp.com/v3/businesses/matches?name=${encodeURIComponent(place.displayName?.text || "")}&address1=${encodeURIComponent(place.formattedAddress || "")}&city=New York&state=NY&country=US&limit=1`,
             { headers: { Authorization: `Bearer ${yelpKey}` } },
             { maxRetries: 2 }
           );
@@ -53,7 +50,7 @@ export const POST = withRateLimit("crawl", async (request) => {
 
       await menuCrawlQueue.add(
         "area-crawl",
-        { googlePlaceId: place.place_id, yelpBusinessId },
+        { googlePlaceId: place.id, yelpBusinessId },
         { attempts: 3, backoff: { type: "exponential", delay: 5000 } }
       );
       queued++;
