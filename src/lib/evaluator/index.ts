@@ -42,14 +42,31 @@ const ALLERGEN_TO_FLAG: Record<string, keyof DietaryFlags> = {
   // fish, shellfish, soybeans, sesame, celery, mustard, lupin, molluscs, sulphites
 };
 
-/** Keywords that indicate an allergen is present in a dish description. */
+/**
+ * Dishes known to commonly contain specific allergens.
+ * When these are flagged as allergen-free, require higher confidence (WARNING_THRESHOLD)
+ * because the AI may have missed peanuts in Pad Thai, nuts in baklava, etc.
+ */
+const KNOWN_ALLERGEN_DISHES: Partial<Record<keyof DietaryFlags, string[]>> = {
+  nut_free: ["pad thai", "kung pao", "satay", "baklava", "pesto", "mole", "dan dan", "mapo", "som tum"],
+  gluten_free: ["ramen", "udon", "nabeyaki", "spaghetti", "linguine", "penne", "fettuccine", "lo mein", "chow mein", "tiramisu", "ladyfinger", "croissant", "baguette", "pizza", "calzone", "gyoza", "dumpling", "wonton"],
+  dairy_free: ["alfredo", "carbonara", "mac and cheese", "gratin", "fondue", "queso", "tiramisu", "cheesecake", "butter chicken"],
+};
+
+/** Keywords that indicate an allergen is present in a dish description.
+ * IMPORTANT: Include both singular AND plural forms — description text varies.
+ * e.g., "peanut sauce" won't match "peanuts" keyword without singular form.
+ */
 const ALLERGEN_KEYWORDS: Record<string, string[]> = {
-  fish: ["fish", "salmon", "tuna", "cod", "branzino", "mackerel", "anchovy", "catfish"],
-  shellfish: ["shrimp", "crab", "lobster", "clam", "mussel", "oyster", "squid", "octopus", "prawn", "scallop"],
-  soybeans: ["soy", "tofu", "edamame", "miso", "tempeh"],
+  peanuts: ["peanut", "peanuts", "groundnut"],
+  tree_nuts: ["almond", "cashew", "walnut", "pecan", "pistachio", "hazelnut", "macadamia", "pine nut", "brazil nut", "coconut"],
+  fish: ["fish", "salmon", "tuna", "cod", "branzino", "mackerel", "anchovy", "catfish", "trout", "bass", "halibut", "swordfish"],
+  shellfish: ["shrimp", "crab", "lobster", "clam", "mussel", "oyster", "squid", "octopus", "prawn", "scallop", "crawfish", "crayfish"],
+  soybeans: ["soy", "tofu", "edamame", "miso", "tempeh", "soybean"],
   sesame: ["sesame", "tahini"],
-  eggs: ["egg", "omelette", "tamago", "meringue"],
-  milk: ["cheese", "cream", "butter", "yogurt", "milk", "ricotta", "burrata", "mozzarella", "paneer", "mascarpone"],
+  wheat: ["wheat", "flour", "bread", "naan", "pita", "tortilla", "crouton", "breadcrumb", "panko"],
+  eggs: ["egg", "eggs", "omelette", "tamago", "meringue", "frittata", "quiche"],
+  milk: ["cheese", "cream", "butter", "yogurt", "milk", "ricotta", "burrata", "mozzarella", "paneer", "mascarpone", "ghee", "whey"],
 };
 
 /**
@@ -74,24 +91,44 @@ export function verify(
     .filter((dish) => {
       // Allergen keyword filtering — check dish description for allergen indicators
       for (const allergen of allergens) {
-        // If allergen maps to a dietary flag, use that
         const flagKey = ALLERGEN_TO_FLAG[allergen];
+        const confidence = dish.dietary_confidence ?? 0;
+        const desc = (dish.description || "").toLowerCase();
+        const dishName = (dish.name || "").toLowerCase();
+        const keywords = ALLERGEN_KEYWORDS[allergen] || [allergen];
+
         if (flagKey) {
           const flag = dish.dietary_flags?.[flagKey];
+          const isCritical = ALLERGY_CRITICAL.includes(flagKey);
+
+          // Explicitly contains the allergen → exclude
           if (flag === false) return false;
+
+          // Allergy-critical allergens: must be explicitly safe with high confidence
+          // This mirrors the dietary restriction path — allergens= must be equally strict
+          if (isCritical) {
+            if (flag !== true || confidence < THRESHOLDS.ALLERGY_CRITICAL_MIN) return false;
+            // Known allergen dishes get even stricter threshold
+            const knownDishes = KNOWN_ALLERGEN_DISHES[flagKey] ?? [];
+            if (knownDishes.some((kw) => dishName.includes(kw)) && confidence < THRESHOLDS.WARNING_THRESHOLD) return false;
+          }
+
+          // Keyword safety net — even if flag is true, description mentioning the allergen overrides
+          // This catches cases where AI marks nut_free:true but description says "peanut sauce"
+          if (isCritical && keywords.some((kw) => desc.includes(kw) || dishName.includes(kw))) return false;
+
+          // Flag not explicitly true → fall through to keyword check
           if (flag !== true) {
-            // Unknown — check description keywords
-            const keywords = ALLERGEN_KEYWORDS[allergen] || [allergen];
-            const desc = (dish.description || "").toLowerCase();
-            const name = (dish.name || "").toLowerCase();
-            if (keywords.some((kw) => desc.includes(kw) || name.includes(kw))) return false;
+            if (keywords.some((kw) => desc.includes(kw) || dishName.includes(kw))) return false;
+          }
+
+          // Flag is true but description mentions the allergen → suspicious, exclude
+          if (flag === true && keywords.some((kw) => desc.includes(kw) || dishName.includes(kw))) {
+            return false;
           }
         } else {
           // No flag mapping — use keyword matching only
-          const keywords = ALLERGEN_KEYWORDS[allergen] || [allergen];
-          const desc = (dish.description || "").toLowerCase();
-          const name = (dish.name || "").toLowerCase();
-          if (keywords.some((kw) => desc.includes(kw) || name.includes(kw))) return false;
+          if (keywords.some((kw) => desc.includes(kw) || dishName.includes(kw))) return false;
         }
       }
 
@@ -108,6 +145,27 @@ export function verify(
 
         // Allergy-critical: must be explicitly true with high confidence
         if (isCritical && (flag !== true || confidence < THRESHOLDS.ALLERGY_CRITICAL_MIN)) return false;
+
+        // Known allergen-containing dishes get stricter threshold
+        if (isCritical && flag === true) {
+          const knownDishes = KNOWN_ALLERGEN_DISHES[restriction] ?? [];
+          const dName = (dish.name || "").toLowerCase();
+          const isKnownAllergenDish = knownDishes.some((kw) => dName.includes(kw));
+          if (isKnownAllergenDish && confidence < THRESHOLDS.WARNING_THRESHOLD) return false;
+        }
+
+        // Keyword safety net for dietary restrictions
+        // Even if flag is true, if description contains the allergen keyword, exclude
+        if (isCritical && flag === true) {
+          const desc = (dish.description || "").toLowerCase();
+          const dName = (dish.name || "").toLowerCase();
+          const nutKeywords = restriction === "nut_free"
+            ? ["peanut", "almond", "cashew", "walnut", "pecan", "pistachio", "hazelnut", "macadamia", "pine nut", "coconut"]
+            : restriction === "gluten_free"
+            ? ["wheat", "flour tortilla", "panko", "breadcrumb"]
+            : [];
+          if (nutKeywords.some((kw) => desc.includes(kw) || dName.includes(kw))) return false;
+        }
       }
       return true;
     })
@@ -124,6 +182,21 @@ export function verify(
           warnings.push(
             `Likely ${label} based on menu analysis, but not verified by the restaurant`
           );
+        }
+
+        // Known allergen dishes ALWAYS get a warning regardless of confidence
+        // e.g., Pad Thai claiming nut_free even at 0.95 — peanuts are a core ingredient
+        if (flag === true && ALLERGY_CRITICAL.includes(restriction)) {
+          const knownDishes = KNOWN_ALLERGEN_DISHES[restriction] ?? [];
+          const dishName = (dish.name || "").toLowerCase();
+          if (knownDishes.some((kw) => dishName.includes(kw))) {
+            const label = restriction.replace(/_/g, " ");
+            if (!warnings.some((w) => w.includes("traditionally contains"))) {
+              warnings.push(
+                `This dish traditionally contains ingredients related to ${label} — verify with the restaurant before ordering`
+              );
+            }
+          }
         }
 
         // Flag is null but confidence >= threshold → borderline, warn
