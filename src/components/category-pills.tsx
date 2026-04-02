@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CATEGORY_ICON_MAP } from "@/components/food-category-icons";
 import { UtensilsCrossed } from "lucide-react";

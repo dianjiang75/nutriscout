@@ -1,10 +1,5 @@
 import { Worker, type Job } from "bullmq";
 import { connection, reviewQueue } from "./queues";
-import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
-const prisma = new PrismaClient({ adapter });
 
 interface ReviewJobData {
   restaurantId: string;

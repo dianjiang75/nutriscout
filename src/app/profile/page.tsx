@@ -65,7 +65,7 @@ interface UserProfile {
 export default function ProfilePage() {
   const router = useRouter();
   const { user: authUser, logout } = useAuth();
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [_user, setUser] = useState<UserProfile | null>(null);
   const [dietary, setDietary] = useState<string[]>([]);
   const [allergens, setAllergens] = useState<string[]>([]);
   const [customRestrictions, setCustomRestrictions] = useState<string[]>([]);
