@@ -322,36 +322,6 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
     durationMs: Date.now() - start,
   });
 
-  // 7. If text search returned no results, fall back to showing popular dishes
-  if (diversified.length === 0 && query.query) {
-    logger.debug("No results for query, falling back to popular dishes", { query: query.query });
-    // Re-run without text filter to get general results
-    const fallbackResults = await prisma.dish.findMany({
-      where: {
-        isAvailable: true,
-        ...dietaryWhere,
-        restaurant: { isActive: true },
-      },
-      include: {
-        restaurant: true,
-        reviewSummary: true,
-        photos: { take: 1, orderBy: { createdAt: "desc" } },
-      },
-      take: limit,
-      orderBy: { caloriesMin: "desc" },
-    });
-
-    if (fallbackResults.length > 0) {
-      const fallbackDishes = fallbackResults.map((dish) => mapDishToResult(dish, query));
-      return {
-        dishes: fallbackDishes,
-        total_count: fallbackDishes.length,
-        cached: false,
-        fallback: true,
-      };
-    }
-  }
-
   return {
     dishes: diversified.slice(offset, offset + limit),
     total_count: diversified.length,
