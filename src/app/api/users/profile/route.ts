@@ -1,7 +1,18 @@
+import { z } from "zod";
 import { prisma } from "@/lib/db/client";
 import { authenticateRequest } from "@/lib/auth/jwt";
 import { checkApiRateLimit } from "@/lib/middleware/rate-limiter";
-import { apiSuccess, apiError, apiUnauthorized, apiNotFound, apiRateLimited } from "@/lib/utils/api-response";
+import { apiSuccess, apiError, apiBadRequest, apiUnauthorized, apiNotFound, apiRateLimited } from "@/lib/utils/api-response";
+
+const profileUpdateSchema = z.object({
+  dietary_restrictions: z.record(z.string(), z.boolean()).optional(),
+  nutritional_goals: z.record(z.string(), z.any()).optional(),
+  max_wait_minutes: z.number().int().min(1).max(120).optional(),
+  search_radius_miles: z.number().min(0.1).max(50).optional(),
+  preferred_cuisines: z.array(z.string()).optional(),
+  allergens: z.array(z.string()).optional(),
+  custom_restrictions: z.array(z.string()).optional(),
+});
 
 export async function GET(request: Request) {
   const auth = await authenticateRequest(request);
@@ -41,8 +52,12 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const body = await request.json();
-    const { dietary_restrictions, nutritional_goals, max_wait_minutes, search_radius_miles, preferred_cuisines, allergens, custom_restrictions } = body;
+    const body = await request.json().catch(() => null);
+    const parsed = profileUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return apiBadRequest(parsed.error.issues[0]?.message || "Invalid input");
+    }
+    const { dietary_restrictions, nutritional_goals, max_wait_minutes, search_radius_miles, preferred_cuisines, allergens, custom_restrictions } = parsed.data;
 
     const user = await prisma.userProfile.update({
       where: { id: auth.sub as string },

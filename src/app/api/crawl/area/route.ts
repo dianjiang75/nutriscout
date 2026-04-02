@@ -1,14 +1,22 @@
+import { z } from "zod";
 import { withRateLimit } from "@/lib/middleware/with-rate-limit";
 import { fetchWithRetry } from "@/lib/utils/fetch-retry";
 import { searchNearby } from "@/lib/google-places/client";
 
+const crawlAreaSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  radius_miles: z.number().min(0.1).max(25).optional(),
+});
+
 export const POST = withRateLimit("crawl", async (request) => {
   try {
-    const { latitude, longitude, radius_miles } = await request.json();
-
-    if (latitude == null || longitude == null) {
-      return Response.json({ error: "latitude and longitude are required" }, { status: 400 });
+    const body = await request.json().catch(() => null);
+    const parsed = crawlAreaSchema.safeParse(body);
+    if (!parsed.success) {
+      return Response.json({ error: parsed.error.issues[0]?.message || "latitude and longitude are required" }, { status: 400 });
     }
+    const { latitude, longitude, radius_miles } = parsed.data;
 
     const apiKey = process.env.GOOGLE_PLACES_API_KEY;
     if (!apiKey || apiKey === "placeholder") {

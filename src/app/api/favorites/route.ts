@@ -1,6 +1,11 @@
+import { z } from "zod";
 import { prisma } from "@/lib/db/client";
 import { authenticateRequest } from "@/lib/auth/jwt";
 import { checkApiRateLimit } from "@/lib/middleware/rate-limiter";
+
+const favoriteSchema = z.object({
+  dish_id: z.string().uuid("Invalid dish_id"),
+});
 
 export async function GET(request: Request) {
   const auth = await authenticateRequest(request);
@@ -49,10 +54,12 @@ export async function POST(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { dish_id } = await request.json();
-  if (!dish_id) {
-    return Response.json({ error: "dish_id is required" }, { status: 400 });
+  const body = await request.json().catch(() => null);
+  const parsed = favoriteSchema.safeParse(body);
+  if (!parsed.success) {
+    return Response.json({ error: parsed.error.issues[0]?.message || "dish_id is required" }, { status: 400 });
   }
+  const { dish_id } = parsed.data;
 
   try {
     await prisma.userFavorite.create({

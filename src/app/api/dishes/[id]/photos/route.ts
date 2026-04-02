@@ -1,5 +1,8 @@
+import { z } from "zod";
 import { prisma } from "@/lib/db/client";
-import { apiSuccess, apiError } from "@/lib/utils/api-response";
+import { apiSuccess, apiError, apiBadRequest } from "@/lib/utils/api-response";
+
+const uuidParam = z.string().uuid("Invalid dish ID");
 
 export async function GET(
   _request: Request,
@@ -7,6 +10,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    if (!uuidParam.safeParse(id).success) {
+      return apiBadRequest("Invalid dish ID format");
+    }
 
     const photos = await prisma.dishPhoto.findMany({
       where: { dishId: id },

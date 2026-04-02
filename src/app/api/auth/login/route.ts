@@ -1,8 +1,14 @@
+import { z } from "zod";
 import { prisma } from "@/lib/db/client";
 import { compare } from "bcryptjs";
 import { signToken } from "@/lib/auth/jwt";
 import { checkApiRateLimit } from "@/lib/middleware/rate-limiter";
 import { apiBadRequest, apiError, apiRateLimited } from "@/lib/utils/api-response";
+
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
 
 export async function POST(request: Request) {
   try {
@@ -12,10 +18,12 @@ export async function POST(request: Request) {
       return apiRateLimited(rl.retryAfterSeconds);
     }
 
-    const { email, password } = await request.json();
-    if (!email || !password) {
-      return apiBadRequest("email and password are required");
+    const body = await request.json().catch(() => null);
+    const parsed = loginSchema.safeParse(body);
+    if (!parsed.success) {
+      return apiBadRequest(parsed.error.issues[0]?.message || "Invalid input");
     }
+    const { email, password } = parsed.data;
 
     const user = await prisma.userProfile.findUnique({ where: { email } });
     if (!user || !user.passwordHash) {
