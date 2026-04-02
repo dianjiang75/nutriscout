@@ -1,6 +1,6 @@
-import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
 import { estimateMacros } from "@/lib/usda/client";
+import { getGeminiClient, GEMINI_FLASH } from "@/lib/ai/clients";
 import { extractJson } from "@/lib/utils/parse-json";
 import { prisma } from "@/lib/db/client";
 import type {
@@ -59,9 +59,7 @@ Return your analysis as JSON:
 
 Return ONLY valid JSON, no markdown fences or extra text.`;
 
-function getAnthropicClient(): Anthropic {
-  return new Anthropic();
-}
+// Legacy — kept for type compatibility but Gemini is now the primary vision model
 
 /**
  * Build a min/max range around a macro estimate based on confidence.
@@ -88,51 +86,29 @@ function buildMacroRange(value: number, confidence: number): MacroRange {
  */
 export async function analyzeFoodPhoto(
   imageUrl: string,
-  model: string = "claude-sonnet-4-20250514"
 ): Promise<VisionAnalysis> {
-  const client = getAnthropicClient();
+  const gemini = getGeminiClient();
+  const model = gemini.getGenerativeModel({ model: GEMINI_FLASH });
 
   // Preprocess image: resize to 1024x768 max, convert to JPEG
-  // Saves ~90% on Vision API tokens and improves accuracy
-  let imageContent: Anthropic.ImageBlockParam;
+  let base64Data: string;
   try {
-    const { base64, mediaType } = await preprocessImage(imageUrl);
-    imageContent = {
-      type: "image",
-      source: { type: "base64", media_type: mediaType, data: base64 },
-    };
+    const { base64 } = await preprocessImage(imageUrl);
+    base64Data = base64;
   } catch {
-    // Fallback to URL if preprocessing fails (e.g., CORS, timeout)
-    imageContent = {
-      type: "image",
-      source: { type: "url", url: imageUrl },
-    };
+    const res = await fetch(imageUrl, { signal: AbortSignal.timeout(15000) });
+    base64Data = Buffer.from(await res.arrayBuffer()).toString("base64");
   }
 
-  const response = await client.messages.create({
-    model,
-    max_tokens: 1024,
-    messages: [
-      {
-        role: "user",
-        content: [
-          imageContent,
-          {
-            type: "text",
-            text: "Analyze this food photo and estimate its nutritional content.",
-          },
-        ],
-      },
-    ],
-    system: VISION_SYSTEM_PROMPT,
-  });
+  const result = await model.generateContent([
+    { text: VISION_SYSTEM_PROMPT + "\n\nAnalyze this food photo and estimate its nutritional content." },
+    { inlineData: { data: base64Data, mimeType: "image/jpeg" } },
+  ]);
 
-  const textBlock = response.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("No text response from Claude vision analysis");
-  }
+  const text = result.response.text();
+  if (!text) throw new Error("No text response from Gemini vision analysis");
 
-  const visionResult = extractJson<ClaudeVisionResponse>(textBlock.text);
+  const visionResult = extractJson<ClaudeVisionResponse>(text);
 
   // Cross-reference each ingredient against USDA
   const ingredients: IngredientEstimate[] = [];
@@ -315,10 +291,7 @@ export async function batchAnalyzePhotos(jobs: BatchJob[]): Promise<void> {
 
 async function processPhotoJob(job: BatchJob): Promise<void> {
   try {
-    const analysis = await analyzeFoodPhoto(
-      job.imageUrl,
-      "claude-haiku-4-5-20251001"
-    );
+    const analysis = await analyzeFoodPhoto(job.imageUrl);
 
     const bestCal = analysis.macros.calories.best_estimate;
     const bestProtein = analysis.macros.protein_g.best_estimate;

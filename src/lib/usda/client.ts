@@ -258,6 +258,31 @@ export async function estimateMacros(
   }
 
   if (allResults.length === 0) {
+    // LLM-assisted fallback: ask GPT-4.1 nano to suggest a USDA search term
+    try {
+      const { getOpenAIClient, GPT_NANO } = await import("@/lib/ai/clients");
+      const openai = getOpenAIClient();
+      const completion = await openai.chat.completions.create({
+        model: GPT_NANO,
+        max_tokens: 50,
+        messages: [{
+          role: "user",
+          content: `What is the closest USDA FoodData Central search term for "${foodName}"? Reply with ONLY the search term, nothing else. Example: "chicken breast, cooked, roasted"`,
+        }],
+      });
+      const suggestion = completion.choices[0]?.message?.content?.trim();
+      if (suggestion) {
+        const foods = await searchFood(suggestion, 3);
+        for (const food of foods) {
+          allResults.push({ food, query: suggestion });
+        }
+      }
+    } catch {
+      // OpenAI not configured or failed — skip LLM fallback
+    }
+  }
+
+  if (allResults.length === 0) {
     throw new Error(`No USDA results for "${foodName}"`);
   }
 

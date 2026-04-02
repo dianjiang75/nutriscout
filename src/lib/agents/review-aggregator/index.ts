@@ -1,5 +1,5 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/db/client";
+import { getAnthropicClient, CLAUDE_SONNET } from "@/lib/ai/clients";
 import { fetchWithRetry } from "@/lib/utils/fetch-retry";
 import { extractJson } from "@/lib/utils/parse-json";
 import type {
@@ -8,9 +8,7 @@ import type {
   ReviewAggregationResult,
 } from "./types";
 
-function getAnthropicClient(): Anthropic {
-  return new Anthropic();
-}
+// Uses Claude Sonnet 4.6 for client-facing review summaries
 
 /**
  * Fetch reviews from Google Places API.
@@ -194,7 +192,7 @@ Return as JSON:
 Return ONLY valid JSON, no markdown fences or extra text.`;
 
   const response = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: CLAUDE_SONNET,
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   });

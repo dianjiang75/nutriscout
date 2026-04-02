@@ -1,6 +1,6 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/db/client";
 import { menuSources } from "./sources";
+import { getAnthropicClient, CLAUDE_SONNET } from "@/lib/ai/clients";
 import { extractJson } from "@/lib/utils/parse-json";
 import { fetchWithRetry } from "@/lib/utils/fetch-retry";
 import { batchAnalyzePhotos } from "@/lib/agents/vision-analyzer";
@@ -42,9 +42,7 @@ Return as JSON array:
 
 Return ONLY valid JSON, no markdown fences or extra text.`;
 
-function getAnthropicClient(): Anthropic {
-  return new Anthropic();
-}
+// Uses Claude Sonnet 4.6 for dietary flag analysis (safety-critical)
 
 /**
  * Analyze raw menu items for ingredients and dietary flags using an LLM.
@@ -77,7 +75,7 @@ export async function analyzeIngredients(
 
     try {
       const response = await client.messages.create({
-        model: "claude-haiku-4-5-20251001",
+        model: CLAUDE_SONNET,
         max_tokens: 4096,
         messages: [{ role: "user", content: prompt }],
       });

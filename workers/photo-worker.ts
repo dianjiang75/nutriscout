@@ -28,8 +28,8 @@ async function processPhotoJob(job: Job<PhotoJobData>) {
 
   const { analyzeFoodPhoto } = await import("../src/lib/agents/vision-analyzer");
 
-  // Use Haiku for cost efficiency on batch analysis
-  const analysis = await analyzeFoodPhoto(photoUrl, "claude-haiku-4-5-20251001");
+  // Uses Gemini 2.5 Flash for best vision accuracy per dollar
+  const analysis = await analyzeFoodPhoto(photoUrl);
 
   // Update dish with macro estimates from vision analysis
   await prisma.dish.update({
