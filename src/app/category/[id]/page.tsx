@@ -72,21 +72,24 @@ export default function CategoryPage({ params }: { params: Promise<{ id: string 
         // Fetch top rated (sort by rating, limit 5)
         const ratedRes = await fetch(`/api/search?${params}&sort=rating&limit=5`);
         if (ratedRes.ok) {
-          const data = await ratedRes.json();
+          const raw = await ratedRes.json();
+          const data = raw.data || raw;
           setTopRated((data.dishes || []).map(mapDish));
         }
 
         // Fetch recommended (sort by macro_match which uses user goals, limit 10)
         const recRes = await fetch(`/api/search?${params}&sort=macro_match&limit=10`);
         if (recRes.ok) {
-          const data = await recRes.json();
+          const raw = await recRes.json();
+          const data = raw.data || raw;
           setRecommended((data.dishes || []).map(mapDish));
         }
 
         // Fetch all (default sort, paginated)
         const allRes = await fetch(`/api/search?${params}&limit=20&offset=0`);
         if (allRes.ok) {
-          const data = await allRes.json();
+          const raw = await allRes.json();
+          const data = raw.data || raw;
           const items = (data.dishes || []).map(mapDish);
           setAllDishes(items);
           setHasMore(items.length >= 20);
@@ -110,7 +113,8 @@ export default function CategoryPage({ params }: { params: Promise<{ id: string 
     });
     const res = await fetch(`/api/search?${params}`);
     if (res.ok) {
-      const data = await res.json();
+      const raw = await res.json();
+      const data = raw.data || raw;
       const items = (data.dishes || []).map(mapDish);
       setAllDishes((prev) => [...prev, ...items]);
       setHasMore(items.length >= 20);

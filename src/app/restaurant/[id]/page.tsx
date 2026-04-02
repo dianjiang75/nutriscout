@@ -73,9 +73,10 @@ export default function RestaurantDetailPage({
           fetch(`/api/restaurants/${id}`),
           fetch(`/api/restaurants/${id}/menu`),
         ]);
-        if (rRes.ok) setRestaurant(await rRes.json());
+        if (rRes.ok) { const rRaw = await rRes.json(); setRestaurant(rRaw.data || rRaw); }
         if (mRes.ok) {
-          const data = await mRes.json();
+          const mRaw = await mRes.json();
+          const data = mRaw.data || mRaw;
           setMenu(data.categories || []);
         }
       } finally {

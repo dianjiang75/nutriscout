@@ -79,8 +79,8 @@ export default function DishDetailPage({ params }: { params: Promise<{ id: strin
       try {
         const res = await fetch(`/api/dishes/${id}`);
         if (res.ok) {
-          const data = await res.json();
-          setDish(data);
+          const raw = await res.json();
+          setDish(raw.data || raw);
 
           // Fetch traffic and similar dishes in parallel
           const [tRes, sRes] = await Promise.all([
@@ -98,10 +98,11 @@ export default function DishDetailPage({ params }: { params: Promise<{ id: strin
             }),
           ]);
 
-          if (tRes?.ok) setTraffic(await tRes.json());
+          if (tRes?.ok) { const tRaw = await tRes.json(); setTraffic(tRaw.data || tRaw); }
 
           if (sRes?.ok) {
-            const sData = await sRes.json();
+            const sRaw = await sRes.json();
+            const sData = sRaw.data || sRaw;
             setSimilar((sData.dishes || []).map((d: { id: string; name: string; restaurant_name?: string; calories_min?: number; calories_max?: number; protein_max_g?: number }) => ({
               id: d.id, name: d.name,
               restaurant_name: d.restaurant_name || "",
