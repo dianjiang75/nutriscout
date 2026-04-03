@@ -103,7 +103,7 @@ export async function generateDishImage(
   // Use the image generation model (NanoBanana 2 = Gemini Flash Image)
   // NanoBanana 2 (Gemini Flash Image) with image output enabled
   const model = gemini.getGenerativeModel({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-2.5-flash-image",
     generationConfig: { responseModalities: ["TEXT", "IMAGE"] } as Record<string, unknown>,
   } as Parameters<GoogleGenerativeAI["getGenerativeModel"]>[0]);
 
