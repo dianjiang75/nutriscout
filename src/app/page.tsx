@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { ChefHat, Store, Sparkles, MapPin, Star, Clock, Heart } from "lucide-react";
 import { SearchTypeahead } from "@/components/search-typeahead";
+import { NotificationBell } from "@/components/notification-bell";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DishCard, type DishCardData } from "@/components/dish-card";
@@ -191,6 +192,7 @@ export default function HomePage() {
               placeholder={activeTab === "dishes" ? "What are you craving?" : "Find a restaurant..."}
             />
             <FilterDrawer filters={filters} onChange={setFilters} />
+            <NotificationBell />
             <Link href="/favorites" className="w-9 h-9 rounded-full bg-rose-500/10 flex items-center justify-center hover:bg-rose-500/20 transition-colors" aria-label="Favorites">
               <Heart className="w-4 h-4 text-rose-500" />
             </Link>

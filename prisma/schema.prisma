@@ -214,8 +214,11 @@ model UserProfile {
   createdAt            DateTime @default(now()) @map("created_at")
   updatedAt            DateTime @updatedAt @map("updated_at")
 
-  communityFeedback    CommunityFeedback[]
-  favorites            UserFavorite[]
+  communityFeedback        CommunityFeedback[]
+  favorites                UserFavorite[]
+  notificationPreference   NotificationPreference?
+  pushSubscriptions        PushSubscription[]
+  notifications            NotificationLog[]
 
   @@map("user_profiles")
 }
@@ -246,4 +249,71 @@ model CommunityFeedback {
   user         UserProfile  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("community_feedback")
+}
+
+// ── Notifications ──────────────────────────────────────
+
+enum NotificationType {
+  new_dish_match
+  favorite_updated
+  wait_time_drop
+  weekly_digest
+}
+
+enum NotificationChannel {
+  in_app
+  web_push
+}
+
+model NotificationPreference {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @unique @map("user_id") @db.Uuid
+  inAppEnabled    Boolean  @default(true) @map("in_app_enabled")
+  pushEnabled     Boolean  @default(false) @map("push_enabled")
+  newDishMatch    Boolean  @default(true) @map("new_dish_match")
+  favoriteUpdated Boolean  @default(true) @map("favorite_updated")
+  waitTimeDrop    Boolean  @default(true) @map("wait_time_drop")
+  weeklyDigest    Boolean  @default(true) @map("weekly_digest")
+  quietHoursStart Int?     @map("quiet_hours_start")
+  quietHoursEnd   Int?     @map("quiet_hours_end")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user            UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  endpoint  String
+  p256dh    String
+  auth      String
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, endpoint])
+  @@map("push_subscriptions")
+}
+
+model NotificationLog {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @map("user_id") @db.Uuid
+  type      NotificationType
+  channel   NotificationChannel
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime?           @map("read_at")
+  clickedAt DateTime?           @map("clicked_at")
+  createdAt DateTime            @default(now()) @map("created_at")
+
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt], map: "idx_notifications_user_unread")
+  @@index([createdAt], map: "idx_notifications_created")
+  @@map("notification_log")
 }

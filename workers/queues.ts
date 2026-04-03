@@ -14,6 +14,7 @@ export const menuCrawlQueue = new Queue("menu-crawl", { connection, defaultJobOp
 export const photoAnalysisQueue = new Queue("photo-analysis", { connection, defaultJobOptions });
 export const logisticsQueue = new Queue("logistics-update", { connection, defaultJobOptions });
 export const reviewQueue = new Queue("review-aggregation", { connection, defaultJobOptions });
+export const notificationQueue = new Queue("notifications", { connection, defaultJobOptions });
 export const deadLetterQueue = new Queue("dead-letter", { connection, defaultJobOptions: { removeOnComplete: { count: 500 }, removeOnFail: { count: 1000 } } });
 
 /**
