@@ -12,7 +12,12 @@ import { seedRestaurants } from "./seed-manhattan-data";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
-// Load user-approved photos from the approval tool
+// Load AI-generated photos (priority 1) and user-approved references (priority 2)
+import * as fs from "fs";
+const generatedPhotosPath = require("path").join(__dirname, "generated-photos.json");
+const generatedPhotos: Record<string, string> = fs.existsSync(generatedPhotosPath)
+  ? JSON.parse(fs.readFileSync(generatedPhotosPath, "utf8"))
+  : {};
 import approvedPhotos from "./approved-photos.json";
 
 // Legacy mapping — replaced by approved-photos.json
@@ -282,7 +287,11 @@ const PHOTOS_BY_TYPE: Record<string, string> = {
 const FALLBACK_PHOTO = "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&h=500&fit=crop";
 
 export function matchPhoto(dishName: string): string {
-  // 1. User-approved photos (from approval tool)
+  // 1. AI-generated photos (copyright-free, highest priority)
+  const generated = generatedPhotos[dishName];
+  if (generated) return generated;
+
+  // 2. User-approved reference photos (from approval tool)
   const approved = (approvedPhotos as Record<string, string>)[dishName];
   if (approved) return approved;
 

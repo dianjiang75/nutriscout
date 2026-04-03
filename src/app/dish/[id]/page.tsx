@@ -80,11 +80,12 @@ export default function DishDetailPage({ params }: { params: Promise<{ id: strin
         const res = await fetch(`/api/dishes/${id}`);
         if (res.ok) {
           const raw = await res.json();
-          setDish(raw.data || raw);
+          const dishData = raw.data || raw;
+          setDish(dishData);
 
           // Fetch traffic and similar dishes in parallel
           const [tRes, sRes] = await Promise.all([
-            fetch(`/api/restaurants/${data.restaurant.id}/traffic`).catch(() => null),
+            fetch(`/api/restaurants/${dishData.restaurant.id}/traffic`).catch(() => null),
             new Promise<Response | null>((resolve) => {
               if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(
