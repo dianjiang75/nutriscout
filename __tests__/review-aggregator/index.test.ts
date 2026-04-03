@@ -1,11 +1,12 @@
 import type { RawReview } from "@/lib/agents/review-aggregator/types";
 
 const mockCreate = jest.fn();
-jest.mock("@anthropic-ai/sdk", () => {
-  return jest.fn().mockImplementation(() => ({
-    messages: { create: mockCreate },
-  }));
-});
+jest.mock("@/lib/ai/clients", () => ({
+  getQwenClient: () => ({
+    chat: { completions: { create: mockCreate } },
+  }),
+  QWEN_3: "qwen-plus",
+}));
 
 jest.mock("@/lib/db/client", () => ({
   prisma: {
@@ -126,10 +127,10 @@ describe("Review Aggregator", () => {
 
     it("calls LLM and returns structured summary", async () => {
       mockCreate.mockResolvedValueOnce({
-        content: [
+        choices: [
           {
-            type: "text",
-            text: JSON.stringify({
+            message: {
+              content: JSON.stringify({
               summary:
                 "The Pad Thai at Test Restaurant is highly praised for its balanced flavors and generous portions. Multiple reviewers highlight the fresh shrimp, though some find it slightly too sweet.",
               dish_rating: 4.5,
@@ -142,6 +143,7 @@ describe("Review Aggregator", () => {
               dietary_warnings: [],
               portion_perception: "generous",
             }),
+            },
           },
         ],
       });

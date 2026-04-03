@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db/client";
-import { getAnthropicClient, CLAUDE_SONNET } from "@/lib/ai/clients";
+import { getQwenClient, QWEN_3 } from "@/lib/ai/clients";
 import { fetchWithRetry } from "@/lib/utils/fetch-retry";
 import { extractJson } from "@/lib/utils/parse-json";
 import type {
@@ -8,7 +8,7 @@ import type {
   ReviewAggregationResult,
 } from "./types";
 
-// Uses Claude Sonnet 4.6 for client-facing review summaries
+// Uses Qwen 3 for client-facing review summaries (migrated from Claude Sonnet — 97% cheaper, 92% theme coverage per A/B test 2026-04-03)
 
 /**
  * Fetch reviews from Google Places API.
@@ -152,7 +152,7 @@ export async function summarizeDishReviews(
     };
   }
 
-  const client = getAnthropicClient();
+  const client = getQwenClient();
   const reviewTexts = reviews
     .map((r, i) => `Review ${i + 1} (${r.rating}/5 stars, ${r.source}): "${r.text}"`)
     .join("\n\n");
@@ -184,18 +184,18 @@ Return as JSON:
 
 Return ONLY valid JSON, no markdown fences or extra text.`;
 
-  const response = await client.messages.create({
-    model: CLAUDE_SONNET,
+  const response = await client.chat.completions.create({
+    model: QWEN_3,
     max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
   });
 
-  const textBlock = response.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
+  const text = response.choices[0]?.message?.content;
+  if (!text) {
     throw new Error("No text response from review summarization");
   }
 
-  return extractJson<DishReviewSummary>(textBlock.text);
+  return extractJson<DishReviewSummary>(text);
 }
 
 /**

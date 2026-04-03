@@ -1,0 +1,1177 @@
+[
+  {
+    "agent_id": 1,
+    "timestamp": "2026-04-03T04:24:38.454Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.96,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 4131.279999999999,
+        "total_cost": 0.004676620000000002
+      },
+      "qwen": {
+        "accuracy": 0.9270833333333334,
+        "conservatism": 0.6666666666666666,
+        "safety_failures": [
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Falafel Wrap: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3458.0000000000014,
+        "total_cost": 0.0033094400000000003
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.8571428571428571,
+        "avg_latency_ms": 5635.8,
+        "total_cost": 0.00278767
+      },
+      "qwen": {
+        "theme_coverage": 0.8809523809523809,
+        "avg_latency_ms": 3932,
+        "total_cost": 0.0017147199999999999
+      }
+    }
+  },
+  {
+    "agent_id": 2,
+    "timestamp": "2026-04-03T04:24:36.639Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9809523809523809,
+        "conservatism": 0.9,
+        "safety_failures": [
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 4085.1199999999994,
+        "total_cost": 0.00461714
+      },
+      "qwen": {
+        "accuracy": 0.9482758620689655,
+        "conservatism": 0,
+        "safety_failures": [
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3584.62962962963,
+        "total_cost": 0.003677375999999998
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.8461538461538461,
+        "avg_latency_ms": 5364.1,
+        "total_cost": 0.0026752800000000004
+      },
+      "qwen": {
+        "theme_coverage": 0.8974358974358975,
+        "avg_latency_ms": 3901.5,
+        "total_cost": 0.0016852800000000002
+      }
+    }
+  },
+  {
+    "agent_id": 3,
+    "timestamp": "2026-04-03T04:24:46.611Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9590163934426229,
+        "conservatism": 0.8181818181818182,
+        "safety_failures": [
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 4233.319999999998,
+        "total_cost": 0.0048367500000000025
+      },
+      "qwen": {
+        "accuracy": 0.9655172413793104,
+        "conservatism": 0.5714285714285714,
+        "safety_failures": [
+          "Chicken Tikka Masala: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Butter Chicken: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3768.3600000000006,
+        "total_cost": 0.0035875199999999986
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.8780487804878049,
+        "avg_latency_ms": 5569.4,
+        "total_cost": 0.0027111
+      },
+      "qwen": {
+        "theme_coverage": 0.926829268292683,
+        "avg_latency_ms": 3782.7,
+        "total_cost": 0.00168112
+      }
+    }
+  },
+  {
+    "agent_id": 4,
+    "timestamp": "2026-04-03T04:24:40.189Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9629629629629629,
+        "conservatism": 0.8,
+        "safety_failures": [
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3898.4800000000005,
+        "total_cost": 0.004456460000000001
+      },
+      "qwen": {
+        "accuracy": 0.9130434782608695,
+        "conservatism": 0.5,
+        "safety_failures": [
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Falafel Wrap: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Chicken Tikka Masala: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3790.8076923076906,
+        "total_cost": 0.0037185280000000005
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.9024390243902439,
+        "avg_latency_ms": 5573,
+        "total_cost": 0.00272384
+      },
+      "qwen": {
+        "theme_coverage": 0.926829268292683,
+        "avg_latency_ms": 3895.7,
+        "total_cost": 0.00174032
+      }
+    }
+  },
+  {
+    "agent_id": 5,
+    "timestamp": "2026-04-03T04:24:42.477Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9838709677419355,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 4039.4400000000023,
+        "total_cost": 0.00457009
+      },
+      "qwen": {
+        "accuracy": 0.9636363636363636,
+        "conservatism": 0.6666666666666666,
+        "safety_failures": [
+          "Butter Chicken: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3669.4400000000023,
+        "total_cost": 0.0034931200000000015
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.8205128205128205,
+        "avg_latency_ms": 5737,
+        "total_cost": 0.0028021400000000003
+      },
+      "qwen": {
+        "theme_coverage": 0.8974358974358975,
+        "avg_latency_ms": 3934.6,
+        "total_cost": 0.0017209600000000001
+      }
+    }
+  },
+  {
+    "agent_id": 6,
+    "timestamp": "2026-04-03T04:29:27.551Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9754098360655737,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 3909.4399999999987,
+        "total_cost": 0.00445264
+      },
+      "qwen": {
+        "accuracy": 0.979381443298969,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 3653.56,
+        "total_cost": 0.003450719999999999
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.8421052631578947,
+        "avg_latency_ms": 5570,
+        "total_cost": 0.0026148200000000003
+      },
+      "qwen": {
+        "theme_coverage": 0.9210526315789473,
+        "avg_latency_ms": 3614.3,
+        "total_cost": 0.00156976
+      }
+    }
+  },
+  {
+    "agent_id": 7,
+    "timestamp": "2026-04-03T04:29:42.193Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9626168224299065,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 4192.079999999999,
+        "total_cost": 0.00480005
+      },
+      "qwen": {
+        "accuracy": 0.946236559139785,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 3641.319999999999,
+        "total_cost": 0.0034655999999999997
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.8,
+        "avg_latency_ms": 5883.6,
+        "total_cost": 0.0027681900000000002
+      },
+      "qwen": {
+        "theme_coverage": 0.9,
+        "avg_latency_ms": 4089.6,
+        "total_cost": 0.0017603200000000001
+      }
+    }
+  },
+  {
+    "agent_id": 8,
+    "timestamp": "2026-04-03T04:29:34.000Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9813084112149533,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 4058.480000000002,
+        "total_cost": 0.004591950000000001
+      },
+      "qwen": {
+        "accuracy": 0.9714285714285714,
+        "conservatism": 0.6,
+        "safety_failures": [
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Butter Chicken: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3541.8,
+        "total_cost": 0.003377920000000001
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.926829268292683,
+        "avg_latency_ms": 5825.7,
+        "total_cost": 0.00278298
+      },
+      "qwen": {
+        "theme_coverage": 0.926829268292683,
+        "avg_latency_ms": 3911.2,
+        "total_cost": 0.0017104
+      }
+    }
+  },
+  {
+    "agent_id": 9,
+    "timestamp": "2026-04-03T04:29:26.533Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9905660377358491,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 4084.7200000000007,
+        "total_cost": 0.004682620000000002
+      },
+      "qwen": {
+        "accuracy": 0.941747572815534,
+        "conservatism": 0.3333333333333333,
+        "safety_failures": [
+          "Falafel Wrap: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Butter Chicken: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3339.2799999999993,
+        "total_cost": 0.003197119999999999
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.8536585365853658,
+        "avg_latency_ms": 5483.5,
+        "total_cost": 0.00267378
+      },
+      "qwen": {
+        "theme_coverage": 0.9024390243902439,
+        "avg_latency_ms": 3946.2,
+        "total_cost": 0.00170592
+      }
+    }
+  },
+  {
+    "agent_id": 10,
+    "timestamp": "2026-04-03T04:29:34.329Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9473684210526315,
+        "conservatism": 0.6666666666666666,
+        "safety_failures": [
+          "Chicken Tikka Masala: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 4321.28,
+        "total_cost": 0.004867690000000001
+      },
+      "qwen": {
+        "accuracy": 0.9304347826086956,
+        "conservatism": 0.6666666666666666,
+        "safety_failures": [
+          "Chicken Tikka Masala: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3258.4,
+        "total_cost": 0.0031271999999999993
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.9024390243902439,
+        "avg_latency_ms": 5928,
+        "total_cost": 0.0027815300000000004
+      },
+      "qwen": {
+        "theme_coverage": 0.9512195121951219,
+        "avg_latency_ms": 3893.1,
+        "total_cost": 0.00171264
+      }
+    }
+  },
+  {
+    "agent_id": 11,
+    "timestamp": "2026-04-03T04:34:34.476Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9590163934426229,
+        "conservatism": 0.8333333333333334,
+        "safety_failures": [
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 4411.159999999999,
+        "total_cost": 0.004524099999999998
+      },
+      "qwen": {
+        "accuracy": 0.9351851851851852,
+        "conservatism": 0,
+        "safety_failures": [
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3537.9599999999987,
+        "total_cost": 0.003374719999999999
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.8974358974358975,
+        "avg_latency_ms": 5644.5,
+        "total_cost": 0.00264788
+      },
+      "qwen": {
+        "theme_coverage": 0.9487179487179487,
+        "avg_latency_ms": 3709.4,
+        "total_cost": 0.0016296000000000001
+      }
+    }
+  },
+  {
+    "agent_id": 12,
+    "timestamp": "2026-04-03T04:35:10.584Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9649122807017544,
+        "conservatism": 0.9090909090909091,
+        "safety_failures": [],
+        "avg_latency_ms": 4611.879999999998,
+        "total_cost": 0.004702439999999998
+      },
+      "qwen": {
+        "accuracy": 0.9759036144578314,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 3207.903846153847,
+        "total_cost": 0.003131584
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.75,
+        "avg_latency_ms": 5784.5,
+        "total_cost": 0.0027351100000000002
+      },
+      "qwen": {
+        "theme_coverage": 0.9,
+        "avg_latency_ms": 4012.1,
+        "total_cost": 0.0017652800000000001
+      }
+    }
+  },
+  {
+    "agent_id": 13,
+    "timestamp": "2026-04-03T04:34:26.256Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9553571428571429,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 4459.360000000002,
+        "total_cost": 0.00460033
+      },
+      "qwen": {
+        "accuracy": 0.9716981132075472,
+        "conservatism": 0.8,
+        "safety_failures": [
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3064.8399999999983,
+        "total_cost": 0.00295344
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.8536585365853658,
+        "avg_latency_ms": 5570.1,
+        "total_cost": 0.0026950100000000003
+      },
+      "qwen": {
+        "theme_coverage": 0.8292682926829268,
+        "avg_latency_ms": 4023.8,
+        "total_cost": 0.00170192
+      }
+    }
+  },
+  {
+    "agent_id": 14,
+    "timestamp": "2026-04-03T04:34:43.561Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9572649572649573,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 4486.639999999999,
+        "total_cost": 0.004645600000000002
+      },
+      "qwen": {
+        "accuracy": 0.9468085106382979,
+        "conservatism": 0.5,
+        "safety_failures": [
+          "Butter Chicken: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3819.1600000000008,
+        "total_cost": 0.003627840000000002
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.9230769230769231,
+        "avg_latency_ms": 5472.2,
+        "total_cost": 0.0026209300000000005
+      },
+      "qwen": {
+        "theme_coverage": 0.9487179487179487,
+        "avg_latency_ms": 3898.5,
+        "total_cost": 0.0016886400000000001
+      }
+    }
+  },
+  {
+    "agent_id": 15,
+    "timestamp": "2026-04-03T04:34:53.603Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9727272727272728,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 4796.199999999998,
+        "total_cost": 0.00494978
+      },
+      "qwen": {
+        "accuracy": 0.9464285714285714,
+        "conservatism": 0.5,
+        "safety_failures": [
+          "Butter Chicken: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3794.760000000001,
+        "total_cost": 0.003596000000000002
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.8780487804878049,
+        "avg_latency_ms": 5833.6,
+        "total_cost": 0.00275177
+      },
+      "qwen": {
+        "theme_coverage": 0.926829268292683,
+        "avg_latency_ms": 3828,
+        "total_cost": 0.0017113599999999999
+      }
+    }
+  },
+  {
+    "agent_id": 16,
+    "timestamp": "2026-04-03T04:39:51.061Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9619047619047619,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 4008.9200000000005,
+        "total_cost": 0.0044349800000000016
+      },
+      "qwen": {
+        "accuracy": 0.9230769230769231,
+        "conservatism": 0.5,
+        "safety_failures": [
+          "Chicken Tikka Masala: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3240.559999999999,
+        "total_cost": 0.0031121599999999992
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.9047619047619048,
+        "avg_latency_ms": 6011.4,
+        "total_cost": 0.00276747
+      },
+      "qwen": {
+        "theme_coverage": 0.9761904761904762,
+        "avg_latency_ms": 3910.5,
+        "total_cost": 0.0017148800000000002
+      }
+    }
+  },
+  {
+    "agent_id": 17,
+    "timestamp": "2026-04-03T04:39:58.056Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.992,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 4361.6399999999985,
+        "total_cost": 0.004810950000000001
+      },
+      "qwen": {
+        "accuracy": 0.99,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 3215.799999999999,
+        "total_cost": 0.003056320000000001
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.8780487804878049,
+        "avg_latency_ms": 6001.8,
+        "total_cost": 0.00272338
+      },
+      "qwen": {
+        "theme_coverage": 0.926829268292683,
+        "avg_latency_ms": 3799.7,
+        "total_cost": 0.0016784
+      }
+    }
+  },
+  {
+    "agent_id": 18,
+    "timestamp": "2026-04-03T04:40:09.807Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9745762711864406,
+        "conservatism": 0.6666666666666666,
+        "safety_failures": [
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Butter Chicken: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Chicken Tikka Masala: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 4104.28,
+        "total_cost": 0.00454016
+      },
+      "qwen": {
+        "accuracy": 0.9224137931034483,
+        "conservatism": 0.3333333333333333,
+        "safety_failures": [
+          "Falafel Wrap: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Butter Chicken: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Chicken Tikka Masala: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3899.785185185185,
+        "total_cost": 0.003974047999999998
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.8837209302325582,
+        "avg_latency_ms": 6124.2,
+        "total_cost": 0.0027681700000000004
+      },
+      "qwen": {
+        "theme_coverage": 0.9069767441860465,
+        "avg_latency_ms": 3963,
+        "total_cost": 0.0017163200000000003
+      }
+    }
+  },
+  {
+    "agent_id": 19,
+    "timestamp": "2026-04-03T04:39:14.666Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9848484848484849,
+        "conservatism": 0.8333333333333334,
+        "safety_failures": [
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 2569.2400000000007,
+        "total_cost": 0.00284364
+      },
+      "qwen": {
+        "accuracy": 0.9509803921568627,
+        "conservatism": 0.2,
+        "safety_failures": [
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Chicken Tikka Masala: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Butter Chicken: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3293.0000000000014,
+        "total_cost": 0.0031500800000000004
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.8205128205128205,
+        "avg_latency_ms": 5980,
+        "total_cost": 0.0026535100000000004
+      },
+      "qwen": {
+        "theme_coverage": 0.8717948717948718,
+        "avg_latency_ms": 3721.8,
+        "total_cost": 0.00161728
+      }
+    }
+  },
+  {
+    "agent_id": 20,
+    "timestamp": "2026-04-03T04:40:06.626Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.957983193277311,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 4292.079999999999,
+        "total_cost": 0.004700620000000001
+      },
+      "qwen": {
+        "accuracy": 0.9545454545454546,
+        "conservatism": 0.8,
+        "safety_failures": [
+          "Butter Chicken: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 2658.800000000001,
+        "total_cost": 0.0025191999999999997
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.8292682926829268,
+        "avg_latency_ms": 6030.8,
+        "total_cost": 0.00273801
+      },
+      "qwen": {
+        "theme_coverage": 0.926829268292683,
+        "avg_latency_ms": 3972.3,
+        "total_cost": 0.0017297599999999999
+      }
+    }
+  },
+  {
+    "agent_id": 21,
+    "timestamp": "2026-04-03T04:45:08.510Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9636363636363636,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 4458.800000000002,
+        "total_cost": 0.004723200000000001
+      },
+      "qwen": {
+        "accuracy": 0.9238095238095239,
+        "conservatism": 0.6666666666666666,
+        "safety_failures": [
+          "Butter Chicken: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3536.36,
+        "total_cost": 0.003376800000000001
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.85,
+        "avg_latency_ms": 5891.2,
+        "total_cost": 0.00274821
+      },
+      "qwen": {
+        "theme_coverage": 0.95,
+        "avg_latency_ms": 3990.1,
+        "total_cost": 0.00172112
+      }
+    }
+  },
+  {
+    "agent_id": 22,
+    "timestamp": "2026-04-03T04:44:52.436Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9568965517241379,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 4201.239999999998,
+        "total_cost": 0.004459010000000001
+      },
+      "qwen": {
+        "accuracy": 0.9734513274336283,
+        "conservatism": 0.6666666666666666,
+        "safety_failures": [
+          "Chicken Tikka Masala: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3362.2399999999993,
+        "total_cost": 0.0032208
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.9024390243902439,
+        "avg_latency_ms": 5451.1,
+        "total_cost": 0.00263449
+      },
+      "qwen": {
+        "theme_coverage": 0.926829268292683,
+        "avg_latency_ms": 3901.6,
+        "total_cost": 0.0016896
+      }
+    }
+  },
+  {
+    "agent_id": 23,
+    "timestamp": "2026-04-03T04:45:09.912Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9745762711864406,
+        "conservatism": 0.9411764705882353,
+        "safety_failures": [
+          "Chicken Tikka Masala: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 4116.64,
+        "total_cost": 0.00438426
+      },
+      "qwen": {
+        "accuracy": 0.91,
+        "conservatism": 0.625,
+        "safety_failures": [
+          "Falafel Wrap: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Chicken Tikka Masala: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3972.5200000000004,
+        "total_cost": 0.003772320000000001
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.9047619047619048,
+        "avg_latency_ms": 5726.5,
+        "total_cost": 0.00284461
+      },
+      "qwen": {
+        "theme_coverage": 0.9285714285714286,
+        "avg_latency_ms": 4059.6,
+        "total_cost": 0.0017795200000000001
+      }
+    }
+  },
+  {
+    "agent_id": 24,
+    "timestamp": "2026-04-03T04:45:01.344Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9421487603305785,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 4298.3200000000015,
+        "total_cost": 0.004532090000000001
+      },
+      "qwen": {
+        "accuracy": 0.9532710280373832,
+        "conservatism": 0.75,
+        "safety_failures": [
+          "Chicken Tikka Masala: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3444.1600000000008,
+        "total_cost": 0.003295840000000001
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.85,
+        "avg_latency_ms": 5840.2,
+        "total_cost": 0.0027522500000000004
+      },
+      "qwen": {
+        "theme_coverage": 0.95,
+        "avg_latency_ms": 3955.4,
+        "total_cost": 0.00174912
+      }
+    }
+  },
+  {
+    "agent_id": 25,
+    "timestamp": "2026-04-03T04:45:06.465Z",
+    "dietary_scores": {
+      "claude": {
+        "accuracy": 1,
+        "conservatism": 0,
+        "safety_failures": [],
+        "avg_latency_ms": 800,
+        "total_cost": 0.10875
+      },
+      "deepseek": {
+        "accuracy": 0.9813084112149533,
+        "conservatism": 1,
+        "safety_failures": [],
+        "avg_latency_ms": 4735.359999999998,
+        "total_cost": 0.004949529999999998
+      },
+      "qwen": {
+        "accuracy": 0.9484536082474226,
+        "conservatism": 0.5,
+        "safety_failures": [
+          "Butter Chicken: nut_free expected=null got=true (UNSAFE ASSUMPTION)",
+          "Bibimbap: nut_free expected=null got=true (UNSAFE ASSUMPTION)"
+        ],
+        "avg_latency_ms": 3373.9199999999996,
+        "total_cost": 0.003210239999999999
+      }
+    },
+    "review_scores": {
+      "claude": {
+        "theme_coverage": 1,
+        "avg_latency_ms": 1200,
+        "total_cost": 0.063
+      },
+      "deepseek": {
+        "theme_coverage": 0.9024390243902439,
+        "avg_latency_ms": 5478.8,
+        "total_cost": 0.0026583100000000005
+      },
+      "qwen": {
+        "theme_coverage": 0.9512195121951219,
+        "avg_latency_ms": 3912.3,
+        "total_cost": 0.00171616
+      }
+    }
+  }
+]

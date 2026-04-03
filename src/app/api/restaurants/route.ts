@@ -14,7 +14,8 @@ export async function GET(request: Request) {
     }
 
     const q = searchParams.get("q") || "";
-    const categories = searchParams.get("categories")?.split(",").filter(Boolean) || [];
+    const categoriesRaw = searchParams.get("categories") || searchParams.get("category") || "";
+    const categories = categoriesRaw.split(",").filter(Boolean);
     const sort = searchParams.get("sort") || "distance";
     const maxWait = searchParams.get("max_wait") ? parseInt(searchParams.get("max_wait")!) : null;
     const radius = searchParams.get("radius") ? parseFloat(searchParams.get("radius")!) : null;
@@ -24,7 +25,9 @@ export async function GET(request: Request) {
       "thai", "japanese", "italian", "mexican", "indian",
       "chinese", "korean", "mediterranean", "american", "vietnamese",
     ]);
-    const cuisineFilters = categories.filter((c) => cuisineIds.has(c));
+    const cuisineFilters = categories
+      .filter((c) => cuisineIds.has(c.toLowerCase()))
+      .map((c) => c.charAt(0).toUpperCase() + c.slice(1).toLowerCase());
 
     // Build restaurant where clause
     const where: Record<string, unknown> = { isActive: true };

@@ -1,5 +1,6 @@
 import * as cheerio from "cheerio";
-import Anthropic from "@anthropic-ai/sdk";
+import { getGeminiClient, GEMINI_FLASH } from "@/lib/ai/clients";
+import { SchemaType } from "@google/generative-ai";
 import { extractJson } from "@/lib/utils/parse-json";
 import { fetchWithRetry } from "@/lib/utils/fetch-retry";
 import type { MenuSourceStrategy, RawMenuItem, RestaurantInfo } from "./types";
@@ -14,10 +15,6 @@ Return as JSON array:
 [{"name": "string", "description": "string", "price": "string", "category": "string"}]
 
 Return ONLY valid JSON, no markdown fences or extra text.`;
-
-function getAnthropicClient(): Anthropic {
-  return new Anthropic();
-}
 
 /**
  * Source 1: Parse menu from the restaurant's own website.
@@ -263,32 +260,50 @@ export const googlePhotosSource: MenuSourceStrategy = {
 
       if (photos.length === 0) return null;
 
-      // Get first few photos and send to Claude for menu extraction
+      // Get first few photos and send to Gemini Flash for menu extraction
+      // (migrated from Claude Haiku — 10x cheaper, same OCR quality)
       const allItems: RawMenuItem[] = [];
-      const client = getAnthropicClient();
+      const gemini = getGeminiClient();
+      const model = gemini.getGenerativeModel({
+        model: GEMINI_FLASH,
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                name: { type: SchemaType.STRING },
+                description: { type: SchemaType.STRING },
+                price: { type: SchemaType.STRING },
+                category: { type: SchemaType.STRING },
+              },
+              required: ["name"],
+            },
+          },
+        },
+      });
 
       for (const photo of photos.slice(0, 3)) {
         const photoUrl = getPhotoUrl(photo.name, 1600);
 
         try {
-          const response = await client.messages.create({
-            model: "claude-haiku-4-5-20251001",
-            max_tokens: 2048,
-            messages: [
-              {
-                role: "user",
-                content: [
-                  { type: "image", source: { type: "url", url: photoUrl } },
-                  { type: "text", text: MENU_EXTRACTION_PROMPT },
-                ],
-              },
-            ],
-          });
+          // Fetch photo as base64 for Gemini inline_data
+          const photoRes = await fetchWithRetry(photoUrl, {}, { maxRetries: 1 });
+          if (!photoRes.ok) continue;
+          const photoBuffer = Buffer.from(await photoRes.arrayBuffer());
+          const base64 = photoBuffer.toString("base64");
+          const mimeType = photoRes.headers.get("content-type") || "image/jpeg";
 
-          const textBlock = response.content.find((b) => b.type === "text");
-          if (textBlock && textBlock.type === "text") {
+          const result = await model.generateContent([
+            { inlineData: { mimeType, data: base64 } },
+            { text: MENU_EXTRACTION_PROMPT },
+          ]);
+
+          const text = result.response.text();
+          if (text) {
             try {
-              const parsed = extractJson<RawMenuItem[]>(textBlock.text);
+              const parsed = extractJson<RawMenuItem[]>(text);
               if (Array.isArray(parsed)) {
                 allItems.push(...parsed.map((item: RawMenuItem) => ({ ...item, photoUrl })));
               }
