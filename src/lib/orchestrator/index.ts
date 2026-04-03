@@ -35,6 +35,7 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
     calorieLimit: query.calorie_limit ?? null,
     proteinMin: query.protein_min_g ?? null,
     allergens: query.allergens ?? [],
+    maxWaitMinutes: query.max_wait_minutes ?? null,
   };
 
   const cached = await getCachedQuery<SearchResults>(cacheParams);

@@ -55,6 +55,7 @@ export interface QueryCacheParams {
   calorieLimit: number | null;
   proteinMin: number | null;
   allergens: string[];
+  maxWaitMinutes: number | null;
 }
 
 /**
@@ -76,8 +77,9 @@ export function buildQueryCacheKey(params: QueryCacheParams): string {
   const calCap = params.calorieLimit != null ? String(params.calorieLimit) : "none";
   const protMin = params.proteinMin != null ? String(params.proteinMin) : "none";
   const allergens = [...(params.allergens || [])].sort().join("|") || "none";
+  const maxWait = params.maxWaitMinutes != null ? String(params.maxWaitMinutes) : "none";
 
-  return `query:${text}:${filters}:${goal}:${cats}:${sort}:cal${calCap}:prot${protMin}:alg${allergens}:${lat},${lng}:r${radius}`;
+  return `query:${text}:${filters}:${goal}:${cats}:${sort}:cal${calCap}:prot${protMin}:alg${allergens}:wait${maxWait}:${lat},${lng}:r${radius}`;
 }
 
 /**

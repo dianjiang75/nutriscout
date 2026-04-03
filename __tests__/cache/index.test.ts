@@ -81,9 +81,10 @@ describe("Cache Layer", () => {
         calorieLimit: null,
         proteinMin: null,
         allergens: [],
+        maxWaitMinutes: null,
       });
 
-      expect(key).toBe("query:all:gluten_free|vegan:max_protein:none:default:calnone:protnone:algnone:40.736,-73.991:r2.0");
+      expect(key).toBe("query:all:gluten_free|vegan:max_protein:none:default:calnone:protnone:algnone:waitnone:40.736,-73.991:r2.0");
     });
 
     it("sorts filters alphabetically regardless of input order", () => {
@@ -99,6 +100,7 @@ describe("Cache Layer", () => {
         calorieLimit: null,
         proteinMin: null,
         allergens: [],
+        maxWaitMinutes: null,
       });
       const key2 = buildQueryCacheKey({
         searchText: null,
@@ -112,6 +114,7 @@ describe("Cache Layer", () => {
         calorieLimit: null,
         proteinMin: null,
         allergens: [],
+        maxWaitMinutes: null,
       });
 
       expect(key1).toBe(key2);
@@ -130,9 +133,10 @@ describe("Cache Layer", () => {
         calorieLimit: null,
         proteinMin: null,
         allergens: [],
+        maxWaitMinutes: null,
       });
 
-      expect(key).toBe("query:all:none:none:none:default:calnone:protnone:algnone:40.735,-73.991:r1.5");
+      expect(key).toBe("query:all:none:none:none:default:calnone:protnone:algnone:waitnone:40.735,-73.991:r1.5");
     });
 
     it("rounds lat/lng to 3 decimal places (~100m)", () => {
@@ -148,9 +152,10 @@ describe("Cache Layer", () => {
         calorieLimit: null,
         proteinMin: null,
         allergens: [],
+        maxWaitMinutes: null,
       });
 
-      expect(key).toBe("query:all:vegan:none:none:default:calnone:protnone:algnone:40.736,-73.991:r2.0");
+      expect(key).toBe("query:all:vegan:none:none:default:calnone:protnone:algnone:waitnone:40.736,-73.991:r2.0");
     });
 
     it("includes search text in cache key", () => {
@@ -166,6 +171,7 @@ describe("Cache Layer", () => {
         calorieLimit: null,
         proteinMin: null,
         allergens: [],
+        maxWaitMinutes: null,
       });
 
       expect(key).toContain("pad thai");
@@ -186,6 +192,7 @@ describe("Cache Layer", () => {
         calorieLimit: null,
         proteinMin: null,
         allergens: [],
+        maxWaitMinutes: null,
       };
 
       const expectedData = [{ dish: "Tofu Pad Thai", score: 0.95 }];
@@ -208,6 +215,7 @@ describe("Cache Layer", () => {
         calorieLimit: null,
         proteinMin: null,
         allergens: [],
+        maxWaitMinutes: null,
       };
 
       await setCachedQuery(params, [{ dish: "test" }]);
