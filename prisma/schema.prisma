@@ -52,6 +52,27 @@ enum FeedbackType {
   photo_submission
 }
 
+// ─── DISCOVERY ─────────────────────────────────────────
+
+model DiscoveryArea {
+  id                    String   @id @default(uuid()) @db.Uuid
+  name                  String   // e.g. "Midtown Manhattan", "Williamsburg"
+  latitude              Decimal  @db.Decimal(10, 7)
+  longitude             Decimal  @db.Decimal(10, 7)
+  radiusMiles           Decimal  @default(0.5) @map("radius_miles") @db.Decimal(4, 1)
+  discoveryIntervalDays Int      @default(7) @map("discovery_interval_days")
+  priority              Int      @default(3) // 1=high, 5=low
+  isActive              Boolean  @default(true) @map("is_active")
+  lastDiscoveredAt      DateTime? @map("last_discovered_at")
+  restaurantsFoundTotal Int      @default(0) @map("restaurants_found_total")
+  restaurantsFoundLast  Int      @default(0) @map("restaurants_found_last") // new restaurants found in last run
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive, priority], map: "idx_discovery_active_priority")
+  @@map("discovery_areas")
+}
+
 // ─── MODELS ─────────────────────────────────────────────
 
 model Restaurant {

@@ -123,7 +123,7 @@ export async function searchNearby(
     locationRestriction: {
       circle: {
         center: { latitude, longitude },
-        radiusMeters: Math.min(radiusMeters, 50000), // API max 50km
+        radius: Math.min(radiusMeters, 50000), // API max 50km — field is "radius" in v2
       },
     },
     maxResultCount: options?.maxResults ?? 20,

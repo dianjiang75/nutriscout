@@ -54,7 +54,18 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Implements GREEN/YELLOW tier changes, validates each individually
 - Reverts on failure, writes improvement log with before/after metrics
 
-### 9. User Test Agent (`/user-test` skill)
+### 9. Discovery Agent (`/discovery` skill)
+- Runs nightly at 2 AM as AGENT 0 (first in the nightly-agents sequence, before /pipeline)
+- Scans `DiscoveryArea` records for areas due for re-scan (based on `discoveryIntervalDays`)
+- Calls Google Places Nearby Search to find restaurants NOT yet in the DB
+- Queues new restaurants for crawl via BullMQ FlowProducer (priority 5 = nightly scheduled)
+- Researches coverage gaps, adds new discovery areas for trending neighborhoods
+- Script: `scripts/nightly-discovery.ts` (supports `--dry-run`, `--max-areas N`, `--max-restaurants N`)
+- API: `GET/POST /api/discover/areas` for managing discovery targets
+- Seed: `scripts/seed-discovery-areas.ts` (20 NYC neighborhoods + Denver test market)
+- Budget caps: MAX_AREAS=10, MAX_RESTAURANTS=50 per run to control Google Places API costs
+
+### 10. User Test Agent (`/user-test` skill)
 - Runs nightly at 6 AM via macOS launchd, after learn and improve complete
 - Simulates 5 customer personas end-to-end via real API calls:
   - **Explorer Emma** — browses categories, searches, tests navigation and empty states
@@ -124,3 +135,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Hybrid RRF search: combining FTS (GIN) + vector (HNSW) via Reciprocal Rank Fusion (k=60) outperforms either alone; implement in `src/lib/similarity/` when vector search is active
 - GIN trgm index on `dishes.name` (`gin_trgm_ops`) speeds up `findDishesByNameSimilarity()` — currently performs seq scan for `similarity() > 0.2` threshold checks
 - For dietary safety caching (nut_free, gluten_free): never serve semantically cached results from different dietary restriction combos — partition semantic cache by dietary restriction hash
+- Discovery areas stored in `discovery_areas` table; nightly script filters by `discoveryIntervalDays` in JS (Prisma can't express date arithmetic in WHERE)
+- Discovery dedup: script loads all `googlePlaceId`s into a Set before scanning, also adds to the Set during scan to prevent cross-area duplicates
+- Discovery FlowProducer job name: `discovery-{areaId}` with children `discovery-crawl` on `menu-crawl` queue
+- Discovery area duplicate check uses coordinate proximity (0.01 degrees ~1km) OR case-insensitive name match

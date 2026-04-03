@@ -1,0 +1,24 @@
+All 6 agents complete. Here's the summary:
+
+## Final Results
+
+**Commit**: `d0d5152` — `chore(nightly-improve): 2026-04-01 — 6-agent pipeline run`
+
+| Metric | Before | After | Delta |
+|--------|--------|-------|-------|
+| Type errors | 0 | 0 | 0 |
+| Lint errors | 2 | 2 | 0 (pre-existing) |
+| Tests passing | 81 | 93 | **+12** |
+| Tests failing | 12 | 1 | **-11** |
+| Files changed | — | 34 | — |
+
+### What each agent did:
+
+1. **Pipeline** — Robust price parsing, dish dedup on re-crawl, USDA synonym mapping (30+ ingredients), vision batch 3x concurrency, failed batch recovery, extractJson for review summarization
+2. **Backend** — 3 new DB indexes, Redis health check, prefix-based cache invalidation, singleton Prisma in workers, photo worker in start-all, BullMQ job dedup
+3. **Search** — Similarity engine now respects geographic radius, macro_match sort implemented, wait_time sort fixed, cache key includes search text/categories/sort, max_wait filter
+4. **API** — Zod validation on crawl/similar/feedback, UUID validation on dish/restaurant routes, standardized apiSuccess/apiError responses
+5. **Frontend** — viewport-fit cover for iOS safe-area, aria-labels on sort + nav buttons, dish detail error boundary + progressive loading skeleton
+6. **Quality** — Fixed 11 test regressions from the other agents, updated AGENTS.md with 10 new patterns, wrote quality report + METRICS.csv
+
+Not pushed to remote as instructed.
