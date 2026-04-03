@@ -53,7 +53,7 @@ const KNOWN_ALLERGEN_DISHES: Partial<Record<keyof DietaryFlags, string[]>> = {
   nut_free: ["pad thai", "kung pao", "satay", "baklava", "pesto", "mole", "dan dan", "mapo", "som tum"],
   gluten_free: ["ramen", "udon", "nabeyaki", "spaghetti", "linguine", "penne", "fettuccine", "lo mein", "chow mein", "tiramisu", "ladyfinger", "croissant", "baguette", "pizza", "calzone", "gyoza", "dumpling", "wonton"],
   dairy_free: ["alfredo", "carbonara", "mac and cheese", "gratin", "fondue", "queso", "tiramisu", "cheesecake", "butter chicken", "cacio e pepe"],
-  vegan: ["eel", "unagi", "omakase", "bolognese", "ragu", "meatball", "steak", "burger", "lamb", "pork", "bacon", "prosciutto", "sashimi", "sushi", "omelette", "frittata", "tiramisu", "cheesecake"],
+  vegan: ["eel", "unagi", "omakase", "bolognese", "ragu", "meatball", "steak", "burger", "lamb", "pork", "bacon", "prosciutto", "sashimi", "omelette", "frittata", "tiramisu", "cheesecake", "nigiri", "kohada", "uni bibimbap", "taramasalata", "kitsune udon"],
   vegetarian: ["eel", "unagi", "omakase", "sashimi", "bolognese", "ragu", "meatball", "steak", "lamb chop", "pork belly", "bacon", "prosciutto", "kebab"],
 };
 
@@ -187,7 +187,10 @@ export function verify(
               "chicken", "beef", "pork", "lamb", "duck", "turkey", "veal",
               "bacon", "ham", "sausage", "salami", "prosciutto", "pepperoni",
               "steak", "ribeye", "sirloin", "brisket", "chorizo", "meat",
-              "eel", "unagi", "honey",
+              "eel", "unagi", "honey", "dashi", "bonito",
+              "roe", "caviar", "uni", "sea urchin", "ikura",
+              "kohada", "shad", "nigiri", "sashimi",
+              "tarama", "anchovy",
             ]);
           } else if (restriction === "vegetarian") {
             keywordSources.push(ALLERGEN_KEYWORDS["fish"] || []);
@@ -197,7 +200,9 @@ export function verify(
               "chicken", "beef", "pork", "lamb", "duck", "turkey", "veal",
               "bacon", "ham", "sausage", "salami", "prosciutto", "pepperoni",
               "steak", "ribeye", "sirloin", "brisket", "chorizo", "meat",
-              "eel", "unagi",
+              "eel", "unagi", "dashi", "bonito",
+              "roe", "caviar", "uni", "sea urchin", "ikura",
+              "kohada", "shad", "tarama",
             ]);
           }
 
