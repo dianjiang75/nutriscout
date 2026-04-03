@@ -84,8 +84,8 @@ export async function getPlaceDetails(
 ): Promise<PlaceDetails> {
   let fieldMask: string;
   if (fields === "core") fieldMask = DETAIL_FIELDS_CORE;
-  else if (fields === "photos") fieldMask = "places.photos";
-  else if (fields === "reviews") fieldMask = "places.reviews";
+  else if (fields === "photos") fieldMask = DETAIL_FIELDS_PHOTOS;
+  else if (fields === "reviews") fieldMask = DETAIL_FIELDS_REVIEWS;
   else fieldMask = fields;
 
   // The v2 endpoint uses the place ID directly in the URL path

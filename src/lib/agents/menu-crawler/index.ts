@@ -2,7 +2,6 @@ import { prisma } from "@/lib/db/client";
 import { menuSources } from "./sources";
 import { getAnthropicClient, CLAUDE_SONNET } from "@/lib/ai/clients";
 import { extractJson } from "@/lib/utils/parse-json";
-import { fetchWithRetry } from "@/lib/utils/fetch-retry";
 import { batchAnalyzePhotos } from "@/lib/agents/vision-analyzer";
 import type { BatchJob } from "@/lib/agents/vision-analyzer/types";
 import type {

@@ -37,15 +37,6 @@ export async function getRestaurantsInViewport(
   bounds: ViewportBounds,
   filters?: ViewportFilters
 ): Promise<ViewportRestaurant[]> {
-  // Build dynamic WHERE clauses
-  const cuisineFilter = filters?.cuisines?.length
-    ? `AND r.cuisine_type && ARRAY[${filters.cuisines.map((c) => `'${c.replace(/'/g, "''")}'`).join(",")}]::text[]`
-    : "";
-
-  const waitFilter = filters?.maxWait
-    ? `AND (rl.estimated_wait_minutes IS NULL OR rl.estimated_wait_minutes <= ${Number(filters.maxWait)})`
-    : "";
-
   const now = new Date();
   const dayOfWeek = now.getDay();
   const hour = now.getHours();
@@ -75,5 +66,19 @@ export async function getRestaurantsInViewport(
     LIMIT 100
   `;
 
-  return rows;
+  // Apply filters that can't be parameterized in $queryRaw
+  let filtered = rows;
+  if (filters?.cuisines?.length) {
+    const cuisineSet = new Set(filters.cuisines.map((c) => c.toLowerCase()));
+    filtered = filtered.filter((r) =>
+      r.cuisine_type.some((c) => cuisineSet.has(c.toLowerCase()))
+    );
+  }
+  if (filters?.maxWait != null) {
+    filtered = filtered.filter(
+      (r) => r.estimated_wait_minutes == null || r.estimated_wait_minutes <= filters.maxWait!
+    );
+  }
+
+  return filtered;
 }

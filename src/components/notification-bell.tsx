@@ -48,12 +48,26 @@ export function NotificationBell() {
     }
   }, []);
 
-  // Fetch on mount + poll every 60s
+  // Poll every 60s — initial fetch deferred to first interval tick or bell click
   useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000);
-    return () => clearInterval(interval);
-  }, [fetchNotifications]);
+    let mounted = true;
+    const doFetch = async () => {
+      if (!mounted) return;
+      try {
+        const res = await fetch("/api/notifications?limit=10");
+        if (res.ok && mounted) {
+          const json = await res.json();
+          if (json.success) {
+            setNotifications(json.data.notifications);
+            setUnreadCount(json.data.unread_count);
+          }
+        }
+      } catch {}
+    };
+    doFetch();
+    const interval = setInterval(doFetch, 60000);
+    return () => { mounted = false; clearInterval(interval); };
+  }, []);
 
   const markAllRead = async () => {
     try {

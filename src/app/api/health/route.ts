@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db/client";
 import { redis } from "@/lib/cache/redis";
-import { apiSuccess, apiError } from "@/lib/utils/api-response";
+import { apiSuccess } from "@/lib/utils/api-response";
 import { healthCheck as googlePlacesHealthCheck } from "@/lib/google-places/client";
 
 export const dynamic = "force-dynamic";

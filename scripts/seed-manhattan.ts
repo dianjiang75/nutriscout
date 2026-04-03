@@ -14,7 +14,8 @@ const prisma = new PrismaClient({ adapter });
 
 // Load AI-generated photos (priority 1) and user-approved references (priority 2)
 import * as fs from "fs";
-const generatedPhotosPath = require("path").join(__dirname, "generated-photos.json");
+import * as path from "path";
+const generatedPhotosPath = path.join(__dirname, "generated-photos.json");
 const generatedPhotos: Record<string, string> = fs.existsSync(generatedPhotosPath)
   ? JSON.parse(fs.readFileSync(generatedPhotosPath, "utf8"))
   : {};

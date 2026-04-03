@@ -34,7 +34,7 @@ async function main() {
   console.log(`Loaded ${Object.keys(approved).length} approved reference photos`);
 
   // Load dish metadata for cuisine/description
-  let dishMeta: Record<string, Dish> = {};
+  const dishMeta: Record<string, Dish> = {};
   if (fs.existsSync(DISHES_FILE)) {
     const dishes: Dish[] = JSON.parse(fs.readFileSync(DISHES_FILE, "utf8"));
     for (const d of dishes) {
