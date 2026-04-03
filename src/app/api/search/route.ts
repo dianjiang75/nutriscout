@@ -30,7 +30,7 @@ export const GET = withRateLimit("search", async (request) => {
       radius_miles: p.radius,
       dietary_restrictions: dietaryRestrictions,
       nutritional_goal: p.goal,
-      calorie_limit: p.calorie_limit,
+      calorie_limit: p.calorie_limit || p.calories_max,
       protein_min_g: p.protein_min,
       cuisine_preferences: p.cuisines ? p.cuisines.split(",").filter(Boolean) : undefined,
       max_wait_minutes: p.max_wait,
@@ -39,7 +39,7 @@ export const GET = withRateLimit("search", async (request) => {
       limit: p.limit,
       offset: p.offset,
       query: p.q || undefined,
-      categories: p.categories ? p.categories.split(",").filter(Boolean) : undefined,
+      categories: (p.categories || p.category) ? (p.categories || p.category)!.split(",").filter(Boolean) : undefined,
       allergens: p.allergens ? p.allergens.split(",").filter(Boolean) : undefined,
     });
 

@@ -20,6 +20,7 @@ export const searchParamsSchema = z.object({
   diet: z.string().max(200).default(""),
   goal: z.enum(NUTRITIONAL_GOALS).optional(),
   calorie_limit: z.coerce.number().int().min(0).max(10000).optional(),
+  calories_max: z.coerce.number().int().min(0).max(10000).optional(), // alias for calorie_limit
   protein_min: z.coerce.number().int().min(0).max(500).optional(),
   cuisines: z.string().max(500).default(""),
   max_wait: z.coerce.number().int().min(0).max(180).optional(),
@@ -29,6 +30,7 @@ export const searchParamsSchema = z.object({
   offset: z.coerce.number().int().min(0).max(10000).default(0),
   q: z.string().max(200).default(""),
   categories: z.string().max(500).default(""),
+  category: z.string().max(500).default(""), // alias for categories
   allergens: z.string().max(500).default(""),
 });
 
