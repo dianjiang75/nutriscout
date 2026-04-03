@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db/client";
 import { estimateWaitMinutes } from "@/lib/agents/logistics-poller";
-import { apiSuccess, apiError } from "@/lib/utils/api-response";
+import { apiSuccess, apiBadRequest, apiError } from "@/lib/utils/api-response";
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +12,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    if (!UUID_REGEX.test(id)) return apiBadRequest("Invalid restaurant ID");
     const now = new Date();
 
     const logistics = await prisma.restaurantLogistics.findUnique({

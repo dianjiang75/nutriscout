@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/client";
 import { authenticateRequest } from "@/lib/auth/jwt";
 import { checkApiRateLimit } from "@/lib/middleware/rate-limiter";
+import { apiSuccess, apiBadRequest, apiUnauthorized, apiRateLimited, apiError } from "@/lib/utils/api-response";
 
 const favoriteSchema = z.object({
   dish_id: z.string().uuid("Invalid dish_id"),
@@ -10,7 +11,7 @@ const favoriteSchema = z.object({
 export async function GET(request: Request) {
   const auth = await authenticateRequest(request);
   if (!auth) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return apiUnauthorized();
   }
 
   const favorites = await prisma.userFavorite.findMany({
@@ -26,7 +27,7 @@ export async function GET(request: Request) {
     orderBy: { createdAt: "desc" },
   });
 
-  return Response.json({
+  return apiSuccess({
     favorites: favorites.map((f) => ({
       id: f.dish.id,
       name: f.dish.name,
@@ -43,21 +44,18 @@ export async function POST(request: Request) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
   const rl = await checkApiRateLimit(ip, "write");
   if (!rl.allowed) {
-    return Response.json(
-      { error: "Too many requests", retryAfterSeconds: rl.retryAfterSeconds },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds ?? 60) } }
-    );
+    return apiRateLimited(rl.retryAfterSeconds ?? 60);
   }
 
   const auth = await authenticateRequest(request);
   if (!auth) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return apiUnauthorized();
   }
 
   const body = await request.json().catch(() => null);
   const parsed = favoriteSchema.safeParse(body);
   if (!parsed.success) {
-    return Response.json({ error: parsed.error.issues[0]?.message || "dish_id is required" }, { status: 400 });
+    return apiBadRequest(parsed.error.issues[0]?.message || "dish_id is required");
   }
   const { dish_id } = parsed.data;
 
@@ -65,15 +63,15 @@ export async function POST(request: Request) {
     await prisma.userFavorite.create({
       data: { userId: auth.sub, dishId: dish_id },
     });
-    return Response.json({ saved: true }, { status: 201 });
+    return apiSuccess({ saved: true }, 201);
   } catch (error) {
     if ((error as { code?: string }).code === "P2002") {
       // Already favorited — remove it (toggle behavior)
       await prisma.userFavorite.deleteMany({
         where: { userId: auth.sub, dishId: dish_id },
       });
-      return Response.json({ saved: false });
+      return apiSuccess({ saved: false });
     }
-    return Response.json({ error: "Failed to save" }, { status: 500 });
+    return apiError("Failed to save favorite");
   }
 }

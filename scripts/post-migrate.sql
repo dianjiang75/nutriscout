@@ -53,6 +53,18 @@ BEGIN
   END IF;
 END $$;
 
+-- Macro source quality: prioritize dishes with restaurant_published > usda > vision_ai
+CREATE INDEX IF NOT EXISTS idx_dishes_macro_source ON dishes(macro_source, created_at DESC)
+  WHERE macro_source IS NOT NULL;
+
+-- Delivery staleness: find platforms that haven't been checked recently
+CREATE INDEX IF NOT EXISTS idx_delivery_last_checked ON restaurant_deliveries(last_checked)
+  WHERE is_available = true;
+
+-- Macro confidence: find low-confidence dishes needing re-analysis
+CREATE INDEX IF NOT EXISTS idx_dishes_low_confidence ON dishes(macro_confidence ASC)
+  WHERE macro_confidence IS NOT NULL AND macro_confidence < 0.7;
+
 -- ─── pg_trgm index for fuzzy search ────────────────────
 -- GIN is 2x faster than GIST for similarity() function queries used by
 -- findDishesByNameSimilarity(). GIST is better for LIKE/ILIKE patterns;

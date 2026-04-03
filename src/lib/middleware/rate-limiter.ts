@@ -15,6 +15,9 @@ interface RateLimitResult {
   retryAfterSeconds: number | null;
 }
 
+// Monotonic counter for rate limit member uniqueness (avoids Math.random() collisions)
+let memberCounter = 0;
+
 /** Route-category rate limits. */
 export const RATE_LIMITS: Record<string, RateLimitConfig> = {
   auth: { maxRequests: 5, windowSeconds: 60 },
@@ -88,7 +91,7 @@ export async function checkApiRateLimit(
   const key = `ratelimit:${category}:${ip}`;
   const now = Date.now();
   const windowStart = now - config.windowSeconds * 1000;
-  const member = `${now}:${Math.random()}`;
+  const member = `${now}:${++memberCounter}`;
 
   try {
     const result = (await redis.eval(

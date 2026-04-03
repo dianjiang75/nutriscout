@@ -27,9 +27,10 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
           return (
             <button
               key={tab.id}
-              onClick={() => onChange(tab.id)}
-              aria-label={tab.label}
+              onClick={() => !isLocked && onChange(tab.id)}
+              aria-label={isLocked ? `${tab.label} (coming soon)` : tab.label}
               aria-current={isActive ? "page" : undefined}
+              aria-disabled={isLocked || undefined}
               role="tab"
               className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 pt-3 transition-all duration-300 relative ${
                 isLocked

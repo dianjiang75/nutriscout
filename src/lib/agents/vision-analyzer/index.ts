@@ -296,12 +296,13 @@ export async function analyzeMultiplePhotos(
   const outlierIndices = detectOutliers(calorieEstimates);
 
   // Filter out outliers for averaging
-  const validAnalyses = analyses.filter((_, i) => !outlierIndices.includes(i));
+  let validAnalyses = analyses.filter((_, i) => !outlierIndices.includes(i));
+  let effectiveOutliers = outlierIndices;
 
   if (validAnalyses.length === 0) {
     // All are outliers — fall back to using all
-    validAnalyses.push(...analyses);
-    outlierIndices.length = 0;
+    validAnalyses = [...analyses];
+    effectiveOutliers = [];
   }
 
   const n = validAnalyses.length;
@@ -316,10 +317,12 @@ export async function analyzeMultiplePhotos(
   const avgFat =
     validAnalyses.reduce((s, a) => s + a.macros.fat_g.best_estimate, 0) / n;
 
-  // Confidence improves with more photos: base * (1 - 1/sqrt(n))
+  // Confidence improves with more photos: base * (1 + log2(n)/10)
+  // Original formula (1 - 1/sqrt(n)) gave 0.29x for n=2 which is too low.
+  // New formula gives ~5-10% boost per additional photo, capped at 1.0
   const avgBaseConfidence =
     validAnalyses.reduce((s, a) => s + a.confidence, 0) / n;
-  const ensembleConfidence = avgBaseConfidence * (1 - 1 / Math.sqrt(n));
+  const ensembleConfidence = Math.min(1, avgBaseConfidence * (1 + Math.log2(n) / 10));
 
   // Tighter margin with ensemble
   const margin = ensembleConfidence > 0.8 ? 0.1 : 0.2;
@@ -349,7 +352,7 @@ export async function analyzeMultiplePhotos(
     confidence: Math.round(ensembleConfidence * 1000) / 1000,
     usda_references: base.usda_references,
     num_photos_analyzed: imageUrls.length,
-    outlier_indices: outlierIndices,
+    outlier_indices: effectiveOutliers,
   };
 }
 

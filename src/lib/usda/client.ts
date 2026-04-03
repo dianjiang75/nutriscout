@@ -54,9 +54,9 @@ export async function searchFood(query: string, pageSize = 5, requireAllWords = 
 
     const data: USDASearchResponse = await res.json();
 
-    // If requireAllWords returned no results, retry without it
+    // If requireAllWords returned no results, retry with relaxed matching (one time only)
     if (data.foods.length === 0 && requireAllWords) {
-      return searchFood(query, pageSize, false);
+      return searchFood(query, pageSize, false); // base case: requireAllWords=false won't recurse again
     }
 
     return data.foods;
@@ -442,7 +442,10 @@ export async function estimateMacros(
     throw new Error(`No USDA results for "${foodName}"`);
   }
 
-  const best = pickBestMatch(allResults)!;
+  const best = pickBestMatch(allResults);
+  if (!best) {
+    throw new Error(`No suitable USDA match for "${foodName}"`);
+  }
   const scale = portionGrams / 100; // USDA values are per 100g
   const prepMultiplier = getPreparationMultiplier(preparationMethod);
 

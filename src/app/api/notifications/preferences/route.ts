@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db/client";
 import { authenticateRequest } from "@/lib/auth/jwt";
+import { withRateLimit } from "@/lib/middleware/with-rate-limit";
 import { apiSuccess, apiBadRequest, apiUnauthorized } from "@/lib/utils/api-response";
 
 const prefsSchema = z.object({
@@ -17,7 +18,7 @@ const prefsSchema = z.object({
 /**
  * GET /api/notifications/preferences
  */
-export async function GET(request: Request) {
+export const GET = withRateLimit("read", async (request: Request) => {
   const auth = await authenticateRequest(request);
   if (!auth) return apiUnauthorized();
 
@@ -35,12 +36,12 @@ export async function GET(request: Request) {
     quiet_hours_start: prefs?.quietHoursStart ?? null,
     quiet_hours_end: prefs?.quietHoursEnd ?? null,
   });
-}
+});
 
 /**
  * PUT /api/notifications/preferences — partial update
  */
-export async function PUT(request: Request) {
+export const PUT = withRateLimit("write", async (request: Request) => {
   const auth = await authenticateRequest(request);
   if (!auth) return apiUnauthorized();
 
@@ -87,4 +88,4 @@ export async function PUT(request: Request) {
     quiet_hours_start: prefs.quietHoursStart,
     quiet_hours_end: prefs.quietHoursEnd,
   });
-}
+});

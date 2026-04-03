@@ -279,8 +279,8 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
   const waitFiltered = query.max_wait_minutes
     ? radiusFiltered.filter((d) => {
         const wait = d.logistics?.estimated_wait_minutes;
-        // Strict < to match user expectation: "max 15 min" excludes 16 min
-        return wait == null || wait < query.max_wait_minutes!;
+        // Inclusive <= : "max 15 min" means 15 min is acceptable, 16 is not
+        return wait == null || wait <= query.max_wait_minutes!;
       })
     : radiusFiltered;
 

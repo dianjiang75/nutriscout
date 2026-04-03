@@ -31,6 +31,14 @@ if (process.env.NODE_ENV !== "production") {
   globalForRedis.redis = redis;
 }
 
+// Trigger connection eagerly so misconfigurations surface at startup, not on first query.
+// lazyConnect defers the TCP handshake until first command; calling connect() here
+// initiates it immediately while still being non-blocking (returns a promise).
+redis.connect().catch(() => {
+  // Error already handled by the "error" event listener above — this just
+  // ensures .connect() is called so we don't wait until the first command.
+});
+
 /**
  * Check Redis connectivity. Returns latency in ms on success, throws on failure.
  * Use in health check endpoints and startup validation.

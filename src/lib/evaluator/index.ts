@@ -39,9 +39,10 @@ const ALLERGEN_TO_FLAG: Record<string, keyof DietaryFlags> = {
   wheat: "gluten_free",
   gluten: "gluten_free",
   milk: "dairy_free",
-  eggs: "dairy_free",
-  // These allergens don't map to a dietary flag — filtered by description keyword matching
-  // fish, shellfish, soybeans, sesame, celery, mustard, lupin, molluscs, sulphites
+  // eggs intentionally NOT mapped to dairy_free — eggs are NOT dairy.
+  // Egg allergen uses keyword-only matching (no dedicated egg_free flag exists).
+  // These allergens don't map to a dietary flag — filtered by description keyword matching:
+  // eggs, fish, shellfish, soybeans, sesame, celery, mustard, lupin, molluscs, sulphites
 };
 
 /**
@@ -117,19 +118,12 @@ export function verify(
             if (knownDishes.some((kw) => dishName.includes(kw)) && confidence < THRESHOLDS.WARNING_THRESHOLD) return false;
           }
 
-          // Keyword safety net — even if flag is true, description mentioning the allergen overrides
-          // This catches cases where AI marks nut_free:true but description says "peanut sauce"
-          if (isCritical && keywords.some((kw) => desc.includes(kw) || dishName.includes(kw))) return false;
+          // Keyword safety net — if description/name mentions the allergen, exclude regardless of flag.
+          // Catches cases where AI marks nut_free:true but description says "peanut sauce".
+          if (keywords.some((kw) => desc.includes(kw) || dishName.includes(kw))) return false;
 
-          // Flag not explicitly true → fall through to keyword check
-          if (flag !== true) {
-            if (keywords.some((kw) => desc.includes(kw) || dishName.includes(kw))) return false;
-          }
-
-          // Flag is true but description mentions the allergen → suspicious, exclude
-          if (flag === true && keywords.some((kw) => desc.includes(kw) || dishName.includes(kw))) {
-            return false;
-          }
+          // Flag not explicitly true and no keyword match → exclude for non-critical unknowns
+          if (flag !== true && !isCritical) continue;
         } else {
           // No flag mapping — use keyword matching only
           if (keywords.some((kw) => desc.includes(kw) || dishName.includes(kw))) return false;

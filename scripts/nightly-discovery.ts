@@ -141,8 +141,15 @@ async function main() {
             // Yelp business match (best-effort)
             if (yelpKey && yelpKey !== "placeholder") {
               try {
+                // Extract city/state from Google formatted address (e.g. "123 Main St, Brooklyn, NY 10001, USA")
+                const addrParts = (place.formattedAddress || "").split(",").map((s) => s.trim());
+                const address1 = addrParts[0] || "";
+                const city = addrParts.length >= 3 ? addrParts[addrParts.length - 3] : "";
+                const stateZip = addrParts.length >= 2 ? addrParts[addrParts.length - 2] : "";
+                const state = stateZip.split(/\s+/)[0] || "";
+
                 const yelpRes = await fetchWithRetry(
-                  `https://api.yelp.com/v3/businesses/matches?name=${encodeURIComponent(place.displayName?.text || "")}&address1=${encodeURIComponent(place.formattedAddress || "")}&city=&state=&country=US&limit=1`,
+                  `https://api.yelp.com/v3/businesses/matches?name=${encodeURIComponent(place.displayName?.text || "")}&address1=${encodeURIComponent(address1)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&country=US&limit=1`,
                   { headers: { Authorization: `Bearer ${yelpKey}` } },
                   { maxRetries: 1 }
                 );

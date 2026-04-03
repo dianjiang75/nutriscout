@@ -139,3 +139,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Discovery dedup: script loads all `googlePlaceId`s into a Set before scanning, also adds to the Set during scan to prevent cross-area duplicates
 - Discovery FlowProducer job name: `discovery-{areaId}` with children `discovery-crawl` on `menu-crawl` queue
 - Discovery area duplicate check uses coordinate proximity (0.01 degrees ~1km) OR case-insensitive name match
+- Yelp business match in nightly-discovery.ts requires city/state extracted from Google `formattedAddress` — parse as comma-separated parts: `[street, city, stateZip, country]`
+- Evaluator ALLERGEN_TO_FLAG: eggs must NOT map to `dairy_free` — eggs are not dairy. Use keyword-only matching for egg allergen since no `egg_free` flag exists
+- Vision analyzer ensemble confidence formula: `base * (1 + log2(n)/10)` gives ~7% boost per additional photo; original `base * (1 - 1/sqrt(n))` was unusably low for n=2
+- JSON-LD menu price parsing: always check `String(price).startsWith("$")` before prepending `$` to avoid `$$12.99`
+- `pickBestMatch()` in usda/client.ts can return null — always null-check before using result
+- Redis `lazyConnect: true` requires explicit `.connect()` call to surface misconfigurations at startup instead of on first query
+- Rate limiter sorted set member should use monotonic counter `${now}:${++counter}` not `Math.random()` for guaranteed uniqueness
+- Production logger MIN_LEVEL should be `info` (not `warn`) so normal API requests are visible in monitoring; configurable via `LOG_LEVEL` env var
+- post-migrate.sql: `idx_dishes_macro_source`, `idx_delivery_last_checked`, `idx_dishes_low_confidence` indexes added for macro quality sorting, delivery staleness, and re-analysis targeting
+- Button component in shadcn/ui does NOT support `asChild` prop — use `<Link><Button>` wrapping pattern instead

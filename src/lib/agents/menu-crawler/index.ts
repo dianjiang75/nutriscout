@@ -127,6 +127,7 @@ export async function analyzeIngredients(
               dietary_flags: {
                 vegan: null, vegetarian: null, gluten_free: null,
                 dairy_free: null, nut_free: null, halal: null, kosher: null,
+                glp1_labeled: false,
               },
               dietary_confidence: 0,
               dietary_warnings: ["Automated dietary analysis failed — manual review needed"],
@@ -282,7 +283,7 @@ export async function crawlRestaurant(
   await prisma.restaurant.update({
     where: { id: restaurant.id },
     data: {
-      menuSource: usedSource as "website" | "google_photos" | "manual",
+      menuSource: usedSource === "none" ? undefined : usedSource as "website" | "google_photos" | "manual",
       lastMenuCrawl: new Date(),
     },
   });

@@ -120,14 +120,15 @@ function extractJsonLdMenu(html: string): RawMenuItem[] {
 
             for (const item of itemList) {
               if (item.name) {
-                const price = item.offers?.price
+                const rawPrice = item.offers?.price
                   || item.offers?.lowPrice
                   || item.price
                   || null;
+                const price = rawPrice != null ? (String(rawPrice).startsWith("$") ? String(rawPrice) : `$${rawPrice}`) : null;
                 items.push({
                   name: item.name,
                   description: item.description || "",
-                  price: price ? `$${price}` : null,
+                  price,
                   category,
                 });
               }
@@ -147,10 +148,12 @@ function extractJsonLdMenu(html: string): RawMenuItem[] {
 
             for (const item of itemList) {
               if (item.name) {
+                const rawPrice = item.offers?.price ?? null;
+                const price = rawPrice != null ? (String(rawPrice).startsWith("$") ? String(rawPrice) : `$${rawPrice}`) : null;
                 items.push({
                   name: item.name,
                   description: item.description || "",
-                  price: item.offers?.price ? `$${item.offers.price}` : null,
+                  price,
                   category,
                 });
               }

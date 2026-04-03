@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default function GlobalError({
@@ -20,9 +21,19 @@ export default function GlobalError({
       <p className="text-sm text-muted-foreground mb-4 max-w-md">
         We hit an unexpected error. This has been logged and we&apos;ll look into it.
       </p>
-      <Button onClick={reset} variant="outline">
-        Try again
-      </Button>
+      <div className="flex gap-3">
+        <Button onClick={reset} variant="outline">
+          Try again
+        </Button>
+        <Link href="/">
+          <Button variant="ghost">Go home</Button>
+        </Link>
+      </div>
+      {process.env.NODE_ENV === "development" && error.digest && (
+        <p className="mt-4 text-xs text-muted-foreground/50 font-mono">
+          Digest: {error.digest}
+        </p>
+      )}
     </div>
   );
 }
