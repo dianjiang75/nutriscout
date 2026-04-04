@@ -4,7 +4,7 @@ import { getAnthropicClient, CLAUDE_SONNET } from "@/lib/ai/clients";
 import { extractJson } from "@/lib/utils/parse-json";
 import { batchAnalyzePhotos } from "@/lib/agents/vision-analyzer";
 import type { BatchJob } from "@/lib/agents/vision-analyzer/types";
-import { cleanDishName, cleanCategoryName, cleanDescription, isDishWorthRecommending } from "./clean-dish-name";
+import { cleanDishName, cleanCategoryName, cleanDescription, isDishWorthRecommending, isWineOrSpirit } from "./clean-dish-name";
 import type {
   AnalyzedDish,
   CrawlResult,
@@ -47,10 +47,14 @@ Return ONLY valid JSON, no markdown fences or extra text.`;
 
 /**
  * Regex patterns for GLP-1 labeled menu items.
- * Major chains (Shake Shack, Chipotle, Subway, M&S) started adding "GLP-1 Friendly"
- * section labels and tags in March–April 2026.
+ * Covers both the generic "GLP-1 Friendly" label AND chain-specific marketing terms:
+ * - Shake Shack: "Good Fit Menu"
+ * - Chipotle: "High Protein Menu"
+ * - Cheesecake Factory: "Skinnylicious"
+ * - Subway, M&S, Morrisons: "GLP-1 Friendly", "GLP-1 Support"
+ * Only matches explicit restaurant labeling — never inferred from macros.
  */
-const GLP1_LABEL_PATTERN = /\bglp-?1\s*(friendly|support|approved|label|section|choice)?\b/i;
+const GLP1_LABEL_PATTERN = /\bglp-?1\s*(friendly|support|approved|label|section|choice)?\b|\bgood fit\s*menu\b|\bhigh protein menu\b|\bskinnylicious\b|\bglp-?1\s*approved\b/i;
 
 /**
  * Check if a raw menu item has an explicit GLP-1 label from the restaurant.
@@ -237,8 +241,9 @@ export async function crawlRestaurant(
     const cleanedCategory = item.category ? cleanCategoryName(item.category) : null;
 
     // Filter out items that aren't real dishes worth recommending
-    // (sides, add-ons, basic drinks, condiments, non-food items)
+    // (sides, add-ons, basic drinks, condiments, non-food items, wines, spirits, beers)
     if (!isDishWorthRecommending(cleaned, cleanedCategory)) return acc;
+    if (isWineOrSpirit(cleaned, cleanedCategory)) return acc;
 
     const cleanedDescription = item.description
       ? cleanDescription(item.description, cleaned)
@@ -272,19 +277,78 @@ export async function crawlRestaurant(
     };
   }
 
-  // Analyze ingredients and dietary flags
-  const analyzed = await analyzeIngredients(rawItems);
+  // ─── PRE-INSERT AUDIT: 3-agent validation pipeline ─────
+  // Runs Agent A (format), Agent B (food verify), Agent C (consistency)
+  // before ANY dish enters the database. This is the guardrail that prevents
+  // garbage like "Wheelchair-accessible basin" from becoming menu items.
+  const { auditMenuItems } = await import("@/lib/agents/dish-auditor");
+  const cuisineStr = (restaurant as Record<string, unknown>).cuisineType
+    ? ((restaurant as Record<string, unknown>).cuisineType as string[]).join(", ")
+    : "";
+  const auditResults = await auditMenuItems(rawItems, restaurant.id, cuisineStr);
+
+  // Split results: passed items, rejected items, and non-dish items (drinks/sides)
+  const validItems = auditResults.filter(r => r.passed);
+  const rejected = auditResults.filter(r => !r.passed);
+
+  // Dishes get full treatment (photos, search, image gen)
+  // Drinks/sides/condiments go in DB for restaurant menu pages but NOT in search/photos
+  const dishItems = validItems.filter(r => r.dishType === "dish");
+  const nonDishItems = validItems.filter(r => r.dishType !== "dish");
+
+  if (rejected.length > 0) {
+    console.log(`[menu-crawler] Rejected ${rejected.length}/${rawItems.length} items for ${restaurant.name}:`);
+    rejected.slice(0, 5).forEach(r => console.log(`  ✗ "${r.item.name}" — ${r.rejectionReasons.join(", ")}`));
+  }
+  if (nonDishItems.length > 0) {
+    console.log(`[menu-crawler] ${nonDishItems.length} non-dish items (drinks/sides) — menu-only, no photos/search`);
+  }
+
+  // Use only dish items for ingredient analysis + photo pipeline
+  // Non-dish items go directly to DB without photos or dietary analysis
+  const validRawItems = dishItems.map(r => r.item);
+
+  // Insert non-dish items directly (no photos, no dietary analysis, not searchable)
+  for (const r of nonDishItems) {
+    const raw = r.item;
+    const price = raw.price ? parsePriceString(raw.price) : null;
+    const existing = await prisma.dish.findFirst({
+      where: { restaurantId: restaurant.id, name: { equals: raw.name, mode: "insensitive" } },
+    });
+    if (!existing) {
+      await prisma.dish.create({
+        data: {
+          restaurantId: restaurant.id,
+          name: raw.name,
+          description: raw.description || null,
+          price,
+          category: raw.category || r.dishType,
+          isAvailable: false, // NOT searchable — only visible on restaurant menu page
+        },
+      }).catch(() => {});
+    }
+  }
+
+  // Analyze ingredients and dietary flags (only for validated items)
+  const analyzed = await analyzeIngredients(validRawItems);
 
   // Upsert dishes into database and collect photo jobs
   const photoJobs: BatchJob[] = [];
 
-  for (let i = 0; i < rawItems.length; i++) {
-    const raw = rawItems[i];
+  for (let i = 0; i < validRawItems.length; i++) {
+    const raw = validRawItems[i];
     const analysis = analyzed.find(
       (a) => a.dish_name.toLowerCase() === raw.name.toLowerCase()
     );
 
     const price = raw.price ? parsePriceString(raw.price) : null;
+
+    // Items sourced from allergen compliance pages (California SB 478, EU FIC) carry
+    // elevated dietary confidence — the restaurant is legally liable for accuracy.
+    const isCompliancePage = raw.source === "compliance_page";
+    const dietaryConfidence = isCompliancePage
+      ? Math.max(0.95, analysis?.dietary_confidence ?? 0.95)
+      : (analysis?.dietary_confidence ?? null);
 
     const dishData = {
       name: raw.name,
@@ -294,7 +358,7 @@ export async function crawlRestaurant(
       ingredientsRaw: raw.description || null,
       ingredientsParsed: analysis?.ingredients_parsed ?? undefined,
       dietaryFlags: analysis?.dietary_flags ?? undefined,
-      dietaryConfidence: analysis?.dietary_confidence ?? null,
+      dietaryConfidence,
       isAvailable: true,
     };
 
