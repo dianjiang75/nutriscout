@@ -4,6 +4,7 @@ import { getAnthropicClient, CLAUDE_SONNET } from "@/lib/ai/clients";
 import { extractJson } from "@/lib/utils/parse-json";
 import { batchAnalyzePhotos } from "@/lib/agents/vision-analyzer";
 import type { BatchJob } from "@/lib/agents/vision-analyzer/types";
+import { cleanDishName, cleanCategoryName, cleanDescription, isDishWorthRecommending } from "./clean-dish-name";
 import type {
   AnalyzedDish,
   CrawlResult,
@@ -229,6 +230,48 @@ export async function crawlRestaurant(
     };
   }
 
+  // Clean and standardize dish names, descriptions, categories before analysis and storage
+  rawItems = rawItems.reduce<RawMenuItem[]>((acc, item) => {
+    const cleaned = cleanDishName(item.name);
+    if (!cleaned) return acc; // skip garbage names
+    const cleanedCategory = item.category ? cleanCategoryName(item.category) : null;
+
+    // Filter out items that aren't real dishes worth recommending
+    // (sides, add-ons, basic drinks, condiments, non-food items)
+    if (!isDishWorthRecommending(cleaned, cleanedCategory)) return acc;
+
+    const cleanedDescription = item.description
+      ? cleanDescription(item.description, cleaned)
+      : null;
+    acc.push({
+      ...item,
+      name: cleaned,
+      category: cleanedCategory,
+      description: cleanedDescription ?? "",
+    });
+    return acc;
+  }, []);
+
+  // Deduplicate by cleaned name (case-insensitive) within same crawl
+  const seen = new Set<string>();
+  rawItems = rawItems.filter((item) => {
+    const key = item.name.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  if (rawItems.length === 0) {
+    return {
+      restaurantId: restaurant.id,
+      restaurantName: restaurant.name,
+      menuSource: usedSource,
+      dishesFound: 0,
+      dishesAnalyzed: 0,
+      photosQueued: 0,
+    };
+  }
+
   // Analyze ingredients and dietary flags
   const analyzed = await analyzeIngredients(rawItems);
 
@@ -256,8 +299,12 @@ export async function crawlRestaurant(
     };
 
     // Check if dish already exists for this restaurant to avoid duplicates on re-crawl
+    // Use case-insensitive match so re-crawls with minor casing changes still dedup
     const existing = await prisma.dish.findFirst({
-      where: { restaurantId: restaurant.id, name: raw.name },
+      where: {
+        restaurantId: restaurant.id,
+        name: { equals: raw.name, mode: "insensitive" },
+      },
     });
 
     const dish = existing
@@ -345,6 +392,7 @@ function extractCuisineTypes(googleTypes: string[]): string[] {
 }
 
 export { parseHtmlMenu } from "./sources";
+export { cleanDishName, cleanCategoryName, cleanDescription } from "./clean-dish-name";
 export type {
   RawMenuItem,
   AnalyzedDish,
