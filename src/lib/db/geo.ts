@@ -153,20 +153,14 @@ export async function fullTextSearchDishes(
 
   // Fallback: 'simple' dictionary (no stemming — exact token match)
   // Catches foreign food terms the English stemmer discards (sushi, ramen, nori)
+  // Uses the search_vector_simple generated column + GIN index from post-migrate.sql
+  // (avoids on-the-fly to_tsvector() which caused seq scans)
   const simpleResults = await prisma.$queryRaw<{ id: string; rank: number }[]>`
     SELECT
       id,
-      ts_rank_cd(
-        setweight(to_tsvector('simple', coalesce(name, '')), 'A') ||
-        setweight(to_tsvector('simple', coalesce(description, '')), 'B'),
-        websearch_to_tsquery('simple', ${trimmed}),
-        2
-      ) AS rank
+      ts_rank_cd(search_vector_simple, websearch_to_tsquery('simple', ${trimmed}), 2) AS rank
     FROM dishes
-    WHERE (
-      setweight(to_tsvector('simple', coalesce(name, '')), 'A') ||
-      setweight(to_tsvector('simple', coalesce(description, '')), 'B')
-    ) @@ websearch_to_tsquery('simple', ${trimmed})
+    WHERE search_vector_simple @@ websearch_to_tsquery('simple', ${trimmed})
       AND is_available = true
     ORDER BY rank DESC
     LIMIT ${limit}

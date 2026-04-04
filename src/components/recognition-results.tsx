@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { MacroBar } from "@/components/macro-bar";
 
 interface RecognitionData {
@@ -99,9 +100,8 @@ export function RecognitionResults({ recognition, dbMatches }: RecognitionResult
                 className="flex items-center gap-3 p-3 rounded-xl border border-border/40 bg-card hover:bg-accent transition-colors"
               >
                 {match.photo_url && (
-                  <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-muted">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={match.photo_url} alt={match.name} className="w-full h-full object-cover" />
+                  <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-muted relative">
+                    <Image src={match.photo_url} alt={match.name} fill sizes="48px" className="object-cover" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">

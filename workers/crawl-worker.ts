@@ -82,8 +82,11 @@ worker.on("completed", async (job) => {
         },
       });
 
+      // Cap photo batch to prevent queue flooding — 20 dishes max per crawl
+      const MAX_PHOTOS_PER_CRAWL = 20;
       let queued = 0;
       for (const dish of dishes) {
+        if (queued >= MAX_PHOTOS_PER_CRAWL) break;
         const photo = dish.photos[0];
         if (photo?.sourceUrl) {
           const allPhotoUrls = dish.photos

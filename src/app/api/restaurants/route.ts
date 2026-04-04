@@ -1,8 +1,10 @@
 import { prisma } from "@/lib/db/client";
+import { withRateLimit } from "@/lib/middleware/with-rate-limit";
+import { apiSuccess, apiBadRequest, apiError } from "@/lib/utils/api-response";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export const GET = withRateLimit("read", async (request: Request) => {
   try {
     const { searchParams } = new URL(request.url);
 
@@ -10,7 +12,12 @@ export async function GET(request: Request) {
     const lng = parseFloat(searchParams.get("lng") || "");
 
     if (isNaN(lat) || isNaN(lng)) {
-      return Response.json({ error: "lat and lng are required" }, { status: 400 });
+      return apiBadRequest("lat and lng are required");
+    }
+
+    // Validate coordinate ranges
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      return apiBadRequest("lat must be -90 to 90, lng must be -180 to 180");
     }
 
     const q = searchParams.get("q") || "";
@@ -120,12 +127,12 @@ export async function GET(request: Request) {
       filtered.sort((a, b) => (a.distanceMiles ?? Infinity) - (b.distanceMiles ?? Infinity));
     }
 
-    return Response.json({ restaurants: filtered });
+    return apiSuccess({ restaurants: filtered });
   } catch (error) {
-    console.error("Restaurants error:", error);
-    return Response.json({ error: "Failed to fetch restaurants" }, { status: 500 });
+    console.error("[api/restaurants] Error:", (error as Error).message);
+    return apiError("Failed to fetch restaurants");
   }
-}
+});
 
 function haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 3959;

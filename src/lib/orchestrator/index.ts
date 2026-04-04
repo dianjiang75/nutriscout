@@ -202,8 +202,19 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
     logisticsRows.map((l) => [l.restaurantId, l])
   );
 
-  // Calculate distances using haversine formula
+  // Use DB-calculated distances from geo pre-filter when available (earthdistance is
+  // more accurate than haversine for short distances). Fall back to haversine for
+  // dishes from restaurants not in the geo pre-filter.
   const distanceMap = new Map<string, number>();
+  if (hasGeoParams) {
+    const geoResults = await getRestaurantIdsWithinRadius(
+      query.latitude, query.longitude, query.radius_miles
+    );
+    for (const r of geoResults) {
+      distanceMap.set(r.id, Math.round(r.distance_miles * 100) / 100);
+    }
+  }
+  // Fallback: calculate haversine for any restaurants not in the geo map
   for (const dish of dishes) {
     if (!distanceMap.has(dish.restaurantId)) {
       const rLat = Number(dish.restaurant.latitude);
@@ -319,14 +330,19 @@ export async function search(query: UserSearchQuery): Promise<SearchResults> {
   // 5c. Restaurant diversity cap: max 3 dishes per restaurant
   const diversified = applyRestaurantDiversityCap(verified, 3);
 
-  // 5d. Re-sort after diversity cap for explicit sorts so order stays monotonic
-  // (the cap can remove items and break the sort order)
+  // 5d. Re-sort after diversity cap so order stays monotonic
+  // (the cap removes items which can break sort order)
   if (query.sort_by === "rating") {
     diversified.sort((a, b) => (b.review_summary?.average_rating ?? -1) - (a.review_summary?.average_rating ?? -1));
   } else if (query.sort_by === "distance") {
     diversified.sort((a, b) => (a.restaurant.distance_miles ?? Infinity) - (b.restaurant.distance_miles ?? Infinity));
   } else if (query.sort_by === "wait_time") {
     diversified.sort((a, b) => (a.logistics?.estimated_wait_minutes ?? Infinity) - (b.logistics?.estimated_wait_minutes ?? Infinity));
+  } else if (query.sort_by === "macro_match" && query.nutritional_goal) {
+    diversified.sort((a, b) => macroMatchScore(b, query.nutritional_goal!) - macroMatchScore(a, query.nutritional_goal!));
+  } else {
+    // Default relevance — re-sort after cap to maintain best-match ordering
+    diversified.sort((a, b) => relevanceScore(b, ftsRankMap) - relevanceScore(a, ftsRankMap));
   }
 
   // 6. Cache full result set, then return paginated slice

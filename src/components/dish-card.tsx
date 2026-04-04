@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { UtensilsCrossed, MapPin, Clock, Heart } from "lucide-react";
 import { ConfidenceDot } from "@/components/confidence-dot";
 import { useAuth } from "@/lib/auth/context";
@@ -78,12 +79,13 @@ export function DishCard({ dish, initialFavorited = false }: { dish: DishCardDat
           {dish.photo_url && !imgError ? (
             <>
               <div className="absolute inset-0 bg-gradient-to-br from-amber-100 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/10" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={dish.photo_url}
                 alt={dish.name}
-                className="absolute inset-0 w-full h-full object-cover transition-all duration-500 opacity-0 data-[loaded=true]:opacity-100 group-hover:scale-105"
-                onLoad={(e) => e.currentTarget.setAttribute("data-loaded", "true")}
+                fill
+                sizes="(max-width: 400px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-cover transition-all duration-500 opacity-0 data-[loaded=true]:opacity-100 group-hover:scale-105"
+                onLoad={(e) => (e.currentTarget as HTMLImageElement).setAttribute("data-loaded", "true")}
                 onError={() => setImgError(true)}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />

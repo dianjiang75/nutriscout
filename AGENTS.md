@@ -222,3 +222,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Redis 8 I/O threading: set `io-threads 8` + `io-threads-do-reads yes` in redis.conf for up to 2x throughput on multi-core servers. Nightly agent coordination (all 6 agents + BullMQ state + rate limiter) stresses Redis throughput.
 - Prisma 7.4 partialIndexes preview feature available — add `"partialIndexes"` to previewFeatures in schema.prisma to enable defining conditional indexes directly in schema (avoids needing post-migrate.sql for partial index patterns).
 - PgBouncer transaction mode is required for Prisma 7 + prisma.$transaction() — session mode breaks prepared statements. For PgBouncer 1.21+: do NOT set `?pgbouncer=true` in DATABASE_URL (that flag is now legacy and counter-productive). Use separate DIRECT_DATABASE_URL for prisma migrate commands.
+- `post-migrate.sql` now exists at `prisma/post-migrate.sql` — run after `prisma migrate deploy`. Contains GIN (dietaryFlags, search_vector, trgm), GiST (geo), HNSW (embedding), and partial indexes.
+- Cache `cacheGet`/`cacheSet`/`cacheDel` now swallow Redis errors gracefully — callers fall through to DB on cache failure (no more 500s from Redis outages).
+- Logger `withLogging()` generates correlation IDs (`requestId`) from `x-request-id` header or `crypto.randomUUID().slice(0,8)`. Also flags slow requests (>2s).
+- `withRateLimit("read")` must wrap all public GET routes — restaurant detail, dish detail, and menu routes were unprotected until 2026-04-04.
+- `estimateMacros()` clamps portion to 1g–5000g — prevents nonsensical macro values from vision analyzer errors (0g or 50000g portions).
+- Crawl worker caps photo analysis batch at 20 per restaurant — prevents queue flooding for large menus.
+- FTS simple dictionary fallback now uses indexed `search_vector_simple` generated column (post-migrate.sql) — no more on-the-fly `to_tsvector('simple', ...)` seq scans.
+- Discovery areas expanded (2026-04-04): 30 total — 15 Manhattan, 7 Brooklyn, 4 Queens, 4 Denver. Flushing (priority 1) is the richest new area (20 restaurants per scan).

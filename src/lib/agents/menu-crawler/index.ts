@@ -401,8 +401,9 @@ export async function crawlRestaurant(
 
   // Queue photo analysis in background (don't await — runs async)
   if (photoJobs.length > 0) {
+    console.log(`[menu-crawler] Queueing ${photoJobs.length} photo analysis jobs for ${restaurant.name}`);
     batchAnalyzePhotos(photoJobs).catch((err) =>
-      console.error("Photo batch analysis failed:", (err as Error).message)
+      console.error(`[menu-crawler] Photo batch analysis failed for ${restaurant.name} (${photoJobs.length} photos):`, (err as Error).message)
     );
   }
 

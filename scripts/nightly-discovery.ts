@@ -94,6 +94,9 @@ async function main() {
     const { flowProducer, menuCrawlQueue } = await import("../workers/queues");
     const { fetchWithRetry } = await import("../src/lib/utils/fetch-retry");
 
+    // addBulk available for future batch optimization (single Redis pipeline call vs N round-trips)
+    // const useBulkEnqueue = typeof menuCrawlQueue.addBulk === "function";
+
     const yelpKey = process.env.YELP_API_KEY;
 
     // Get all existing googlePlaceIds in one query for fast dedup

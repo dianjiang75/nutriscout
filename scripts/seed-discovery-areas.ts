@@ -7,7 +7,7 @@
 import "dotenv/config";
 
 const AREAS = [
-  // Manhattan
+  // ── Manhattan ──────────────────────────────────────────────────────
   { name: "Midtown Manhattan", latitude: 40.7549, longitude: -73.9840, radiusMiles: 0.5, priority: 1 },
   { name: "Lower East Side", latitude: 40.7150, longitude: -73.9843, radiusMiles: 0.4, priority: 2 },
   { name: "East Village", latitude: 40.7265, longitude: -73.9815, radiusMiles: 0.3, priority: 2 },
@@ -23,6 +23,27 @@ const AREAS = [
   { name: "Koreatown / Herald Square", latitude: 40.7481, longitude: -73.9872, radiusMiles: 0.25, priority: 1 },
   { name: "Washington Heights", latitude: 40.8417, longitude: -73.9393, radiusMiles: 0.5, priority: 3 },
   { name: "NoHo / Bowery", latitude: 40.7260, longitude: -73.9929, radiusMiles: 0.25, priority: 2 },
+
+  // ── Brooklyn ───────────────────────────────────────────────────────
+  { name: "Williamsburg", latitude: 40.7081, longitude: -73.9571, radiusMiles: 0.4, priority: 1 },
+  { name: "Park Slope / Gowanus", latitude: 40.6710, longitude: -73.9814, radiusMiles: 0.4, priority: 2 },
+  { name: "Bushwick", latitude: 40.6944, longitude: -73.9213, radiusMiles: 0.4, priority: 3 },
+  { name: "Carroll Gardens / Cobble Hill", latitude: 40.6795, longitude: -73.9991, radiusMiles: 0.3, priority: 2 },
+  { name: "DUMBO / Brooklyn Heights", latitude: 40.7033, longitude: -73.9903, radiusMiles: 0.3, priority: 2 },
+  { name: "Fort Greene / Clinton Hill", latitude: 40.6882, longitude: -73.9718, radiusMiles: 0.35, priority: 3 },
+  { name: "Prospect Heights / Crown Heights", latitude: 40.6775, longitude: -73.9619, radiusMiles: 0.4, priority: 3 },
+
+  // ── Queens ─────────────────────────────────────────────────────────
+  { name: "Flushing", latitude: 40.7580, longitude: -73.8306, radiusMiles: 0.4, priority: 1 },
+  { name: "Astoria", latitude: 40.7724, longitude: -73.9301, radiusMiles: 0.4, priority: 2 },
+  { name: "Jackson Heights", latitude: 40.7468, longitude: -73.8831, radiusMiles: 0.35, priority: 2 },
+  { name: "Long Island City", latitude: 40.7425, longitude: -73.9566, radiusMiles: 0.35, priority: 3 },
+
+  // ── Denver ─────────────────────────────────────────────────────────
+  { name: "RiNo Denver", latitude: 39.7713, longitude: -104.9812, radiusMiles: 0.4, priority: 2 },
+  { name: "LoHi Denver", latitude: 39.7585, longitude: -105.0072, radiusMiles: 0.35, priority: 2 },
+  { name: "LoDo Denver", latitude: 39.7530, longitude: -104.9990, radiusMiles: 0.35, priority: 3 },
+  { name: "Capitol Hill Denver", latitude: 39.7314, longitude: -104.9788, radiusMiles: 0.35, priority: 3 },
 ];
 
 async function main() {

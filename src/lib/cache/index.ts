@@ -15,30 +15,45 @@ export const TTL = {
 type CacheDomain = keyof typeof TTL;
 
 /**
- * Get a cached value by key. Returns null on miss.
+ * Get a cached value by key. Returns null on miss or Redis failure.
+ * Swallows errors so callers fall through to the database on cache miss.
  */
 export async function cacheGet<T>(key: string): Promise<T | null> {
-  const raw = await redis.get(key);
-  if (!raw) return null;
-  return JSON.parse(raw) as T;
+  try {
+    const raw = await redis.get(key);
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  } catch (err) {
+    console.warn(`[cache] GET failed for ${key.slice(0, 60)}:`, (err as Error).message);
+    return null;
+  }
 }
 
 /**
  * Set a cached value with the TTL for the given domain.
+ * Swallows errors — cache misses are acceptable, but writes should not break callers.
  */
 export async function cacheSet(
   key: string,
   value: unknown,
   domain: CacheDomain
 ): Promise<void> {
-  await redis.set(key, JSON.stringify(value), "EX", TTL[domain]);
+  try {
+    await redis.set(key, JSON.stringify(value), "EX", TTL[domain]);
+  } catch (err) {
+    console.warn(`[cache] SET failed for ${key.slice(0, 60)}:`, (err as Error).message);
+  }
 }
 
 /**
  * Delete a cached key.
  */
 export async function cacheDel(key: string): Promise<void> {
-  await redis.del(key);
+  try {
+    await redis.del(key);
+  } catch (err) {
+    console.warn(`[cache] DEL failed for ${key.slice(0, 60)}:`, (err as Error).message);
+  }
 }
 
 // ─── Semantic Query Cache ────────────────────────────────

@@ -1,15 +1,15 @@
 import { prisma } from "@/lib/db/client";
+import { withRateLimit } from "@/lib/middleware/with-rate-limit";
 import { apiSuccess, apiBadRequest, apiNotFound, apiError } from "@/lib/utils/api-response";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export async function GET(
+export const GET = withRateLimit("read", async (
   _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context?: { params: Promise<Record<string, string>> }
+) => {
+  const { id } = await context!.params;
   try {
-    const { id } = await params;
-
     if (!UUID_REGEX.test(id)) {
       return apiBadRequest("Invalid dish ID format");
     }
@@ -73,7 +73,7 @@ export async function GET(
   } catch {
     return apiError("Failed to fetch dish");
   }
-}
+});
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildSourceInfo(dish: any) {

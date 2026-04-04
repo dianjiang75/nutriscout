@@ -25,6 +25,12 @@ interface PhotoJobData {
 async function processPhotoJob(job: Job<PhotoJobData>) {
   const { dishId, photoUrl, photoUrls, restaurantName } = job.data;
 
+  // Validate inputs early — prevents wasted API calls on bad data
+  if (!dishId || !photoUrl) {
+    console.warn(`[photo-worker] Skipping job — missing dishId or photoUrl`);
+    return { dishId, skipped: true, reason: "missing_input" };
+  }
+
   const urls = photoUrls && photoUrls.length > 1 ? photoUrls : [photoUrl];
   console.log(`[photo-worker] Analyzing ${urls.length} photo(s) for dish ${dishId} at ${restaurantName}`);
 

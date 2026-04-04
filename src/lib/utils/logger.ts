@@ -18,6 +18,7 @@ interface LogContext {
   userId?: string;
   ip?: string;
   query?: string;
+  requestId?: string;
   [key: string]: unknown;
 }
 
@@ -83,6 +84,8 @@ export function withLogging(
   return async (request: Request) => {
     const start = Date.now();
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+    // Correlation ID: use incoming header or generate a short random ID
+    const requestId = request.headers.get("x-request-id") ?? crypto.randomUUID().slice(0, 8);
 
     try {
       const response = await handler(request);
@@ -95,6 +98,16 @@ export function withLogging(
           status: response.status,
           durationMs,
           ip,
+          requestId,
+        });
+      } else if (durationMs > 2000) {
+        // Flag slow requests even on success (> 2s)
+        logger.warn("Slow API request", {
+          route,
+          method: request.method,
+          status: response.status,
+          durationMs,
+          requestId,
         });
       } else {
         logger.debug("API request", {
@@ -102,6 +115,7 @@ export function withLogging(
           method: request.method,
           status: response.status,
           durationMs,
+          requestId,
         });
       }
 
@@ -113,6 +127,7 @@ export function withLogging(
         method: request.method,
         durationMs,
         ip,
+        requestId,
         error: (err as Error).message,
       });
       throw err;

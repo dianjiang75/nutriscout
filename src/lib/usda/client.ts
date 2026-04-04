@@ -475,6 +475,13 @@ export async function estimateMacros(
   portionGrams: number,
   preparationMethod?: string,
 ): Promise<USDAMacroEstimate> {
+  // Clamp portion to sane bounds — prevents nonsensical macro values from
+  // vision analyzer errors (e.g., 0g or 50000g portions)
+  const clampedPortion = Math.max(1, Math.min(portionGrams, 5000));
+  if (portionGrams !== clampedPortion) {
+    console.warn(`[usda] Clamped portion for "${foodName}": ${portionGrams}g → ${clampedPortion}g`);
+  }
+
   const queries = decomposeIngredientName(foodName);
 
   // Try each decomposed query, collect all results
@@ -530,7 +537,7 @@ export async function estimateMacros(
   if (!best) {
     throw new Error(`No suitable USDA match for "${foodName}"`);
   }
-  const scale = portionGrams / 100; // USDA values are per 100g
+  const scale = clampedPortion / 100; // USDA values are per 100g
   const prepMultiplier = getPreparationMultiplier(preparationMethod);
 
   const calories = getNutrientFromSearchItem(best.food, NUTRIENT_IDS.ENERGY) * scale * prepMultiplier.calories;
@@ -545,7 +552,7 @@ export async function estimateMacros(
     carbs_g: Math.round(carbs * 10) / 10,
     fat_g: Math.round(fat * 10) / 10,
     fiber_g: Math.round(fiber * 10) / 10,
-    serving_description: `${portionGrams}g of ${best.food.description}`,
+    serving_description: `${clampedPortion}g of ${best.food.description}`,
     confidence: computeConfidence(best.food, best.query),
     usda_fdc_id: best.food.fdcId,
   };

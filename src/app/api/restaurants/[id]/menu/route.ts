@@ -1,13 +1,13 @@
 import { prisma } from "@/lib/db/client";
+import { withRateLimit } from "@/lib/middleware/with-rate-limit";
 import { apiSuccess, apiError } from "@/lib/utils/api-response";
 
-export async function GET(
+export const GET = withRateLimit("read", async (
   _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  context?: { params: Promise<Record<string, string>> }
+) => {
+  const { id } = await context!.params;
   try {
-    const { id } = await params;
-
     const dishes = await prisma.dish.findMany({
       where: { restaurantId: id, isAvailable: true },
       orderBy: [{ category: "asc" }, { name: "asc" }],
@@ -38,4 +38,4 @@ export async function GET(
   } catch {
     return apiError("Failed to fetch menu");
   }
-}
+});

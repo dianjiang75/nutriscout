@@ -17,17 +17,14 @@ function createPrismaClient(): PrismaClient {
   });
   return new PrismaClient({
     adapter,
-    log:
-      process.env.NODE_ENV === "development"
-        ? [{ emit: "event", level: "query" }, "warn", "error"]
-        : ["error"],
+    log: [{ emit: "event", level: "query" }, "warn", "error"],
   });
 }
 
 function withSlowQueryLogging(client: PrismaClient): PrismaClient {
-  if (process.env.NODE_ENV !== "development") return client;
-
-  const SLOW_QUERY_THRESHOLD_MS = 500;
+  // Enable slow query logging in all environments — missing slow queries in prod
+  // is worse than slightly noisier dev logs
+  const SLOW_QUERY_THRESHOLD_MS = parseInt(process.env.SLOW_QUERY_MS || "500", 10);
 
   client.$on("query" as never, (e: unknown) => {
     const event = e as {

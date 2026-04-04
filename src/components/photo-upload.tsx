@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
+import Image from "next/image";
 import { Camera, Upload, X } from "lucide-react";
 
 interface PhotoUploadProps {
@@ -42,8 +43,7 @@ export function PhotoUpload({ onFileSelected, disabled }: PhotoUploadProps) {
   if (preview) {
     return (
       <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border border-border/40 shadow-sm">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={preview} alt="Food photo preview" className="w-full h-full object-cover" />
+        <Image src={preview} alt="Food photo preview" fill sizes="100vw" className="object-cover" unoptimized />
         <button
           onClick={clearPreview}
           disabled={disabled}
