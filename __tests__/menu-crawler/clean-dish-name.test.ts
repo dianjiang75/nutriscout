@@ -1,4 +1,4 @@
-import { cleanDishName, cleanCategoryName, cleanDescription } from "@/lib/agents/menu-crawler/clean-dish-name";
+import { cleanDishName, cleanCategoryName, cleanDescription, isWineOrSpirit } from "@/lib/agents/menu-crawler/clean-dish-name";
 
 describe("cleanDishName", () => {
   // ── Casing ──────────────────────────────────────────────────────
@@ -207,6 +207,76 @@ describe("cleanDescription", () => {
     expect(cleanDescription("Mac &amp; cheese with jalape&#241;os")).toBe(
       "Mac & cheese with jalapeños"
     );
+  });
+});
+
+describe("isWineOrSpirit", () => {
+  // ── Wines (should be filtered) ─────────────────────────────────
+  it("detects wine grape names as wine listings", () => {
+    expect(isWineOrSpirit("Pinot Noir")).toBe(true);
+    expect(isWineOrSpirit("Chardonnay")).toBe(true);
+    expect(isWineOrSpirit("Cabernet Sauvignon")).toBe(true);
+    expect(isWineOrSpirit("Barolo")).toBe(true);
+    expect(isWineOrSpirit("Prosecco")).toBe(true);
+  });
+
+  it("detects wines with vintage years", () => {
+    expect(isWineOrSpirit("Barolo Bussia 2021")).toBe(true);
+    expect(isWineOrSpirit("Marchese Antinori Chianti 2019")).toBe(true);
+  });
+
+  it("detects items in wine categories", () => {
+    expect(isWineOrSpirit("Some Random Name", "Red Wine")).toBe(true);
+    expect(isWineOrSpirit("House Selection", "By the Glass")).toBe(true);
+    expect(isWineOrSpirit("Reserve Blend", "Wine List")).toBe(true);
+  });
+
+  // ── Spirits (should be filtered) ───────────────────────────────
+  it("detects spirit listings", () => {
+    expect(isWineOrSpirit("Grand Marnier")).toBe(true);
+    expect(isWineOrSpirit("Don Julio 1942 Añejo")).toBe(true);
+    expect(isWineOrSpirit("Mezcal Union Uno Joven")).toBe(true);
+    expect(isWineOrSpirit("Ketel One Vodka")).toBe(true);
+  });
+
+  it("detects items in spirit categories", () => {
+    expect(isWineOrSpirit("Bulleit", "Bourbon")).toBe(true);
+    expect(isWineOrSpirit("Patron Silver", "Tequila")).toBe(true);
+  });
+
+  // ── Beer (should be filtered) ──────────────────────────────────
+  it("detects beer listings", () => {
+    expect(isWineOrSpirit("Greenport IPA")).toBe(true);
+    expect(isWineOrSpirit("Brooklyn Lager")).toBe(true);
+    expect(isWineOrSpirit("6% abv – New York")).toBe(true);
+  });
+
+  it("detects items in beer categories", () => {
+    expect(isWineOrSpirit("Stella Artois", "Draft Beer")).toBe(true);
+    expect(isWineOrSpirit("Blue Moon", "On Tap")).toBe(true);
+  });
+
+  // ── Real dishes with spirit words (should NOT be filtered) ─────
+  it("preserves dishes with spirit words + food context", () => {
+    expect(isWineOrSpirit("Vodka Rigatoni")).toBe(false);
+    expect(isWineOrSpirit("Spicy Shrimp Vodka Rigatoni")).toBe(false);
+    expect(isWineOrSpirit("Bourbon Glazed Ribs")).toBe(false);
+    expect(isWineOrSpirit("Baked Eggs Alla Vodka")).toBe(false);
+    expect(isWineOrSpirit("Tequila Lime Shrimp")).toBe(false);
+    expect(isWineOrSpirit("Rum Cake")).toBe(false);
+    expect(isWineOrSpirit("Whiskey Burger")).toBe(false);
+  });
+
+  it("preserves dishes with wine grape words + food context", () => {
+    expect(isWineOrSpirit("Cabernet Braised Short Ribs")).toBe(false);
+  });
+
+  // ── Cocktails (should NOT be filtered) ─────────────────────────
+  it("preserves cocktails", () => {
+    expect(isWineOrSpirit("Mezcal Me Maybe")).toBe(false);
+    expect(isWineOrSpirit("Basil Gimlet")).toBe(false);
+    expect(isWineOrSpirit("Tequila Sunrise", "Mimosas")).toBe(false);
+    expect(isWineOrSpirit("Vodka Martini")).toBe(false);
   });
 });
 

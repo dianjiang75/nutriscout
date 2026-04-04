@@ -104,7 +104,10 @@ async function findSimilarDishesViaVector(
     // Enable iterative scans so filtered vector queries don't silently return
     // fewer results for sparse categories (kosher, halal, vegan)
     await tx.$executeRaw`SET LOCAL hnsw.iterative_scan = 'relaxed_order'`;
-    await tx.$executeRaw`SET LOCAL hnsw.max_scan_tuples = 10000`;
+    // Safe upstream default is 20,000 — 10,000 terminates too early on sparse
+    // dietary combos (kosher + nut_free) and silently returns fewer results.
+    // ef_search stays at 100: above 200 PG cost model flips to full seq scan.
+    await tx.$executeRaw`SET LOCAL hnsw.max_scan_tuples = 20000`;
     await tx.$executeRaw`SET LOCAL hnsw.ef_search = 100`;
 
     return tx.$queryRaw<VectorSimilarityRow[]>`

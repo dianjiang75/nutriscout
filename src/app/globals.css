@@ -155,6 +155,8 @@
   html {
     @apply font-sans;
     -webkit-tap-highlight-color: transparent;
+    /* WCAG 2.2 — criterion 2.4.11: prevent sticky header from obscuring keyboard-focused elements */
+    scroll-padding-top: 4rem;
   }
   /* Friendlier focus-visible ring */
   :focus-visible {

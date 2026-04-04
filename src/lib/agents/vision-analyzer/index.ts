@@ -1,7 +1,7 @@
 import sharp from "sharp";
 import { estimateMacros } from "@/lib/usda/client";
 import { getGeminiClient, GEMINI_FLASH } from "@/lib/ai/clients";
-import { SchemaType } from "@google/generative-ai";
+import { SchemaType, type Schema } from "@google/generative-ai";
 import { extractJson } from "@/lib/utils/parse-json";
 import { prisma } from "@/lib/db/client";
 import type {
@@ -80,6 +80,35 @@ Return ONLY valid JSON, no markdown fences or extra text.`;
 // Legacy — kept for type compatibility but Gemini is now the primary vision model
 
 /**
+ * Gemini responseSchema for food photo analysis.
+ * Defined once at module level to avoid maintenance drift between
+ * analyzeFoodPhoto() and analyzeFoodPhotoFromBuffer().
+ */
+const VISION_RESPONSE_SCHEMA: Schema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    dish_name: { type: SchemaType.STRING },
+    cuisine_type: { type: SchemaType.STRING },
+    ingredients: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          name: { type: SchemaType.STRING },
+          estimated_grams: { type: SchemaType.NUMBER },
+          is_primary: { type: SchemaType.BOOLEAN },
+        },
+        required: ["name", "estimated_grams", "is_primary"],
+      },
+    },
+    total_portion_grams: { type: SchemaType.NUMBER },
+    preparation_method: { type: SchemaType.STRING },
+    confidence: { type: SchemaType.NUMBER },
+  },
+  required: ["dish_name", "cuisine_type", "ingredients", "total_portion_grams", "preparation_method", "confidence"],
+};
+
+/**
  * Build a min/max range around a macro estimate based on confidence.
  *
  * Research (NYU 2025, DietAI24) shows AI photo-based estimation has
@@ -110,29 +139,7 @@ export async function analyzeFoodPhoto(
     model: GEMINI_FLASH,
     generationConfig: {
       responseMimeType: "application/json",
-      responseSchema: {
-        type: SchemaType.OBJECT,
-        properties: {
-          dish_name: { type: SchemaType.STRING },
-          cuisine_type: { type: SchemaType.STRING },
-          ingredients: {
-            type: SchemaType.ARRAY,
-            items: {
-              type: SchemaType.OBJECT,
-              properties: {
-                name: { type: SchemaType.STRING },
-                estimated_grams: { type: SchemaType.NUMBER },
-                is_primary: { type: SchemaType.BOOLEAN },
-              },
-              required: ["name", "estimated_grams", "is_primary"],
-            },
-          },
-          total_portion_grams: { type: SchemaType.NUMBER },
-          preparation_method: { type: SchemaType.STRING },
-          confidence: { type: SchemaType.NUMBER },
-        },
-        required: ["dish_name", "cuisine_type", "ingredients", "total_portion_grams", "preparation_method", "confidence"],
-      },
+      responseSchema: VISION_RESPONSE_SCHEMA,
     },
   });
 
@@ -161,29 +168,7 @@ export async function analyzeFoodPhotoFromBuffer(
     model: GEMINI_FLASH,
     generationConfig: {
       responseMimeType: "application/json",
-      responseSchema: {
-        type: SchemaType.OBJECT,
-        properties: {
-          dish_name: { type: SchemaType.STRING },
-          cuisine_type: { type: SchemaType.STRING },
-          ingredients: {
-            type: SchemaType.ARRAY,
-            items: {
-              type: SchemaType.OBJECT,
-              properties: {
-                name: { type: SchemaType.STRING },
-                estimated_grams: { type: SchemaType.NUMBER },
-                is_primary: { type: SchemaType.BOOLEAN },
-              },
-              required: ["name", "estimated_grams", "is_primary"],
-            },
-          },
-          total_portion_grams: { type: SchemaType.NUMBER },
-          preparation_method: { type: SchemaType.STRING },
-          confidence: { type: SchemaType.NUMBER },
-        },
-        required: ["dish_name", "cuisine_type", "ingredients", "total_portion_grams", "preparation_method", "confidence"],
-      },
+      responseSchema: VISION_RESPONSE_SCHEMA,
     },
   });
 

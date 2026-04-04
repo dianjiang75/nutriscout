@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, startTransition } from "react";
 import Link from "next/link";
 import { ChefHat, Store, Sparkles, MapPin, Star, Clock, Heart } from "lucide-react";
 import { SearchTypeahead } from "@/components/search-typeahead";
@@ -207,7 +207,7 @@ export default function HomePage() {
           {/* Category pills — inline filters */}
           <CategoryPills
             selected={search.categories}
-            onSelect={(cats) => setSearch((s) => ({ ...s, categories: cats, offset: 0 }))}
+            onSelect={(cats) => startTransition(() => setSearch((s) => ({ ...s, categories: cats, offset: 0 })))}
           />
 
           {/* Sort options (dishes only) */}
@@ -225,7 +225,7 @@ export default function HomePage() {
                         ? "bg-primary text-primary-foreground shadow-sm shadow-primary/25"
                         : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
-                    onClick={() => setSearch((s) => ({ ...s, sort: opt.value, offset: 0 }))}
+                    onClick={() => startTransition(() => setSearch((s) => ({ ...s, sort: opt.value, offset: 0 })))}
                   >
                     <SortIcon className="w-3.5 h-3.5" />
                     {opt.label}

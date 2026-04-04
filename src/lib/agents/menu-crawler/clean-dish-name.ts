@@ -293,6 +293,11 @@ function isInterestingBeverage(lower: string): boolean {
     "lassi", "mango lassi", "chai",
     "kombucha", "lemonade", "arnold palmer",
     "mexican soda", "jarritos",
+    // Classic cocktails with spirit names
+    "sunrise", "sunset", "sour", "fizz", "mule", "spritz",
+    "negroni", "paloma", "daiquiri", "gimlet", "highball",
+    "old fashioned", "manhattan", "cosmopolitan", "sidecar",
+    "punch", "toddy", "colada", "caipirinha", "crusta", "flip",
   ];
   return interestingPatterns.some((p) => lower.includes(p));
 }
@@ -321,6 +326,163 @@ function isNonFood(lower: string): boolean {
     "catering", "party tray", "event booking",
   ];
   return nonFood.some((n) => lower === n || lower.includes(n));
+}
+
+// ── Wine & Spirit Filter ────────────────────────────────────────────
+
+/**
+ * Words that indicate a food dish even when a spirit keyword is present.
+ * "Vodka Rigatoni" = dish, "Ketel One Vodka" = spirit listing.
+ */
+const FOOD_CONTEXT_WORDS = new Set([
+  // Pasta/grains
+  "rigatoni", "pasta", "penne", "spaghetti", "linguine", "fettuccine",
+  "noodles", "rice", "risotto", "gnocchi", "orzo", "couscous",
+  "lumache", "orecchiette", "bucatini", "cavatelli", "fusilli",
+  "ravioli", "tortellini", "lasagna", "macaroni",
+  // Proteins
+  "chicken", "shrimp", "salmon", "steak", "pork", "beef", "lamb",
+  "fish", "lobster", "crab", "duck", "tofu", "tempeh",
+  "scallop", "squid", "octopus", "mussel", "clam", "oyster",
+  // Cooking methods / dish types
+  "sauce", "pesto", "ragu", "bolognese", "alla",
+  "glazed", "braised", "grilled", "roasted", "fried",
+  "baked", "sauteed", "marinated", "crusted", "infused",
+  "burger", "pizza", "sandwich", "taco", "burrito", "wrap",
+  "soup", "stew", "curry", "salad", "bowl", "plate",
+  "wings", "ribs", "chops", "cutlet", "meatball",
+  "eggs", "omelette", "benedict", "frittata",
+  "square", "slice", "flatbread", "calzone",
+  // Desserts with spirit names
+  "cake", "tiramisu", "mousse", "pudding", "sorbet",
+  "pie", "tart", "cheesecake", "brownie", "flan",
+]);
+
+/** Well-known wine grape varieties and wine terms. */
+const WINE_GRAPES = new Set([
+  "cabernet", "merlot", "pinot", "chardonnay", "sauvignon",
+  "riesling", "syrah", "shiraz", "malbec", "tempranillo",
+  "grenache", "zinfandel", "sangiovese", "nebbiolo", "barbera",
+  "prosecco", "champagne", "cava", "moscato", "gewurztraminer",
+  "viognier", "gruner", "albarino", "vermentino", "trebbiano",
+  "montepulciano", "primitivo", "garnacha", "mourvedre",
+  "beaujolais", "burgundy", "bordeaux", "chianti", "barolo",
+  "brunello", "amarone", "valpolicella", "chablis", "sancerre",
+  "rioja", "manzanilla", "fino", "amontillado", "oloroso",
+]);
+
+/** Wine-related category names. */
+const WINE_CATEGORIES = new Set([
+  "wine", "wines", "red wine", "red wines", "white wine", "white wines",
+  "rose", "rosé", "sparkling", "sparkling wine", "sparkling wines",
+  "by the glass", "by the bottle", "glass pours", "bottle list",
+  "wine list", "wine menu", "wine selection", "reds", "whites",
+  "spirits", "liquor", "liquors", "whiskey", "whisky",
+  "tequila", "mezcal", "bourbon", "scotch", "rum",
+  "beer", "beers", "draft beer", "draft beers", "craft beer",
+  "on tap", "bottles & cans", "bottled beer",
+]);
+
+/** Spirit brand names / types (when NOT followed by food context). */
+const SPIRIT_KEYWORDS = new Set([
+  "vodka", "bourbon", "whiskey", "whisky", "tequila", "mezcal",
+  "rum", "gin", "scotch", "cognac", "brandy", "absinthe",
+  "grappa", "amaro", "aperol", "campari", "vermouth",
+  "grand marnier", "cointreau", "chartreuse", "sambuca",
+  "kahlua", "baileys", "limoncello", "ouzo", "arak",
+  "soju", "shochu", "baijiu", "sake",
+  // Aging / style terms that confirm it's a spirit listing
+  "añejo", "anejo", "reposado", "blanco", "joven", "cristalino",
+  "single malt", "cask strength", "aged",
+]);
+
+/**
+ * Detect if a menu item is a wine, beer, or neat spirit listing
+ * (not a food dish that happens to contain a spirit word in its name).
+ *
+ * "Pinot Noir" → true (wine)
+ * "Vodka Rigatoni" → false (dish)
+ * "Don Julio 1942 Añejo" → true (spirit)
+ * "Bourbon Glazed Ribs" → false (dish)
+ * "Mezcal Me Maybe" → false (cocktail — handled by isInterestingBeverage)
+ */
+export function isWineOrSpirit(name: string, category?: string | null): boolean {
+  const lower = name.toLowerCase();
+  const catLower = (category || "").toLowerCase();
+
+  // ── Category-based detection (strongest signal) ──
+  // (cocktails already escaped above via isInterestingBeverage check)
+  if (WINE_CATEGORIES.has(catLower)) {
+    return true;
+  }
+
+  // ── Early cocktail escape ──
+  // Check before wine/spirit detection — cocktails containing wine/spirit words should pass
+  const words = lower.split(/\s+/);
+  if (isInterestingBeverage(lower)) return false;
+
+  // ── Wine grape / region detection ──
+  const hasWineGrape = words.some((w) => WINE_GRAPES.has(w));
+  if (hasWineGrape) {
+    // Has food context? → it's a dish ("Cabernet Braised Short Ribs")
+    if (words.some((w) => FOOD_CONTEXT_WORDS.has(w))) return false;
+    // Has vintage year? → definitely wine
+    if (/\b(19|20)\d{2}\b/.test(lower)) return true;
+    // Short name with grape variety → wine listing
+    if (words.length <= 5) return true;
+    // Longer name with grape variety but no food context → still likely wine
+    return true;
+  }
+
+  // ── Spirit detection ──
+  const hasSpirit = words.some((w) => SPIRIT_KEYWORDS.has(w))
+    || SPIRIT_KEYWORDS.has(lower); // multi-word spirit name match ("grand marnier")
+  if (hasSpirit) {
+    // Has food context? → it's a dish
+    if (words.some((w) => FOOD_CONTEXT_WORDS.has(w))) return false;
+    // Cocktails already escaped above via early isInterestingBeverage check
+    // Distinguish spirit listings ("Ketel One Vodka") from creative cocktail names
+    // ("Mezcal Me Maybe", "Rum Tum Punch").
+    //
+    // Spirit listing patterns:
+    //   - Spirit word is LAST or FIRST: "Ketel One Vodka", "Vodka Stolichnaya"
+    //   - Has brand/vintage/aging indicator: "Don Julio 1942", "Mezcal Union Joven"
+    //   - Multiple spirit keywords: "Mezcal Union Uno Joven" (mezcal + joven)
+    //
+    // Cocktail patterns:
+    //   - Spirit word + playful/descriptive words: "Mezcal Me Maybe", "Gin & Juice"
+    //   - Spirit word at start, rest isn't a brand: creative drink name
+
+    const spiritWordCount = words.filter((w) => SPIRIT_KEYWORDS.has(w)).length;
+
+    // Multiple spirit keywords → definitely a spirit listing
+    if (spiritWordCount >= 2) return true;
+
+    // Check for brand/vintage indicators
+    const hasBrandIndicator = /\b(19|20)\d{2}\b/.test(lower);
+    if (hasBrandIndicator) return true;
+
+    // Spirit word as last word ("Ketel One Vodka") → spirit listing
+    if (SPIRIT_KEYWORDS.has(words[words.length - 1])) return true;
+
+    // 2-word name with spirit word → spirit listing ("Patron Tequila")
+    if (words.length <= 2) return true;
+
+    // ≥3 words, spirit at start, no brand indicator → likely cocktail
+    return false;
+  }
+
+  // ── Beer detection (by common patterns) ──
+  // Exclude "porter house" (steak), "ginger ale" (already a basic drink)
+  const beerPattern = /\b(?:ipa|lager|(?<!ginger )ale|stout|(?<!porter )pilsner|wheat beer|hefe|saison)\b/i;
+  if (beerPattern.test(lower) && !/\bporter\s*house\b/i.test(lower)) {
+    if (words.some((w) => FOOD_CONTEXT_WORDS.has(w))) return false;
+    return true;
+  }
+  // "X% abv" pattern → almost certainly a beer/wine/spirit listing
+  if (/\d+(?:\.\d+)?%\s*abv/i.test(lower)) return true;
+
+  return false;
 }
 
 // ── Pipeline ─────────────────────────────────────────────────────────

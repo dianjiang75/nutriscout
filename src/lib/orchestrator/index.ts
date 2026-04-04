@@ -508,24 +508,41 @@ function relevanceScore(dish: DishResult, ftsRankMap?: Map<string, number> | nul
 }
 
 /**
- * Restaurant diversity cap: limits dishes per restaurant and interleaves
- * results so no single restaurant dominates a page of results.
+ * Restaurant + cuisine diversity cap: limits dishes per restaurant AND per cuisine.
  *
- * Algorithm: round-robin across restaurants in the order they first appear,
- * picking one dish per restaurant per round, up to `maxPerRestaurant` rounds.
+ * Without cuisine cap, searching "pasta" returns 20 dishes from 5 Italian restaurants
+ * even though there might be a great penne at a Mediterranean spot. The cuisine cap
+ * ensures broader coverage when sorting by relevance.
+ *
+ * maxPerRestaurant: 3 (prevents any single restaurant dominating)
+ * maxPerCuisine: 6 (prevents any single cuisine dominating for broad searches)
+ *
+ * Algorithm: preserves primary sort order (no interleaving — that would break
+ * protein/rating/distance sorts). Filter pass only.
  */
 function applyRestaurantDiversityCap(
   dishes: DishResult[],
-  maxPerRestaurant: number
+  maxPerRestaurant: number,
+  maxPerCuisine = 6
 ): DishResult[] {
-  // Cap dishes per restaurant while preserving the primary sort order.
-  // Does NOT interleave — that would break protein/rating/distance sorts.
-  const counts = new Map<string, number>();
+  const restaurantCounts = new Map<string, number>();
+  const cuisineCounts = new Map<string, number>();
+
   return dishes.filter((dish) => {
     const rid = dish.restaurant.id;
-    const count = counts.get(rid) ?? 0;
-    if (count >= maxPerRestaurant) return false;
-    counts.set(rid, count + 1);
+    const restaurantCount = restaurantCounts.get(rid) ?? 0;
+    if (restaurantCount >= maxPerRestaurant) return false;
+
+    // Track cuisine counts — use first cuisine type if array, or "unknown"
+    const cuisines = dish.restaurant.cuisine_type;
+    const primaryCuisine = (Array.isArray(cuisines) && cuisines.length > 0)
+      ? cuisines[0].toLowerCase()
+      : "unknown";
+    const cuisineCount = cuisineCounts.get(primaryCuisine) ?? 0;
+    if (cuisineCount >= maxPerCuisine) return false;
+
+    restaurantCounts.set(rid, restaurantCount + 1);
+    cuisineCounts.set(primaryCuisine, cuisineCount + 1);
     return true;
   });
 }

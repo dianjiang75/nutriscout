@@ -4,6 +4,14 @@ export interface RawMenuItem {
   price: string | null;
   category: string | null;
   photoUrl?: string | null;
+  /**
+   * Source tag for elevated-confidence items.
+   * "compliance_page" — items parsed from a restaurant's statutory allergen or
+   *   nutrition disclosure page (e.g., California SB 478 / EU FIC compliance).
+   *   These carry the highest dietary flag confidence (0.95) because the
+   *   restaurant is legally obligated to be accurate.
+   */
+  source?: "compliance_page" | "menu";
 }
 
 export interface AnalyzedDish {

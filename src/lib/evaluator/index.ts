@@ -51,27 +51,75 @@ const ALLERGEN_TO_FLAG: Record<string, keyof DietaryFlags> = {
  * because the AI may have missed peanuts in Pad Thai, nuts in baklava, etc.
  */
 const KNOWN_ALLERGEN_DISHES: Partial<Record<keyof DietaryFlags, string[]>> = {
-  nut_free: ["pad thai", "kung pao", "satay", "baklava", "pesto", "mole", "dan dan", "mapo", "som tum"],
-  gluten_free: ["ramen", "udon", "nabeyaki", "spaghetti", "linguine", "penne", "fettuccine", "lo mein", "chow mein", "tiramisu", "ladyfinger", "croissant", "baguette", "pizza", "calzone", "gyoza", "dumpling", "wonton"],
-  dairy_free: ["alfredo", "carbonara", "mac and cheese", "gratin", "fondue", "queso", "tiramisu", "cheesecake", "butter chicken", "cacio e pepe"],
-  vegan: ["eel", "unagi", "omakase", "bolognese", "ragu", "meatball", "steak", "burger", "lamb", "pork", "bacon", "prosciutto", "sashimi", "omelette", "frittata", "tiramisu", "cheesecake", "nigiri", "kohada", "uni bibimbap", "taramasalata", "kitsune udon"],
-  vegetarian: ["eel", "unagi", "omakase", "sashimi", "bolognese", "ragu", "meatball", "steak", "lamb chop", "pork belly", "bacon", "prosciutto", "kebab"],
+  // Dishes that commonly contain hidden nuts despite appearing nut-free
+  nut_free: [
+    "pad thai", "kung pao", "satay", "baklava", "pesto", "mole", "dan dan", "mapo", "som tum",
+    "thai curry", "massaman", "panang", "penang curry",
+    "pecan pie", "praline", "nougat", "gianduja",
+    "romesco", "muhammara", "fesenjan",
+    "chinese chicken salad", "caesar salad",  // often has pine nuts or crouton with nut cross-contact
+  ],
+  // Dishes that commonly contain hidden gluten
+  gluten_free: [
+    "ramen", "udon", "nabeyaki", "spaghetti", "linguine", "penne", "fettuccine", "lo mein", "chow mein",
+    "tiramisu", "ladyfinger", "croissant", "baguette", "pizza", "calzone", "gyoza", "dumpling", "wonton",
+    "couscous", "bulgur", "tabbouleh", "seitan", "fu", "wheat noodle",
+    "orzo", "farfalle", "rigatoni", "tortellini", "gnocchi",
+    "beer-battered", "tempura", "katsu", "tonkatsu", "panko-crusted",
+    "teriyaki", "hoisin", "oyster sauce",  // most contain wheat-based soy sauce
+    "miso soup", "ramen broth",
+  ],
+  // Dishes that commonly contain hidden dairy
+  dairy_free: [
+    "alfredo", "carbonara", "mac and cheese", "gratin", "fondue", "queso", "tiramisu", "cheesecake",
+    "butter chicken", "cacio e pepe",
+    "white sauce", "béchamel", "bechamel", "cream sauce", "cream of mushroom",
+    "hollandaise", "béarnaise", "bearnaise",
+    "mashed potato", "scalloped potato", "au gratin",
+    "risotto", "lobster bisque", "chowder", "creamy soup",
+  ],
+  // Dishes that are virtually never vegan despite potentially seeming so
+  vegan: [
+    "eel", "unagi", "omakase", "bolognese", "ragu", "meatball", "steak", "burger", "lamb", "pork",
+    "bacon", "prosciutto", "sashimi", "omelette", "frittata", "tiramisu", "cheesecake",
+    "nigiri", "kohada", "uni bibimbap", "taramasalata", "kitsune udon",
+    "caesar dressing", "worcestershire sauce", "fish sauce", "oyster sauce",
+    "dashi", "bonito flakes", "katsuobushi",
+  ],
+  // Dishes that are virtually never vegetarian
+  vegetarian: [
+    "eel", "unagi", "omakase", "sashimi", "bolognese", "ragu", "meatball", "steak", "lamb chop",
+    "pork belly", "bacon", "prosciutto", "kebab",
+    "caesar salad",  // anchovies in dressing
+    "ramen", "pho",  // typically pork/chicken/beef broth
+    "french onion soup",  // typically beef broth
+    "paella", "clam chowder", "bouillabaisse",
+    "worcestershire", "fish sauce",
+  ],
 };
 
 /** Keywords that indicate an allergen is present in a dish description.
  * IMPORTANT: Include both singular AND plural forms — description text varies.
  * e.g., "peanut sauce" won't match "peanuts" keyword without singular form.
+ * Covers both FDA Big 9 (US) and EU 14 major allergens.
  */
 const ALLERGEN_KEYWORDS: Record<string, string[]> = {
-  peanuts: ["peanut", "peanuts", "groundnut"],
-  tree_nuts: ["almond", "cashew", "walnut", "pecan", "pistachio", "hazelnut", "macadamia", "pine nut", "brazil nut", "coconut"],
-  fish: ["fish", "salmon", "tuna", "cod", "branzino", "mackerel", "anchovy", "catfish", "trout", "bass", "halibut", "swordfish"],
-  shellfish: ["shrimp", "crab", "lobster", "clam", "mussel", "oyster", "squid", "octopus", "prawn", "scallop", "crawfish", "crayfish"],
-  soybeans: ["soy", "tofu", "edamame", "miso", "tempeh", "soybean"],
-  sesame: ["sesame", "tahini"],
-  wheat: ["wheat", "flour", "bread", "naan", "pita", "tortilla", "crouton", "breadcrumb", "panko", "sourdough", "toast", "brioche", "biscuit", "pastry", "croissant", "baguette", "ciabatta", "focaccia"],
-  eggs: ["egg", "eggs", "omelette", "tamago", "meringue", "frittata", "quiche"],
-  milk: ["cheese", "cream", "butter", "yogurt", "milk", "ricotta", "burrata", "mozzarella", "paneer", "mascarpone", "ghee", "whey", "feta", "pecorino", "parmigiano", "parmesan", "brie", "gouda", "cheddar", "gruyere", "provolone", "cacio"],
+  // FDA Big 9
+  peanuts: ["peanut", "peanuts", "groundnut", "groundnuts", "monkey nut"],
+  tree_nuts: ["almond", "cashew", "walnut", "pecan", "pistachio", "hazelnut", "macadamia", "pine nut", "brazil nut", "coconut", "chestnut", "praline", "nougat", "marzipan", "gianduja", "frangipane"],
+  fish: ["fish", "salmon", "tuna", "cod", "branzino", "mackerel", "anchovy", "anchovies", "catfish", "trout", "bass", "halibut", "swordfish", "mahi", "tilapia", "snapper", "flounder", "sole", "sea bass", "striped bass", "worcestershire"],
+  shellfish: ["shrimp", "crab", "lobster", "clam", "mussel", "oyster", "squid", "octopus", "prawn", "scallop", "crawfish", "crayfish", "langoustine", "abalone", "barnacle"],
+  soybeans: ["soy", "tofu", "edamame", "miso", "tempeh", "soybean", "soya", "tamari", "natto"],
+  sesame: ["sesame", "tahini", "goma", "til", "benne"],
+  wheat: ["wheat", "flour", "bread", "naan", "pita", "tortilla", "crouton", "breadcrumb", "panko", "sourdough", "toast", "brioche", "biscuit", "pastry", "croissant", "baguette", "ciabatta", "focaccia", "semolina", "spelt", "kamut", "emmer", "einkorn", "durum", "seitan", "fu"],
+  eggs: ["egg", "eggs", "omelette", "omelet", "tamago", "meringue", "frittata", "quiche", "aioli", "hollandaise", "carbonara"],
+  milk: ["cheese", "cream", "butter", "yogurt", "milk", "ricotta", "burrata", "mozzarella", "paneer", "mascarpone", "ghee", "whey", "feta", "pecorino", "parmigiano", "parmesan", "brie", "gouda", "cheddar", "gruyere", "provolone", "cacio", "camembert", "roquefort", "gorgonzola", "béchamel", "bechamel", "alfredo", "fondue"],
+  // EU 14 allergens beyond the FDA Big 9
+  celery: ["celery", "celeriac", "celery root", "celery salt", "celery seed", "lovage"],
+  mustard: ["mustard", "mustard seed", "mustard oil", "dijon", "whole-grain mustard", "english mustard", "american mustard"],
+  lupin: ["lupin", "lupine", "lupin flour", "lupin seed", "lupin bean"],
+  sulphites: ["sulphite", "sulfite", "sulphur dioxide", "sulfur dioxide", "dried fruit", "wine sauce", "wine reduction", "pickled"],
+  molluscs: ["snail", "escargot", "slug", "abalone", "squid ink", "cuttlefish ink", "whelk", "periwinkle"],
 };
 
 /**

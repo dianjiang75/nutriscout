@@ -33,17 +33,29 @@ async function cachedFetch<T>(cacheKey: string, fetcher: () => Promise<T>): Prom
 /**
  * Search USDA FoodData Central for foods matching a query.
  */
-export async function searchFood(query: string, pageSize = 5, requireAllWords = true): Promise<USDAFoodItem[]> {
-  const cacheKey = `usda:search:${query.toLowerCase().trim()}:${pageSize}:${requireAllWords}`;
+export async function searchFood(
+  query: string,
+  pageSize = 5,
+  requireAllWords = true,
+  includeBranded = false
+): Promise<USDAFoodItem[]> {
+  const cacheKey = `usda:search:${query.toLowerCase().trim()}:${pageSize}:${requireAllWords}:${includeBranded}`;
 
   return cachedFetch(cacheKey, async () => {
     await checkRateLimit();
+
+    // Include Branded data type for chain restaurant lookups — 1M+ products including
+    // major chain restaurant items (McDonald's, Chipotle, Sweetgreen). Foundation and
+    // SR Legacy are higher quality for generic ingredients; Branded is better for chains.
+    const dataType = includeBranded
+      ? "Foundation,SR Legacy,Branded"
+      : "Foundation,SR Legacy";
 
     const params = new URLSearchParams({
       api_key: getApiKey(),
       query,
       pageSize: String(pageSize),
-      dataType: "Foundation,SR Legacy",
+      dataType,
       requireAllWords: String(requireAllWords),
     });
 
@@ -56,7 +68,7 @@ export async function searchFood(query: string, pageSize = 5, requireAllWords = 
 
     // If requireAllWords returned no results, retry with relaxed matching (one time only)
     if (data.foods.length === 0 && requireAllWords) {
-      return searchFood(query, pageSize, false); // base case: requireAllWords=false won't recurse again
+      return searchFood(query, pageSize, false, includeBranded); // base case: requireAllWords=false won't recurse again
     }
 
     return data.foods;
@@ -278,6 +290,78 @@ const USDA_SYNONYMS: Record<string, string> = {
   "mustard": "mustard, prepared",
   "vinegar": "vinegar",
   "coconut cream": "coconut cream, canned",
+  // Ancient/specialty grains (trending 2025-2026, increasingly on menus)
+  "farro": "farro, cooked",
+  "freekeh": "wheat, freekeh, cooked",
+  "teff": "teff grain, cooked",
+  "amaranth": "amaranth grain, cooked",
+  "forbidden rice": "rice, black, cooked",
+  "black rice": "rice, black, cooked",
+  "jasmine rice": "rice, white, jasmine, cooked",
+  "wild rice": "wild rice, cooked",
+  "basmati rice": "rice, white, basmati, cooked",
+  "sushi rice": "rice, white, short-grain, cooked",
+  "sticky rice": "rice, white, glutinous, cooked",
+  "millet": "millet, cooked",
+  "sorghum": "sorghum grain, cooked",
+  "spelt": "spelt, cooked",
+  // Japanese/SE Asian pantry staples
+  "galangal": "ginger root, raw",  // USDA has no galangal entry; ginger is closest
+  "lemongrass": "lemongrass, raw",
+  "kaffir lime": "lime peel, raw",
+  "yuzu": "lemon juice, raw",  // yuzu not in USDA; lemon juice is closest substitute
+  "dashi": "fish broth",
+  "bonito": "tuna, cooked",  // bonito flakes are dried tuna
+  "katsuobushi": "tuna, cooked",
+  "nori": "seaweed, dried",
+  "wakame": "seaweed, dried",
+  "kombu": "seaweed, dried",
+  "hijiki": "seaweed, dried",
+  "matcha": "tea, green, brewed",
+  "ponzu": "lemon juice, raw",
+  "furikake": "seaweed, dried",
+  // Middle Eastern / Mediterranean additions
+  "za'atar": "thyme, dried",
+  "zaatar": "thyme, dried",
+  "sumac": "spices, sumac",
+  "pomegranate molasses": "pomegranate juice",
+  "harissa": "hot sauce",
+  "ras el hanout": "spices, mixed",
+  "preserved lemon": "lemon juice, raw",
+  "labneh": "yogurt, whole milk",
+  "halloumi": "cheese, mozzarella",  // no USDA entry; similar protein/fat to mozzarella
+  // Latin American additions
+  "achiote": "spices, annatto",
+  "epazote": "spices, mixed",
+  "chipotle": "peppers, hot chili, raw",
+  "ancho": "peppers, hot chili, raw",
+  "guajillo": "peppers, hot chili, raw",
+  "tomatillo": "tomato, green, raw",
+  "jicama": "jicama, raw",
+  "chayote": "chayote, raw",
+  "nopal": "cactus, pads, raw",
+  // Plant-based protein alternatives (growing menu presence 2026)
+  "impossible meat": "beef, ground, cooked",  // macro proxy
+  "beyond meat": "beef, ground, cooked",  // macro proxy
+  "seitan": "wheat gluten, vital",
+  "jackfruit": "jackfruit, raw",
+  "cauliflower steak": "cauliflower, cooked",
+  // Salad dressings / hidden calorie sources (USDA FDC Foundation Foods April 2026)
+  // High-frequency items in restaurant salads — critical for accurate calorie estimates
+  "ranch": "salad dressing, ranch",
+  "ranch dressing": "salad dressing, ranch",
+  "caesar dressing": "salad dressing, caesar",
+  "vinaigrette": "salad dressing, vinaigrette",
+  "balsamic vinaigrette": "salad dressing, balsamic vinaigrette",
+  "blue cheese dressing": "salad dressing, blue or roquefort cheese",
+  "italian dressing": "salad dressing, italian",
+  "balsamic": "vinegar, balsamic",
+  "honey mustard": "salad dressing, honey mustard",
+  "thousand island": "salad dressing, thousand island",
+  "peanut butter": "peanut butter, smooth",
+  "almond butter": "nut butter, almond",
+  "condensed milk": "milk, condensed, sweetened, canned",
+  "evaporated milk": "milk, evaporated, canned",
 };
 
 /**

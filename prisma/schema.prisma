@@ -1,7 +1,7 @@
 generator client {
   provider        = "prisma-client"
   output          = "../src/generated/prisma"
-  previewFeatures = ["postgresqlExtensions"]
+  previewFeatures = ["postgresqlExtensions", "partialIndexes"]
   compilerBuild   = "fast"
 }
 
@@ -93,6 +93,7 @@ model Restaurant {
   lastMenuCrawl        DateTime? @map("last_menu_crawl")
   lastReviewCrawl      DateTime? @map("last_review_crawl")
   lastTrafficUpdate    DateTime? @map("last_traffic_update")
+  lastDeliveryScrape   DateTime? @map("last_delivery_scrape")
   menuSource           MenuSource? @map("menu_source")
   isActive             Boolean  @default(true) @map("is_active")
   createdAt            DateTime @default(now()) @map("created_at")
@@ -182,6 +183,14 @@ model ReviewSummary {
   commonComplaints      String[] @map("common_complaints")
   dietaryWarnings       String[] @map("dietary_warnings")
   lastUpdated           DateTime @default(now()) @map("last_updated")
+
+  // Delivery platform dish-level ratings (DoorDash thumbs up/down, Uber Eats liked %)
+  doordashThumbsUpPct      Decimal?  @map("doordash_thumbs_up_pct") @db.Decimal(5, 2)
+  doordashReviewCount      Int       @default(0) @map("doordash_review_count")
+  ubereatsThumbsUpPct      Decimal?  @map("ubereats_thumbs_up_pct") @db.Decimal(5, 2)
+  ubereatsReviewCount      Int       @default(0) @map("ubereats_review_count")
+  isMostLiked              Boolean   @default(false) @map("is_most_liked")
+  lastDeliveryRatingUpdate DateTime? @map("last_delivery_rating_update")
 
   dish                  Dish     @relation(fields: [dishId], references: [id], onDelete: Cascade)
 

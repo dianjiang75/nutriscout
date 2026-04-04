@@ -65,7 +65,20 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Seed: `scripts/seed-discovery-areas.ts` (20 NYC neighborhoods + Denver test market)
 - Budget caps: MAX_AREAS=10, MAX_RESTAURANTS=50 per run to control Google Places API costs
 
-### 10. User Test Agent (`/user-test` skill)
+### 10. Delivery Scraper (`src/lib/agents/delivery-scraper/`)
+- Scrapes DoorDash + Uber Eats for per-item dish ratings (thumbs up %, "Most Liked" tags)
+- Uses Playwright headless Chromium with stealth (UA rotation, webdriver flag removal)
+- Browser pool: singleton browser, new BrowserContext per scrape, auto-restart after 50 contexts
+- Selector strategy: 3-tier fallback (data-testid → ARIA → CSS pattern) in centralized `selectors.ts`
+- Restaurant matching: Dice coefficient on name bigrams (0.6 weight) + address similarity (0.4), threshold 0.7
+- Creates new Dish records for items found on delivery platforms but not in website crawl
+- Writes to ReviewSummary: `doordashThumbsUpPct`, `ubereatsThumbsUpPct`, `isMostLiked`
+- Worker: `delivery-worker.ts` — concurrency 1, rate 2/min
+- Script: `scripts/nightly-delivery-scrape.ts` (supports `--dry-run`, `--max N`)
+- Pipeline: runs AFTER menu crawl, BEFORE review aggregation (FlowProducer chains them)
+- Budget: 50 restaurants/night, ~25 min at 2/min
+
+### 11. User Test Agent (`/user-test` skill)
 - Runs nightly at 6 AM via macOS launchd, after learn and improve complete
 - Simulates 5 customer personas end-to-end via real API calls:
   - **Explorer Emma** — browses categories, searches, tests navigation and empty states
@@ -149,3 +162,63 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Production logger MIN_LEVEL should be `info` (not `warn`) so normal API requests are visible in monitoring; configurable via `LOG_LEVEL` env var
 - post-migrate.sql: `idx_dishes_macro_source`, `idx_delivery_last_checked`, `idx_dishes_low_confidence` indexes added for macro quality sorting, delivery staleness, and re-analysis targeting
 - Button component in shadcn/ui does NOT support `asChild` prop — use `<Link><Button>` wrapping pattern instead
+- Gemini 2.5 Flash GA confirmed (April 2026): use model ID `gemini-2.5-flash` (already set correctly in clients.ts). Do NOT use `gemini-2.5-flash-image` — structured output bug. Context window: 1M tokens, 3000 images/prompt.
+- `responseSchema` in vision-analyzer is duplicated verbatim in `analyzeFoodPhoto()` and `analyzeFoodPhotoFromBuffer()` — extract to module-level `VISION_RESPONSE_SCHEMA` constant to avoid maintenance drift
+- DietAI RAG pattern NOT YET IMPLEMENTED in code: current vision analyzer does USDA lookup post-hoc (after Gemini returns ingredients). Correct approach: (1) lightweight Gemini pass to identify ingredients, (2) look up USDA per-100g calorie densities, (3) inject those values as context into main Gemini prompt. Expected MAE reduction: 63-83%. Target: `vision-analyzer/index.ts`
+- CalCam (Polyverse/Google) two-pass validation: after primary Gemini analysis, run a second Gemini call asking it to verify its own macro output against nutritional logic (e.g., flag a 2000-calorie salad). Reduces gross errors ~10-15%. Cost: 2x API calls per photo.
+- Vision prompt already uses plate/bowl reference cues for portion estimation (aligned with best practice for no-hardware systems). Gap: no explicit food height/depth field in schema — add `height_cm` to capture tall layered dishes (burgers, sandwiches, stacked plates).
+- Nutritionix API (200K+ US restaurant locations, dietitian-verified) is higher accuracy than USDA generic for branded chain dishes. Plan: add `getNutritionixMacros()` to `usda/client.ts` as fallback when chain restaurant context is known. Needs `NUTRITIONIX_APP_ID` + `NUTRITIONIX_API_KEY` env vars.
+- April 2026 USDA FDC Foundation Foods additions: mayonnaise, salad dressings, peanut butter, condensed milk, edamame (upgraded), canned beans. Add to USDA_SYNONYMS in `usda/client.ts`: ranch, caesar dressing, vinaigrette, blue cheese dressing, italian dressing, balsamic (high-frequency hidden calorie sources in restaurant salads).
+- Vision allergen inference: photo-based allergen detection has high false negative rate for hidden allergens (cross-contamination, sauces). Vision analyzer should add `potential_allergens` field to response schema as advisory signal only — Apollo Evaluator continues to own all hard safety decisions.
+- Competitor accuracy benchmarks (2026): PlateLens ±1.2% MAPE (uses depth sensor), MyFitnessPal ±18%, Bitesnap ±34%. FoodClaw's ±20-50% ranges are honest. Target: narrow high-confidence tier to ±15% by implementing DietAI RAG (above).
+- Delivery scraper uses `playwright-core` (not `playwright`) — keeps package small (~2MB), browser installed separately via `npx playwright install chromium`
+- Delivery scraper browser pool: module-level singleton, auto-restarts after 50 BrowserContexts, stealth via UA rotation + webdriver flag removal
+- Delivery scraper selectors are centralized in `selectors.ts` — single file to update when platforms change their DOM
+- `isWineOrSpirit()` in `clean-dish-name.ts` detects wines (grape names, vintage years, wine categories), spirits (brand listings + aging terms), beers (IPA/lager/stout patterns). Preserves dishes with spirit words + food context ("Vodka Rigatoni"), cocktails ("Tequila Sunrise"), and food items in drink categories
+- `isDishWorthRecommending()` + `isWineOrSpirit()` are wired into the crawl pipeline and also used by the delivery scraper to filter junk at ingestion time
+- Yelp reviews use GraphQL API (not REST `/reviews` endpoint which is deprecated/403). Requires `Accept-Language: en_US` header. Daily points limit resets at midnight GMT.
+- Yelp Business IDs populated via `scripts/match-yelp-ids.ts` — uses Business Match → Business Search fallback. 129/130 restaurants matched.
+- ReviewSummary now has delivery rating columns: `doordashThumbsUpPct`, `doordashReviewCount`, `ubereatsThumbsUpPct`, `ubereatsReviewCount`, `isMostLiked`, `lastDeliveryRatingUpdate`
+- Review aggregator `summarizeDishReviews()` accepts optional `DeliveryRatingContext` — delivery platform ratings are injected into the LLM prompt as additional context (no extra API call)
+- `VISION_RESPONSE_SCHEMA` is now a module-level `Schema` typed constant in vision-analyzer/index.ts — use it for both `analyzeFoodPhoto()` and `analyzeFoodPhotoFromBuffer()`. Do NOT use `as const` on Gemini schemas — `required: string[]` must be mutable, not readonly.
+- Review aggregator `aggregateReviews()` now uses `Promise.allSettled` with CONCURRENCY=3 for dish summarization — parallel LLM calls for ~3x speedup. Failed individual dishes are logged and skipped.
+- Apollo Evaluator `ALLERGEN_KEYWORDS` now covers EU 14 allergens: added celery, mustard, lupin, sulphites, molluscs beyond FDA Big 9. Worcestershire sauce also added under `fish` keywords (contains anchovies).
+- `KNOWN_ALLERGEN_DISHES` has ~120+ entries (expanded 2026-04-04): Thai curry variants, massaman/panang, praline, nougat, couscous, seitan, beer-battered, tempura, teriyaki/hoisin (soy sauce has wheat), béchamel, hollandaise, risotto, chowder, caesar salad (anchovies), ramen/pho (meat broth).
+- USDA_SYNONYMS now has ~340+ entries (added 2026-04-04): specialty grains (farro, teff, freekeh, amaranth), Japanese/SE Asian (lemongrass, nori, wakame, matcha, dashi), Middle Eastern (za'atar, sumac, harissa), Latin American (tomatillo, jicama, nopal), plant-based (jackfruit, seitan), salad dressings (ranch, caesar, vinaigrette, blue cheese).
+- USDA FDC Branded data type: add `"Branded"` to `dataType` param in `searchFood()` query for chain restaurant context to find branded food entries (1M+ products including major chains).
+- Menu crawler compliance page detection: `fetchCompliancePages()` in sources.ts checks 11 URL patterns for allergen/nutrition disclosure pages; items tagged `source: 'compliance_page'` get `dietaryConfidence: 0.95` in main crawler (restaurant is legally liable for accuracy).
+- `RawMenuItem.source` optional field: `'compliance_page' | 'menu'` — set by `fetchCompliancePages()` in sources.ts; used in index.ts to elevate dietary confidence.
+- California SB 478 allergen disclosure law: effective July 1, 2026 — CA restaurants must post allergen data on-menu or QR page. FoodClaw's compliance page detection is designed to harvest this automatically on launch date.
+- Search query intent classification (not yet implemented): regex-based `classifyQueryIntent()` can distinguish dish name / nutritional goal / dietary request / mood searches → route to right filter combination without LLM.
+- Cuisine diversity in search: current diversity cap is per-restaurant only; add per-cuisine cap (max 4 dishes per cuisine type) to prevent all results being from same cuisine when searching broad category.
+- Review aggregator review freshness: pass review dates to Qwen prompt and instruct to weight reviews from last 12 months more heavily — simple prompt change, no infra cost.
+- Review aggregator `price_perception` field: add `'expensive' | 'fair' | 'great_value' | 'unknown'` to `DishReviewSummary` — extracted from review sentiment keywords.
+- `startTransition()` wraps category pill and sort button `setSearch` calls in `page.tsx` — prevents main thread blocking on sort/filter presses (INP fix).
+- `scroll-padding-top: 4rem` on `html` in globals.css — WCAG 2.2 criterion 2.4.11 keyboard fix for sticky header obscuring focused elements.
+- UI (pending Dian approval): LCP — first 2 `DishCard` images should get `priority` prop (pass `isPriority={index < 2}` from page.tsx); add `priority` prop to `DishCard`.
+- UI (pending Dian approval): WCAG 2.2 — `ConfidenceDot` touch target is 10×10px, minimum is 24×24px. Needs invisible 24px wrapper button around the dot.
+- pgvector `hnsw.max_scan_tuples` safe value is 20,000 (not 10,000): the upstream pgvector default is 20,000; 10,000 terminates scan early on sparse dietary combos (kosher+nut_free) and silently returns fewer results. Already corrected in similarity/index.ts (2026-04-04).
+- Prisma `previewFeatures` now includes `"partialIndexes"` (added 2026-04-04) — enables conditional index expressions in schema.prisma, e.g., `@@index([macroSource], where: "macro_source IS NOT NULL")` for partial index support.
+- BullMQ `addBulk()` should replace per-restaurant `queue.add()` loops in `scripts/nightly-discovery.ts` — single Redis pipeline call vs. N round-trips; 10x faster for 50-restaurant batches.
+- `search_vector_simple` gap: FTS fallback in `geo.ts` calls `to_tsvector('simple', name)` on-the-fly per row — no GIN index exists for `'simple'` dictionary. Either add `search_vector_simple` generated column + GIN index, or switch to `websearch_to_tsquery('english', ...)` which uses the existing `search_vector` (`'english'` dictionary) column. The on-the-fly approach causes seq scan.
+- BullMQ sandboxed processors: `photo-worker.ts` and `crawl-worker.ts` should use `processor: path.resolve('./worker-fn.js')` (file path, not inline function) to run each job in a forked Node.js child process — prevents memory leaks from Playwright/vision model accumulation and isolates OOM crashes from the main queue process.
+- Redis 8.6 `io-threads` config: set `io-threads 8` + `io-threads-do-reads yes` in redis.conf for multi-threaded I/O on Redis ≥ 6. Not yet configured. Relevant for BullMQ under high job throughput (>10K ops/sec).
+- PgBouncer transaction mode requirement: `prisma.$transaction()` with `SET LOCAL` statements (as used in similarity/index.ts for HNSW settings) requires PgBouncer in **session mode**, not transaction mode. In transaction mode, `SET LOCAL` is applied to a different connection than the subsequent query. If PgBouncer is added in future, use `pgbouncer_mode = "session"` or move HNSW settings to `SET` (session-level) with explicit reset.
+- UI (pending Dian approval): Focus ring at 50% opacity (`outline-primary/50` in globals.css line 161) may fail WCAG 2.2 criterion 2.4.13. Fix: remove `/50` opacity suffix.
+- UI (pending Dian approval): Dark mode food photo quality — add `dark:brightness-90` to `<Image>` in `dish-card.tsx` (food photos appear oversaturated on dark backgrounds).
+- UI (pending Dian approval): React 19.2 `<Activity>` component — wrap `FilterDrawer` in `<Activity mode={open ? "visible" : "hidden"}>` to preserve filter state across open/close without remounting.
+- GLP-1 label pattern in menu-crawler now also catches chain-specific terms: "Good Fit Menu" (Shake Shack), "High Protein Menu" (Chipotle), "Skinnylicious" (Cheesecake Factory) — these are chain brand names for their GLP-1 sections as of April 2026.
+- California ADDE Act (eff. July 1, 2026): chains with 20+ CA locations must disclose all 9 major allergens per dish on-menu or QR code. Fines $500–$2,500/violation. FoodClaw's compliance page crawler is foundation — next step: detect QR codes in HTML and follow them (menu-crawler/sources.ts).
+- Allergen AI liability (FDA Feb 2026 scrutiny): >70% of AI restaurant allergen systems make definitive safety claims without cross-contamination modeling. FoodClaw's Apollo Evaluator confidence thresholds are correct, but UI needs explicit "verify with restaurant" disclaimer on allergy-critical dishes. UI pending Dian approval.
+- Nutritionix has 202K+ US restaurant menu items, geo-aware, dietitian-verified. Better than USDA generic for branded chains. Commercial-only (no free tier). Plan: `getNutritionixMacros()` in `usda/client.ts` as USDA miss fallback. Needs `NUTRITIONIX_APP_ID` + `NUTRITIONIX_API_KEY`.
+- DoorDash Zesty (AI restaurant discovery, SF/NYC pilot): restaurant-first, social-first, no dish macros, no allergen safety. FoodClaw moat confirmed: dish-first + verified macros + Apollo safety layer.
+- Spokin has 73K+ community reviews, 80+ allergen filters, Verified Brand partners (24-question FAQ). No dish-level macros, no AI confidence scoring. FoodClaw complement: where Spokin verifies a chain, boost Apollo Evaluator confidence for that chain (Spokin signal integration — future work).
+- `DeliveryRatingContext` interface added to review-aggregator (by linter, 2026-04-04): `doordashThumbsUpPct`, `ubereatsThumbsUpPct`, `isMostLiked` — delivery platform signals passed into `summarizeDishReviews()` for richer summaries. Optional parameter, backwards compatible.
+- pgvector HNSW max_scan_tuples should be 20000 (upstream default), not 10000 — current setting in similarity/index.ts line 107 is too low and may cause early scan termination for sparse dietary combos (kosher + nut_free). ef_search=100 is safe; danger zone is above 200 where PG cost model flips to seq scan.
+- pgvector HNSW index build: use ef_construction=128 (not 64) for better recall at index build time. Applies on next rebuild only (not live queries). Change in post-migrate.sql HNSW CREATE INDEX block.
+- FTS 'simple' dictionary fallback in fullTextSearchDishes() performs a sequential scan — the 'simple' tsvector is not indexed. Fix: add `search_vector_simple` generated column + GIN index in post-migrate.sql and use it in the fallback query in geo.ts.
+- BullMQ addBulk() should be used in nightly-discovery.ts for batch restaurant queueing (currently queues one-at-a-time). Saves 49 Redis round-trips for a 50-restaurant batch.
+- BullMQ sandboxed processors: photo-worker and crawl-worker should use sandboxed processor files (separate child processes) to prevent heap accumulation from Gemini base64 buffers and HTML DOM trees across repeated jobs.
+- Redis 8 I/O threading: set `io-threads 8` + `io-threads-do-reads yes` in redis.conf for up to 2x throughput on multi-core servers. Nightly agent coordination (all 6 agents + BullMQ state + rate limiter) stresses Redis throughput.
+- Prisma 7.4 partialIndexes preview feature available — add `"partialIndexes"` to previewFeatures in schema.prisma to enable defining conditional indexes directly in schema (avoids needing post-migrate.sql for partial index patterns).
+- PgBouncer transaction mode is required for Prisma 7 + prisma.$transaction() — session mode breaks prepared statements. For PgBouncer 1.21+: do NOT set `?pgbouncer=true` in DATABASE_URL (that flag is now legacy and counter-productive). Use separate DIRECT_DATABASE_URL for prisma migrate commands.

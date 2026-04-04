@@ -15,6 +15,14 @@ export const photoAnalysisQueue = new Queue("photo-analysis", { connection, defa
 export const logisticsQueue = new Queue("logistics-update", { connection, defaultJobOptions });
 export const reviewQueue = new Queue("review-aggregation", { connection, defaultJobOptions });
 export const notificationQueue = new Queue("notifications", { connection, defaultJobOptions });
+export const deliveryScrapeQueue = new Queue("delivery-scrape", {
+  connection,
+  defaultJobOptions: {
+    ...defaultJobOptions,
+    attempts: 2,
+    backoff: { type: "exponential", delay: 30000 },
+  },
+});
 export const deadLetterQueue = new Queue("dead-letter", { connection, defaultJobOptions: { removeOnComplete: { count: 500 }, removeOnFail: { count: 1000 } } });
 
 /**

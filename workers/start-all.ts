@@ -19,6 +19,10 @@ import("./review-worker").then(() => {
   console.log("[workers] Review aggregation worker started");
 });
 
+import("./delivery-worker").then(() => {
+  console.log("[workers] Delivery scrape worker started");
+});
+
 // Keep process alive and handle shutdown
 process.on("SIGTERM", () => {
   console.log("[workers] SIGTERM received, shutting down...");
