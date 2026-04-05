@@ -264,3 +264,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Photo matching: `src/lib/photos/match-photo.ts` — 3-strategy matching (exact name in generated-photos.json → case-insensitive match → Dice coefficient fuzzy on kebab-case slugs). Threshold 0.7. No generation — null if no match.
 - `extractRawAnnotations()` in sources.ts: captures dietary tag symbols (V, VG, GF, DF, NF, H, K) and footnote markers from raw HTML BEFORE `cleanDishName()` strips them.
 - `extractMenuAnnotations()` in sources.ts: scans HTML for allergen legend/footnote blocks and inline calorie/macro patterns. Best-effort enrichment, not blocking.
+- `extractIngredientsFromDescription()` in sources.ts: parses ingredient lists from dish descriptions (comma-separated patterns, "served with X" patterns, "contains:" patterns).
+- `isDishCard` boolean on MenuItem: explicit dish card decision separate from `menuItemType`. Set by classifier, human-auditable via `/admin/audit/classifier`.
+- `dishCardConfidence` on MenuItem: LLM confidence for dish card decision. Items < 0.7 routed to human audit.
+- Category-based pre-tagging (2026-04-05): scraper uses menu section name to classify before LLM. "Appetizers" → dish, "Desserts" → dessert, "Beverages" → drink, "Sides" → side. Eliminates most LLM calls.
+- LLM fallback chains (2026-04-05): Claude Sonnet → Qwen 3 → DeepSeek V4 → placeholder. Both dietary analyzer and food auditor. Automatically uses cheapest working model. See `memory/project_model_strategy.md` for full model map.
+- Agent split (2026-04-05): monolithic `crawlRestaurant()` split into 5 agents: Menu Scraper (`menu-scraper/`), Menu Classifier (`menu-classifier/`), Stale Archiver (`stale-archiver/`), Photo Matcher (`photos/match-photo.ts`), Pipeline Orchestrator (`menu-pipeline/orchestrator.ts`). Each has its own BullMQ worker.
+- Evaluation framework (2026-04-05): scraper evaluator (recall), classifier evaluator (accuracy), 66 ground truth items, corrections.json for human overrides. Run via `scripts/run-evaluations.ts`.
+- Human audit UI: `/admin/audit/classifier` (type + dish card correction), `/admin/audit/photos` (approve/reject). Low-confidence items auto-routed to human review.
+- Batch crawl: `scripts/batch-crawl.ts` — runs scraper → classifier → archiver sequentially per restaurant. No Redis/BullMQ needed. `--max N`, `--dry-run`, `--skip-classify` options.
