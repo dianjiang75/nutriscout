@@ -3,6 +3,7 @@ import { getGeminiClient, GEMINI_FLASH } from "@/lib/ai/clients";
 import { SchemaType } from "@google/generative-ai";
 import { extractJson } from "@/lib/utils/parse-json";
 import { fetchWithRetry } from "@/lib/utils/fetch-retry";
+import { isWineOrSpirit, isDishWorthRecommending } from "./clean-dish-name";
 import type { MenuSourceStrategy, RawMenuItem, RestaurantInfo } from "./types";
 
 const MENU_EXTRACTION_PROMPT = `This is a photo of a restaurant menu. Extract ALL menu items with:
@@ -244,6 +245,18 @@ export function parseHtmlMenu(html: string): RawMenuItem[] {
     '[data-testid*="menu"]',
   ];
 
+  // Build a heading map: for each element position in the DOM, track the most
+  // recent h2/h3 heading text. This fixes the bug where currentCategory was
+  // always null because closestSection/prevAll couldn't find headings in
+  // typical flat menu HTML structures.
+  const allHeadings: { text: string }[] = [];
+  $("h2, h3, [class*='section-title'], [class*='category-title'], [class*='menu-heading']").each((_, el) => {
+    const text = $(el).text().trim();
+    if (text && text.length > 1 && text.length < 60) {
+      allHeadings.push({ text });
+    }
+  });
+
   // Try structured selectors first
   for (const selector of selectors) {
     $(selector).each((_, el) => {
@@ -260,13 +273,22 @@ export function parseHtmlMenu(html: string): RawMenuItem[] {
       const priceText =
         $el.find(".price, [class*='price']").first().text().trim() || null;
 
-      // Find the nearest preceding heading to use as category
+      // Category detection: try multiple strategies
+      // 1. Closest section container with a heading
       const closestSection = $el.closest("[class*='section'], [class*='category'], [data-category]");
       const sectionHeading = closestSection.find("h2, h3, [class*='heading'], [class*='title']").first().text().trim();
-      // Also check preceding siblings for headings
+
+      // 2. data-category attribute on element or parent
+      const dataCategory = $el.attr("data-category")
+        || $el.closest("[data-category]").attr("data-category")
+        || null;
+
+      // 3. Preceding sibling headings (walk up DOM tree)
       const prevHeading = $el.prevAll("h2, h3").first().text().trim()
-        || $el.parent().prevAll("h2, h3").first().text().trim();
-      const category = sectionHeading || prevHeading || null;
+        || $el.parent().prevAll("h2, h3").first().text().trim()
+        || $el.parent().parent().prevAll("h2, h3").first().text().trim();
+
+      const category = sectionHeading || dataCategory || prevHeading || null;
 
       items.push({
         name,
@@ -299,8 +321,16 @@ export function parseHtmlMenu(html: string): RawMenuItem[] {
     });
   }
 
-  // Validate: remove non-food items before returning
-  return items.filter(item => isLikelyFoodItem(item.name, item.description || ""));
+  // Validate: multi-layer filtering
+  // 1. isLikelyFoodItem() — rejects obvious junk (hotel amenities, nav, phone numbers)
+  // 2. isWineOrSpirit() — rejects wine/beer/spirit listings
+  // 3. isDishWorthRecommending() — rejects sides, condiments, basic drinks
+  return items.filter(item => {
+    if (!isLikelyFoodItem(item.name, item.description || "")) return false;
+    if (isWineOrSpirit(item.name, item.category)) return false;
+    if (!isDishWorthRecommending(item.name, item.category)) return false;
+    return true;
+  });
 }
 
 /**
