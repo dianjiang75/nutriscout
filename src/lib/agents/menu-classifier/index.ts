@@ -334,6 +334,8 @@ export async function classifyAndPromote(
       where: { id: mi.id },
       data: {
         dishId: dish.id,
+        isDishCard: true,
+        dishCardConfidence: analysis?.dietary_confidence ?? 0.8,
         ...(parsedIngredientList && !mi.menuIngredients
           ? { menuIngredients: parsedIngredientList }
           : {}),

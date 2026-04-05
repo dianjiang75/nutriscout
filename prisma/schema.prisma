@@ -208,6 +208,10 @@ model MenuItem {
   menuDietaryTags  String[]        @default([]) @map("menu_dietary_tags") // e.g. ["V", "GF", "DF"] as printed
   menuIngredients  String?         @map("menu_ingredients")
 
+  // Dish card decision
+  isDishCard       Boolean         @default(false) @map("is_dish_card") // Whether this item gets a dish card
+  dishCardConfidence Decimal?      @map("dish_card_confidence") @db.Decimal(3, 2) // LLM confidence for dish card decision
+
   // Audit result
   auditConfidence  Decimal?        @map("audit_confidence") @db.Decimal(3, 2)
 
@@ -232,6 +236,7 @@ model MenuItem {
   @@index([restaurantId, menuItemType, archivedAt], map: "idx_menu_items_type_active")
   @@index([dishId], map: "idx_menu_items_dish")
   @@index([restaurantId, lastSeenAt], map: "idx_menu_items_freshness")
+  @@index([isDishCard, restaurantId], map: "idx_menu_items_dish_card")
   @@map("menu_items")
 }
 

@@ -273,15 +273,43 @@ export async function scrapeRestaurantMenu(
   // ═══════════════════════════════════════════════════════════
   const sourceEnum = mapSourceToEnum(usedSource);
 
-  // Pre-tag items at scrape time (skip LLM for obvious categories)
+  // Pre-tag items at scrape time — use menu category first, then name patterns.
+  // This eliminates most LLM calls since restaurants already categorize their menu.
   const preTagged = dedupedItems.map((item) => {
     let preType: MenuItemType = "unknown";
-    if (isWineOrSpirit(item.name, item.category)) preType = "drink";
-    else if (isCocktailOrSpecialDrink(item.name, item.category))
-      preType = "drink";
-    else if (isDessertItem(item.name, item.category)) preType = "dessert";
-    else if (isComboOrMealDeal(item.name)) preType = "combo";
-    else if (isKidsMenuItem(item.name)) preType = "kids";
+    const cat = (item.category || "").toLowerCase().trim();
+
+    // ── Category-based classification (highest priority — restaurant's own structure) ──
+    if (cat) {
+      // Sides
+      if (/^(sides?|side\s+dish|side\s+order|accompaniment|acompañamiento)s?$/i.test(cat)) preType = "side";
+      // Add-ons / extras
+      else if (/^(add[- ]?on|extra|topping|upgrade|modification|customize)s?$/i.test(cat)) preType = "addon";
+      // Kids
+      else if (/kid|child|junior|little\s+one|pequeño/i.test(cat)) preType = "kids";
+      // Desserts
+      else if (/dessert|sweet|pastel|postre|pastry|bakery|dulce|gelato/i.test(cat)) preType = "dessert";
+      // Drinks / beverages (but NOT cocktails — those might get promoted)
+      else if (/^(beverage|drink|soft\s+drink|soda|water|juice|non[- ]?alcoholic)s?$/i.test(cat)) preType = "drink";
+      // Wine / beer / spirits
+      else if (/wine|beer|spirit|liquor|cocktail|bar|whiskey|bourbon|scotch|champagne|champage|sparkling|rosé|red\s+wine|white\s+wine/i.test(cat)) preType = "drink";
+      // Condiments / sauces
+      else if (/^(sauce|condiment|dressing|dip|salsa|spread)s?$/i.test(cat)) preType = "condiment";
+      // Dishes — explicit main categories (appetizers, entrees, mains, etc.)
+      else if (/appetizer|starter|entrée|entree|main|platter|soup|salad|sandwich|burger|pizza|pasta|taco|sushi|dim\s*sum|steamed|fried|grill|seafood|meat|poultry|chicken|beef|pork|lamb|fish|vegetable|vegan|vegetarian|noodle|rice|curry|stew|brunch|breakfast|lunch|dinner/i.test(cat)) preType = "dish";
+      // Combo / specials
+      else if (/combo|meal\s+deal|value|bundle|set\s+menu|prix\s+fixe|special/i.test(cat)) preType = "combo";
+    }
+
+    // ── Name-based classification (fallback when category didn't match) ──
+    if (preType === "unknown") {
+      if (isWineOrSpirit(item.name, item.category)) preType = "drink";
+      else if (isCocktailOrSpecialDrink(item.name, item.category)) preType = "drink";
+      else if (isDessertItem(item.name, item.category)) preType = "dessert";
+      else if (isComboOrMealDeal(item.name)) preType = "combo";
+      else if (isKidsMenuItem(item.name)) preType = "kids";
+    }
+
     return { item, preType };
   });
 

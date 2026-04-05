@@ -611,6 +611,8 @@ export async function crawlRestaurant(
       },
       data: {
         dishId: dish.id,
+        isDishCard: true,
+        dishCardConfidence: dietaryConfidence ?? 0.8,
         // Write back LLM-parsed ingredients to MenuItem for full menu display
         ...(parsedIngredientList && !item.menuIngredients ? { menuIngredients: parsedIngredientList } : {}),
       },

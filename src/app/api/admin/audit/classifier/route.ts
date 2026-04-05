@@ -43,6 +43,8 @@ export const GET = withRateLimit("read", async (request: Request) => {
           price: true,
           category: true,
           menuItemType: true,
+          isDishCard: true,
+          dishCardConfidence: true,
           auditConfidence: true,
           restaurant: { select: { name: true } },
         },
@@ -63,6 +65,8 @@ export const GET = withRateLimit("read", async (request: Request) => {
       price: item.price ? Number(item.price) : null,
       category: item.category,
       menuItemType: item.menuItemType,
+      isDishCard: item.isDishCard,
+      dishCardConfidence: item.dishCardConfidence ? Number(item.dishCardConfidence) : null,
       auditConfidence: item.auditConfidence ? Number(item.auditConfidence) : null,
       restaurantName: item.restaurant.name,
     }));
@@ -76,13 +80,18 @@ export const GET = withRateLimit("read", async (request: Request) => {
 export const POST = withRateLimit("write", async (request: Request) => {
   try {
     const body = await request.json();
-    const { menuItemId, correctType, reason } = body;
+    const { menuItemId, correctType, isDishCard, reason } = body;
 
     if (!menuItemId || typeof menuItemId !== "string") {
       return apiBadRequest("menuItemId is required");
     }
 
-    if (!correctType || !VALID_TYPES.includes(correctType)) {
+    // Either correctType or isDishCard must be provided
+    if (!correctType && isDishCard === undefined) {
+      return apiBadRequest("correctType or isDishCard is required");
+    }
+
+    if (correctType && !VALID_TYPES.includes(correctType)) {
       return apiBadRequest(
         `correctType must be one of: ${VALID_TYPES.join(", ")}`,
       );
@@ -107,8 +116,8 @@ export const POST = withRateLimit("write", async (request: Request) => {
     await prisma.menuItem.update({
       where: { id: menuItemId },
       data: {
-        menuItemType: correctType,
-        auditConfidence: 1.0, // Human-verified = full confidence
+        ...(correctType ? { menuItemType: correctType, auditConfidence: 1.0 } : {}),
+        ...(isDishCard !== undefined ? { isDishCard: !!isDishCard, dishCardConfidence: 1.0 } : {}),
       },
     });
 
