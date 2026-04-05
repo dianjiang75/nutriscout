@@ -1,0 +1,70 @@
+{
+  "restaurants": [
+    {
+      "googlePlaceId": "ChIJS0y1_oJYwokRp1XiiN58wKA",
+      "name": "Dagon",
+      "expectedItemCount": 152,
+      "knownItems": [
+        "Shakshuka",
+        "Hummus",
+        "Baba Ganouj",
+        "Israeli Breakfast",
+        "Chicken Schnitzel",
+        "Crispy Roasted Lamb",
+        "Flash Fried Cauliflower",
+        "Flatbread",
+        "Labneh Cheesecake",
+        "Flourless Chocolate Cake",
+        "Turkish Coffee",
+        "Margarita",
+        "Falafel Plate",
+        "Lamb Kofta"
+      ],
+      "knownNonItems": [
+        "Saturday",
+        "WiFi",
+        "Live Music",
+        "Patio Available",
+        "Open 7 Days",
+        "Reservations Recommended"
+      ]
+    },
+    {
+      "googlePlaceId": "ChIJXczCZSZawokRerIzds-K5e0",
+      "name": "Golden Unicorn",
+      "expectedItemCount": 100,
+      "knownItems": [
+        "Har Gow",
+        "Siu Mai",
+        "Chicken Feet",
+        "Egg Drop Soup",
+        "Beef Lo Mein",
+        "Wonton Soup",
+        "Xiao Long Bun",
+        "BBQ Pork Bun",
+        "Turnip Cake",
+        "Steamed Rice Rolls"
+      ],
+      "knownNonItems": []
+    },
+    {
+      "googlePlaceId": "ChIJK0Nld6ZZwokRyOd9fsyinLY",
+      "name": "The Smith",
+      "expectedItemCount": 163,
+      "knownItems": [
+        "The Burger",
+        "Mac & Cheese",
+        "Caesar Salad",
+        "Truffle Fries",
+        "Grilled Salmon",
+        "Chicken Milanese",
+        "Steak Frites",
+        "Brussels Sprouts"
+      ],
+      "knownNonItems": [
+        "Happy Hour",
+        "Brunch Available"
+      ]
+    }
+  ]
+}

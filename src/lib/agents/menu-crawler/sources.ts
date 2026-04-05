@@ -3,17 +3,20 @@ import { getGeminiClient, GEMINI_FLASH } from "@/lib/ai/clients";
 import { SchemaType } from "@google/generative-ai";
 import { extractJson } from "@/lib/utils/parse-json";
 import { fetchWithRetry } from "@/lib/utils/fetch-retry";
-import { isWineOrSpirit, isDishWorthRecommending } from "./clean-dish-name";
+import { isLikelyFoodItem } from "./clean-dish-name";
 import type { MenuSourceStrategy, RawMenuItem, RestaurantInfo } from "./types";
 
 const MENU_EXTRACTION_PROMPT = `This is a photo of a restaurant menu. Extract ALL menu items with:
 - Item name
-- Description (if any)
+- Description (if any — include ingredient lists exactly as written)
 - Price (if visible)
 - Section/category (e.g., "Appetizers", "Mains", "Desserts")
+- Ingredients (if listed on the menu — extract the exact ingredient text as written)
+- Dietary symbols visible (e.g., "V" for vegan, "GF" for gluten-free, any allergen icons)
+- Any visible calorie or nutrition information
 
 Return as JSON array:
-[{"name": "string", "description": "string", "price": "string", "category": "string"}]
+[{"name": "string", "description": "string", "price": "string", "category": "string", "ingredients": "string or null", "dietaryTags": ["string"], "calories": number or null}]
 
 Return ONLY valid JSON, no markdown fences or extra text.`;
 
@@ -155,6 +158,63 @@ async function fetchCompliancePages(
  * Many restaurant sites embed menu data as <script type="application/ld+json">.
  * This is the cleanest data source — exact names, prices, descriptions.
  */
+/**
+ * Extract ingredients from a JSON-LD menu item.
+ * Handles Schema.org recipeIngredient, ingredient, and nutrition fields.
+ */
+function extractJsonLdIngredients(item: Record<string, unknown>): string | null {
+  // Schema.org recipeIngredient (array of strings)
+  if (item.recipeIngredient && Array.isArray(item.recipeIngredient)) {
+    return (item.recipeIngredient as string[]).join(", ");
+  }
+  // Some sites use 'ingredient' (non-standard but common)
+  if (item.ingredient && typeof item.ingredient === "string") {
+    return item.ingredient;
+  }
+  if (item.ingredient && Array.isArray(item.ingredient)) {
+    return (item.ingredient as string[]).join(", ");
+  }
+  return null;
+}
+
+/**
+ * Extract ingredients from description text.
+ * Many menus describe dishes as: "Dish Name - ingredient1, ingredient2, ingredient3"
+ * or "served with ingredient1 and ingredient2"
+ */
+export function extractIngredientsFromDescription(description: string): string | null {
+  if (!description || description.length < 5) return null;
+
+  // If description reads like an ingredient list (short, comma-separated, no sentences)
+  // e.g., "grilled chicken, romaine, parmesan, croutons, caesar dressing"
+  const words = description.split(/\s+/);
+  const commas = (description.match(/,/g) || []).length;
+  const periods = (description.match(/\./g) || []).length;
+
+  // High comma-to-word ratio + few periods = likely ingredient list
+  if (commas >= 2 && periods <= 1 && words.length <= 30) {
+    return description;
+  }
+
+  // Look for "served with" / "topped with" / "made with" patterns
+  const withMatch = description.match(
+    /(?:served|topped|made|tossed|drizzled|garnished|finished|accompanied|paired)\s+with\s+(.+)/i
+  );
+  if (withMatch) {
+    return withMatch[1].replace(/\.$/, "").trim();
+  }
+
+  // Look for "contains:" or "ingredients:" prefix
+  const containsMatch = description.match(
+    /(?:contains|ingredients|featuring|includes)\s*[:—–-]\s*(.+)/i
+  );
+  if (containsMatch) {
+    return containsMatch[1].replace(/\.$/, "").trim();
+  }
+
+  return null;
+}
+
 function extractJsonLdMenu(html: string): RawMenuItem[] {
   const $ = cheerio.load(html);
   const items: RawMenuItem[] = [];
@@ -184,11 +244,14 @@ function extractJsonLdMenu(html: string): RawMenuItem[] {
                   || item.price
                   || null;
                 const price = rawPrice != null ? (String(rawPrice).startsWith("$") ? String(rawPrice) : `$${rawPrice}`) : null;
+                // Extract ingredients from JSON-LD (Schema.org recipeIngredient or ingredient fields)
+                const ingredients = extractJsonLdIngredients(item);
                 items.push({
                   name: item.name,
                   description: item.description || "",
                   price,
                   category,
+                  menuIngredients: ingredients || undefined,
                 });
               }
             }
@@ -209,11 +272,13 @@ function extractJsonLdMenu(html: string): RawMenuItem[] {
               if (item.name) {
                 const rawPrice = item.offers?.price ?? null;
                 const price = rawPrice != null ? (String(rawPrice).startsWith("$") ? String(rawPrice) : `$${rawPrice}`) : null;
+                const ingredients = extractJsonLdIngredients(item);
                 items.push({
                   name: item.name,
                   description: item.description || "",
                   price,
                   category,
+                  menuIngredients: ingredients || undefined,
                 });
               }
             }
@@ -270,6 +335,10 @@ export function parseHtmlMenu(html: string): RawMenuItem[] {
       const description =
         $el.find("p, .description, .desc, [class*='description']").first().text().trim() || "";
 
+      // Look for ingredient-specific elements (some menus have dedicated ingredient fields)
+      const ingredientEl =
+        $el.find("[class*='ingredient'], [class*='contents'], .ingredients, .dish-ingredients").first().text().trim() || null;
+
       const priceText =
         $el.find(".price, [class*='price']").first().text().trim() || null;
 
@@ -290,11 +359,17 @@ export function parseHtmlMenu(html: string): RawMenuItem[] {
 
       const category = sectionHeading || dataCategory || prevHeading || null;
 
+      // Extract ingredients: prefer dedicated element, fall back to description parsing
+      const menuIngredients = ingredientEl
+        || extractIngredientsFromDescription(description)
+        || undefined;
+
       items.push({
         name,
         description,
         price: priceText,
         category,
+        menuIngredients,
       });
     });
 
@@ -321,63 +396,9 @@ export function parseHtmlMenu(html: string): RawMenuItem[] {
     });
   }
 
-  // Validate: two-layer filtering
-  // 1. isLikelyFoodItem() — rejects obvious junk (hotel amenities, nav, phone numbers)
-  // 2. isWineOrSpirit() — rejects wine/beer/spirit listings (200+ grapes, 100+ brands)
-  // NOTE: isDishWorthRecommending() is NOT used here — it's too aggressive
-  // (rejects sides like Mac & Cheese, Truffle Fries which users want to find)
-  return items.filter(item => {
-    if (!isLikelyFoodItem(item.name, item.description || "")) return false;
-    if (isWineOrSpirit(item.name, item.category)) return false;
-    return true;
-  });
-}
-
-/**
- * Validate that a menu item is actually food/drink, not hotel amenities,
- * website navigation, business hours, or other garbage.
- *
- * This is the LAST LINE OF DEFENSE before data enters the database.
- * Be aggressive about rejecting — a missed real dish can be re-crawled,
- * but junk in the DB pollutes search results and wastes image generation.
- */
-function isLikelyFoodItem(name: string, description: string): boolean {
-  const lower = (name + " " + description).toLowerCase();
-
-  // Definite non-food patterns
-  const JUNK_PATTERNS = [
-    // Hotel/building amenities
-    /\b(gym|pool|spa|sauna|jacuzzi|elevator|lobby|concierge|valet|parking|shuttle|wifi|wi-fi)\b/,
-    /\b(check-in|checkout|check-out|luggage|baggage|key card|safe deposit|minibar|mini-bar)\b/,
-    /\b(hairdryer|hair dryer|shampoo|conditioner|towel|iron|ironing|laundry)\b/,
-    /\b(air condition|heating|balcony|terrace|grab rail|shower|bathtub|toilet|wc )\b/,
-    /\b(doorman|bellhop|reception|front desk|housekeeping|room service|wake-up)\b/,
-    // Navigation/business info
-    /\b(booking|reservation|phone|call us|contact|email|address|directions|located)\b/,
-    /\b(close to|near |subway|bus stop|train station|airport)\b/,
-    /\b(24-hour|24 hour|open daily|hours of operation|we are open)\b/,
-    /\b(360°|virtual tour|gallery|photo|video|instagram|facebook|twitter)\b/,
-    // Day names as standalone items
-    /^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i,
-    // Phone numbers
-    /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/,
-    // URLs
-    /https?:\/\//,
-    // Too short (single character or abbreviation)
-  ];
-
-  if (JUNK_PATTERNS.some(p => p.test(lower))) return false;
-
-  // Name too short or too long
-  if (name.trim().length < 3 || name.trim().length > 80) return false;
-
-  // Mostly numbers (likely a code or price)
-  if (/^\d+[\s.,-]*\d*$/.test(name.trim())) return false;
-
-  // Contains pipe (wine list format: "6002 | Syrah | ...")
-  if (name.includes("|") && /\d{4}/.test(name)) return false;
-
-  return true;
+  // Filter: isLikelyFoodItem() rejects obvious junk (hotel amenities, nav, phone numbers).
+  // Wine/spirit items pass through — they're tagged later in the pipeline, not filtered here.
+  return items.filter(item => isLikelyFoodItem(item.name, item.description || ""));
 }
 
 /**
@@ -416,6 +437,12 @@ export const googlePhotosSource: MenuSourceStrategy = {
                 description: { type: SchemaType.STRING },
                 price: { type: SchemaType.STRING },
                 category: { type: SchemaType.STRING },
+                ingredients: { type: SchemaType.STRING, nullable: true },
+                dietaryTags: {
+                  type: SchemaType.ARRAY,
+                  items: { type: SchemaType.STRING },
+                },
+                calories: { type: SchemaType.NUMBER, nullable: true },
               },
               required: ["name"],
             },
@@ -444,7 +471,29 @@ export const googlePhotosSource: MenuSourceStrategy = {
             try {
               const parsed = extractJson<RawMenuItem[]>(text);
               if (Array.isArray(parsed)) {
-                allItems.push(...parsed.map((item: RawMenuItem) => ({ ...item, photoUrl })));
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                allItems.push(...parsed.map((item: any) => {
+                  const mapped: RawMenuItem = {
+                    name: String(item.name || ""),
+                    description: String(item.description || ""),
+                    price: item.price ? String(item.price) : null,
+                    category: item.category ? String(item.category) : null,
+                    photoUrl,
+                  };
+                  // Pass through ingredients, dietary tags, and calories from Gemini extraction
+                  if (item.ingredients && typeof item.ingredients === "string") {
+                    mapped.menuIngredients = item.ingredients;
+                  }
+                  const tags = item.dietaryTags;
+                  if (Array.isArray(tags) && tags.length > 0) {
+                    mapped.menuDietaryTags = tags.map(String);
+                  }
+                  const cal = item.calories;
+                  if (typeof cal === "number" && cal > 0) {
+                    mapped.menuCalories = cal;
+                  }
+                  return mapped;
+                }));
               }
             } catch {
               // Skip unparseable photo menu extraction
@@ -475,6 +524,219 @@ export const deliveryPlatformSource: MenuSourceStrategy = {
     return null;
   },
 };
+
+// ---------------------------------------------------------------------------
+// Annotation extraction — best-effort parsing of allergen legends, nutrition
+// data, and dietary symbols from raw menu HTML.
+// ---------------------------------------------------------------------------
+
+export interface MenuAnnotations {
+  /** Symbol-to-meaning map from footnotes, e.g. { "*": "contains nuts", "V": "vegan" } */
+  legendMap: Record<string, string>;
+  /** Per-item annotations keyed by lowercased item name */
+  itemAnnotations: Record<string, {
+    allergens?: string[];
+    dietaryTags?: string[];
+    calories?: number;
+    proteinG?: number;
+    carbsG?: number;
+    fatG?: number;
+    ingredients?: string;
+  }>;
+}
+
+/**
+ * Scan menu HTML for footnote/allergen legends and inline nutrition info.
+ * This is best-effort — returns empty results when nothing is found.
+ */
+export function extractMenuAnnotations(html: string): MenuAnnotations {
+  const legendMap: Record<string, string> = {};
+  const itemAnnotations: MenuAnnotations["itemAnnotations"] = {};
+
+  try {
+    const $ = cheerio.load(html);
+
+    // ── Step 1: Build legend map from footnote/legend blocks ──
+
+    // Strategy A: Look for dedicated legend containers
+    const legendSelectors = [
+      ".allergen-legend", ".dietary-key", ".menu-legend", ".footnote",
+      ".legend", ".allergen-key", ".dietary-legend", ".menu-footnote",
+      "[class*='legend']", "[class*='footnote']", "[class*='allergen-key']",
+    ];
+
+    const legendText: string[] = [];
+    for (const sel of legendSelectors) {
+      $(sel).each((_, el) => {
+        legendText.push($(el).text());
+      });
+    }
+
+    // Strategy B: Scan all text for lines matching "SYMBOL = meaning" patterns
+    // Covers: "* = contains nuts", "(V) = Vegan", "GF = Gluten Free", "† Contains dairy"
+    const bodyText = $("body").text();
+    legendText.push(bodyText);
+
+    const legendLineRe = /([*†‡§¶#!~^+]+|\([A-Z]{1,3}\)|[A-Z]{1,3})\s*[=:–—-]\s*([A-Za-z][A-Za-z\s,'-]{2,60})/g;
+    for (const text of legendText) {
+      let match: RegExpExecArray | null;
+      while ((match = legendLineRe.exec(text)) !== null) {
+        const symbol = match[1].replace(/[()]/g, "").trim();
+        const meaning = match[2].trim().toLowerCase();
+        if (symbol && meaning) {
+          legendMap[symbol] = meaning;
+        }
+      }
+    }
+
+    // ── Step 2: Extract per-item nutrition from HTML ──
+
+    // Calorie patterns: "320 cal", "320 kcal", "Calories: 320", "320-450 cal"
+    const calRe = /(\d{1,4})\s*(?:[-–]\s*\d{1,4}\s*)?(?:cal(?:ories?)?|kcal)\b/i;
+    const calPrefixRe = /(?:cal(?:ories?)?|kcal)\s*[:=]\s*(\d{1,4})/i;
+    const proteinRe = /(\d{1,4})\s*g?\s*(?:protein|prot)\b/i;
+    const carbsRe = /(\d{1,4})\s*g?\s*(?:carbs?|carbohydrates?)\b/i;
+    const fatRe = /(\d{1,4})\s*g?\s*fat\b/i;
+
+    // Allergen inline patterns: "Contains: milk, wheat", "Allergens: nuts, soy"
+    const allergenInlineRe = /(?:contains|allergens?)\s*[:=]\s*([A-Za-z,\s]+?)(?:\.|$)/i;
+
+    // Ingredients pattern: "Ingredients: chicken, rice, ..."
+    const ingredientsRe = /(?:ingredients?)\s*[:=]\s*([A-Za-z,\s()'-]+?)(?:\.|$)/i;
+
+    // Scan menu item elements for nutrition data
+    const itemSelectors = [
+      ".menu-item", ".dish", ".food-item",
+      '[class*="menu-item"]', '[class*="dish"]',
+      '[data-testid*="menu"]',
+      "li", "tr", "dt",
+    ];
+
+    for (const sel of itemSelectors) {
+      $(sel).each((_, el) => {
+        const $el = $(el);
+        const fullText = $el.text();
+        const nameEl = $el.find("h3, h4, .item-name, .dish-name, .name, [class*='name'], [class*='title']").first();
+        const itemName = nameEl.text().trim().toLowerCase();
+        if (!itemName || itemName.length < 2 || itemName.length > 100) return;
+
+        const annotation: NonNullable<MenuAnnotations["itemAnnotations"][string]> = {};
+
+        // Calories
+        const calMatch = calRe.exec(fullText) || calPrefixRe.exec(fullText);
+        if (calMatch) {
+          const cal = parseInt(calMatch[1], 10);
+          if (cal > 0 && cal <= 5000) annotation.calories = cal;
+        }
+
+        // Macros
+        const protMatch = proteinRe.exec(fullText);
+        if (protMatch) {
+          const v = parseInt(protMatch[1], 10);
+          if (v > 0 && v <= 500) annotation.proteinG = v;
+        }
+        const carbMatch = carbsRe.exec(fullText);
+        if (carbMatch) {
+          const v = parseInt(carbMatch[1], 10);
+          if (v > 0 && v <= 1000) annotation.carbsG = v;
+        }
+        const fatMatch = fatRe.exec(fullText);
+        if (fatMatch) {
+          const v = parseInt(fatMatch[1], 10);
+          if (v > 0 && v <= 500) annotation.fatG = v;
+        }
+
+        // Allergens
+        const allergenMatch = allergenInlineRe.exec(fullText);
+        if (allergenMatch) {
+          annotation.allergens = allergenMatch[1]
+            .split(",")
+            .map(s => s.trim().toLowerCase())
+            .filter(s => s.length > 1);
+        }
+
+        // Ingredients
+        const ingredMatch = ingredientsRe.exec(fullText);
+        if (ingredMatch) {
+          annotation.ingredients = ingredMatch[1].trim();
+        }
+
+        // Dietary tags from legend symbols found in item text
+        const tags: string[] = [];
+        for (const symbol of Object.keys(legendMap)) {
+          // Check if the symbol appears in the item's raw text (not just the name)
+          if (fullText.includes(symbol)) {
+            tags.push(symbol);
+          }
+        }
+        if (tags.length > 0) annotation.dietaryTags = tags;
+
+        // Only store if we found something useful
+        if (Object.keys(annotation).length > 0) {
+          itemAnnotations[itemName] = annotation;
+        }
+      });
+    }
+  } catch {
+    // Best-effort: return whatever we have so far
+  }
+
+  return { legendMap, itemAnnotations };
+}
+
+/** Common dietary annotation symbols found on restaurant menus */
+const DIETARY_TAG_PATTERNS: Array<{ re: RegExp; tag: string }> = [
+  { re: /\(V\)|\bV\b(?=\s*$|\s*[,.])/,   tag: "V" },
+  { re: /\(VG\)|\bVG\b(?=\s*$|\s*[,.])/,  tag: "VG" },
+  { re: /\(GF\)|\bGF\b(?=\s*$|\s*[,.])/,  tag: "GF" },
+  { re: /\(DF\)|\bDF\b(?=\s*$|\s*[,.])/,  tag: "DF" },
+  { re: /\(NF\)|\bNF\b(?=\s*$|\s*[,.])/,  tag: "NF" },
+  { re: /\(H\)|\bH\b(?=\s*$|\s*[,.])/, tag: "H" },
+  { re: /\(K\)|\bK\b(?=\s*$|\s*[,.])/, tag: "K" },
+];
+
+const FOOTNOTE_MARKER_RE = /[*†‡§¶]+/g;
+const DIETARY_EMOJI_RE = /[\u{1F331}\u{1F96C}\u{26A0}\u{FE0F}]/gu;
+
+/**
+ * Extract dietary tags and footnote markers from raw item text BEFORE cleaning.
+ * Scans for common dietary annotation patterns:
+ * - Parenthetical: (V), (VG), (GF), (DF), (NF), (H), (K)
+ * - Suffix markers: *, **, †, ‡
+ * - Emoji indicators
+ */
+export function extractRawAnnotations(rawName: string, rawDescription?: string): {
+  dietaryTags: string[];
+  footnoteMarkers: string[];
+} {
+  const combined = rawDescription ? `${rawName} ${rawDescription}` : rawName;
+  const dietaryTags: string[] = [];
+  const footnoteMarkers: string[] = [];
+
+  // Dietary tag patterns
+  for (const { re, tag } of DIETARY_TAG_PATTERNS) {
+    if (re.test(combined)) {
+      dietaryTags.push(tag);
+    }
+  }
+
+  // Emoji dietary indicators
+  if (DIETARY_EMOJI_RE.test(combined)) {
+    // 🌱 = plant-based/vegan, 🥬 = vegetarian, ⚠️ = allergen warning
+    if (/\u{1F331}/u.test(combined)) dietaryTags.push("V");
+    if (/\u{1F96C}/u.test(combined)) dietaryTags.push("VG");
+  }
+
+  // Footnote markers
+  const markerMatches = combined.match(FOOTNOTE_MARKER_RE);
+  if (markerMatches) {
+    for (const m of markerMatches) {
+      if (!footnoteMarkers.includes(m)) footnoteMarkers.push(m);
+    }
+  }
+
+  return { dietaryTags, footnoteMarkers };
+}
 
 export const menuSources: MenuSourceStrategy[] = [
   websiteSource,

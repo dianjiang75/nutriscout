@@ -282,12 +282,19 @@ function isBasicDrink(lower: string): boolean {
   return basicDrinks.some((d) => lower === d || lower === `a ${d}` || lower === `${d} refill`);
 }
 
-function isInterestingBeverage(lower: string): boolean {
+export function isInterestingBeverage(lower: string): boolean {
   const interestingPatterns = [
     "cocktail", "martini", "margarita", "mojito", "sangria",
     "smoothie", "shake", "milkshake", "frappe", "frappuccino",
     "boba", "bubble tea", "taro", "matcha",
+    "coffee", "iced coffee", "vietnamese coffee", "ca phe",
+    "turkish coffee", "irish coffee",
     "latte", "cappuccino", "espresso", "cold brew", "pour over",
+    "macchiato", "mocha", "cortado", "flat white", "americano",
+    "affogato",
+    "tea", "iced tea", "thai iced tea", "thai tea",
+    "hot chocolate", "hot cocoa",
+    "cider",
     "aqua fresca", "horchata", "jamaica", "tamarindo",
     "sake", "soju", "shochu", "makkoli",
     "lassi", "mango lassi", "chai",
@@ -300,6 +307,23 @@ function isInterestingBeverage(lower: string): boolean {
     "punch", "toddy", "colada", "caipirinha", "crusta", "flip",
   ];
   return interestingPatterns.some((p) => lower.includes(p));
+}
+
+/**
+ * Check if a menu item is an interesting beverage by name or by its category.
+ * Returns true if:
+ * - isInterestingBeverage(name) matches, OR
+ * - category contains cocktail/mixology/bar/specialty drink keywords
+ */
+export function isInterestingBeverageOrCategory(name: string, category?: string | null): boolean {
+  if (isInterestingBeverage(name.toLowerCase())) return true;
+  if (!category) return false;
+  const catLower = category.toLowerCase();
+  const beverageCategories = [
+    "cocktail", "mixology", "bar", "specialty drink",
+    "signature drink", "craft beverage",
+  ];
+  return beverageCategories.some((c) => catLower.includes(c));
 }
 
 function isCondiment(lower: string): boolean {
@@ -326,6 +350,151 @@ function isNonFood(lower: string): boolean {
     "catering", "party tray", "event booking",
   ];
   return nonFood.some((n) => lower === n || lower.includes(n));
+}
+
+// ── Food Item Validation ────────────────────────────────────────────
+
+/**
+ * Validate that a menu item is actually food/drink, not hotel amenities,
+ * website navigation, business hours, events, promotions, or other garbage.
+ *
+ * This is the LAST LINE OF DEFENSE before data enters the database.
+ * Be aggressive about rejecting — a missed real dish can be re-crawled,
+ * but junk in the DB pollutes search results and wastes image generation.
+ *
+ * Moved from sources.ts to centralize all dish-name filtering logic.
+ */
+export function isLikelyFoodItem(name: string, description: string): boolean {
+  const lower = (name + " " + description).toLowerCase();
+  const nameLower = name.toLowerCase().trim();
+
+  // Definite non-food patterns
+  const JUNK_PATTERNS = [
+    // Hotel/building amenities
+    /\b(gym|pool|spa|sauna|jacuzzi|elevator|lobby|concierge|valet|parking|shuttle|wifi|wi-fi)\b/,
+    /\b(check-in|checkout|check-out|luggage|baggage|key card|safe deposit|minibar|mini-bar)\b/,
+    /\b(hairdryer|hair dryer|shampoo|conditioner|towel|iron|ironing|laundry)\b/,
+    /\b(air condition|heating|balcony|terrace|grab rail|shower|bathtub|toilet|wc )\b/,
+    /\b(doorman|bellhop|reception|front desk|housekeeping|room service|wake-up)\b/,
+    // Navigation/business info
+    /\b(booking|reservation|phone|call us|contact|email|address|directions|located)\b/,
+    /\b(close to|near |subway|bus stop|train station|airport)\b/,
+    /\b(360°|virtual tour|gallery|photo|video|instagram|facebook|twitter)\b/,
+    // Day names as standalone items
+    /^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i,
+    // Phone numbers
+    /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/,
+    // URLs
+    /https?:\/\//,
+    // ── Events & ambiance ──
+    /\b(live music|dj night|karaoke|trivia night|open mic|comedy night)\b/,
+    /\b(patio available|rooftop seating|indoor dining|outdoor dining)\b/,
+    // ── Business services ──
+    /\b(private events?|catering available|party room)\b/,
+    // ── Time/hours-based ──
+    /\b(happy hour \d|open daily \d|brunch hours|dinner hours|hours of operation|we are open|24-hour|24 hour)\b/,
+    /\b\d{1,2}(?:am|pm)\s*[-–—]\s*\d{1,2}(?:am|pm)\b/i,
+    // ── Promotional text ──
+    /\b(coming soon|limited time|seasonal)\b/,
+    /^new!?\s*$/i,
+    // ── Generic section headers (standalone) ──
+    /^(?:our specials|chef'?s? picks?|today'?s? selection)$/i,
+    // ── Non-item notes ──
+    /\b(ask your server|see blackboard|prices subject to change|market price)\b/,
+    // ── Info/disclaimer text ──
+    /\b(we use locally sourced|all items made fresh|consuming raw)\b/,
+  ];
+
+  if (JUNK_PATTERNS.some(p => p.test(lower))) return false;
+
+  // Name too short or too long
+  if (name.trim().length < 3 || name.trim().length > 80) return false;
+
+  // Mostly numbers (likely a code or price)
+  if (/^\d+[\s.,-]*\d*$/.test(name.trim())) return false;
+
+  // Contains pipe (wine list format: "6002 | Syrah | ...")
+  if (name.includes("|") && /\d{4}/.test(name)) return false;
+
+  return true;
+}
+
+// ── Combo & Kids Detection ──────────────────────────────────────────
+
+/**
+ * Detect combo/meal deal items.
+ * Matches: "combo", "meal deal", "value meal", "bundle", "2 for $",
+ * "dinner for 2", "family meal", "prix fixe", "set menu"
+ */
+export function isComboOrMealDeal(name: string): boolean {
+  const lower = name.toLowerCase();
+  const comboPatterns = [
+    /\bcombo\b/,
+    /\bmeal deal\b/,
+    /\bvalue meal\b/,
+    /\bbundle\b/,
+    /\b\d+\s+for\s+\$/,           // "2 for $20"
+    /\bdinner for \d/,             // "dinner for 2"
+    /\blunch for \d/,
+    /\bfamily meal\b/,
+    /\bprix fixe\b/,
+    /\bset menu\b/,
+  ];
+  return comboPatterns.some((p) => p.test(lower));
+}
+
+/**
+ * Detect kids menu items.
+ * Matches: "kid's", "kids", "children's", "junior", "little ones",
+ * "kiddie", "child's"
+ */
+export function isKidsMenuItem(name: string): boolean {
+  const lower = name.toLowerCase();
+  const kidsPatterns = [
+    /\bkid'?s?\b/,
+    /\bchildren'?s?\b/,
+    /\bjunior\b/,
+    /\blittle ones?\b/,
+    /\bkiddie\b/,
+    /\bchild'?s?\b/,
+  ];
+  return kidsPatterns.some((p) => p.test(lower));
+}
+
+/**
+ * Detect dessert items by name or category (for pre-tagging at scrape time).
+ * Used when the LLM auditor is unavailable (quota exhausted).
+ */
+export function isDessertItem(name: string, category?: string | null): boolean {
+  const lower = name.toLowerCase();
+  const catLower = (category || "").toLowerCase();
+
+  // Category-based detection
+  if (/\b(dessert|sweets?|pastry|pastries|bakery|dulce)\b/.test(catLower)) return true;
+
+  // Name-based detection
+  const dessertPatterns = /\b(cake|pie|ice cream|gelato|tiramisu|cheesecake|brownie|cookies?|pudding|flan|mochi|churros?|crème brûlée|creme brulee|sorbet|parfait|sundae|tart|tartes?|macaron|macaroon|baklava|doughnut|donut|crêpe|crepe|cupcake|panna cotta|cannoli|profiterole|eclair|éclair|beignet|cobbler|strudel|meringue|mousse|pavlova|bread pudding|bananas? foster|banana split|s'?mores|chocolate lava|chocolate cake|carrot cake|tres leches|affogato|semifreddo|soufflé|souffle|kulfi|gulab jamun|knafeh|kunafa|halva|halvah)\b/;
+  return dessertPatterns.test(lower);
+}
+
+/**
+ * Detect cocktails and special non-alcoholic drinks by name or category.
+ * Used for pre-tagging at scrape time (supplements isWineOrSpirit which catches wine/beer/spirits).
+ */
+export function isCocktailOrSpecialDrink(name: string, category?: string | null): boolean {
+  const lower = name.toLowerCase();
+  const catLower = (category || "").toLowerCase();
+
+  // Category-based
+  if (/\b(cocktail|mocktail|mixolog|bar|signature drink|specialty drink|craft beverage|limonada|lemonade)\b/.test(catLower)) return true;
+  if (/\b(after\s*dinner|digestif|digestivo|aperitif|aperitivo|cordials?|liqueurs?)\b/.test(catLower)) return true;
+
+  // Cocktail name patterns
+  const cocktailPatterns = /\b(martini|margarita|mojito|negroni|spritz|old fashioned|manhattan|cosmopolitan|daiquiri|gimlet|paloma|mule|sour|fizz|collins|punch|toddy|colada|caipirinha|sangria|bellini|mimosa|aperol|campari|highball)\b/;
+  if (cocktailPatterns.test(lower)) return true;
+
+  // Interesting non-alcoholic
+  return isInterestingBeverage(lower);
 }
 
 // ── Wine & Spirit Filter ────────────────────────────────────────────
@@ -356,6 +525,10 @@ const FOOD_CONTEXT_WORDS = new Set([
   // Desserts with spirit names
   "cake", "tiramisu", "mousse", "pudding", "sorbet",
   "pie", "tart", "cheesecake", "brownie", "flan",
+  // Food context for dessert wine / fortified wine words
+  // "Port Wine Reduction", "Marsala Sauce", "Sherry Vinegar Glaze"
+  "reduction", "vinegar", "vinaigrette", "demi-glace",
+  "demiglace", "jus", "compote", "zabaglione",
 ]);
 
 /** Well-known wine grape varieties and wine terms. */
@@ -369,6 +542,10 @@ const WINE_GRAPES = new Set([
   "beaujolais", "burgundy", "bordeaux", "chianti", "barolo",
   "brunello", "amarone", "valpolicella", "chablis", "sancerre",
   "rioja", "manzanilla", "fino", "amontillado", "oloroso",
+  // Dessert / fortified wines
+  "port", "tawny", "madeira", "sherry", "marsala",
+  "sauternes", "tokaji", "muscat", "banyuls",
+  "pedro ximenez", "vin santo", "ice wine",
 ]);
 
 /** Wine-related category names. */
@@ -381,6 +558,17 @@ const WINE_CATEGORIES = new Set([
   "tequila", "mezcal", "bourbon", "scotch", "rum",
   "beer", "beers", "draft beer", "draft beers", "craft beer",
   "on tap", "bottles & cans", "bottled beer",
+  // Common typos and alternate category names
+  "champage", "champagne", "champagnes",
+  // After-dinner / digestif / aperitif categories
+  "after dinner", "after dinner menu", "after dinner drinks",
+  "digestif", "digestifs", "digestivo",
+  "aperitif", "aperitifs", "aperitivo",
+  "cordials", "cordial", "liqueurs", "liqueur",
+  // Dessert / fortified wine categories
+  "port", "ports", "port wine", "port wines",
+  "sherry", "sherries", "madeira", "sauternes",
+  "dessert wine", "dessert wines", "fortified wine", "fortified wines",
 ]);
 
 /** Spirit brand names / types (when NOT followed by food context). */
@@ -391,9 +579,18 @@ const SPIRIT_KEYWORDS = new Set([
   "grand marnier", "cointreau", "chartreuse", "sambuca",
   "kahlua", "baileys", "limoncello", "ouzo", "arak",
   "soju", "shochu", "baijiu", "sake",
+  // Brandies / eaux de vie / regional spirits
+  "calvados", "armagnac", "marc", "eau de vie",
+  "schnapps", "raki", "pastis", "pisco", "slivovitz",
+  "kirsch", "drambuie", "frangelico", "fernet",
+  "triple sec", "bénédictine", "benedictine",
+  // Cachaça (with and without cedilla)
+  "cachaça", "cachaca",
   // Aging / style terms that confirm it's a spirit listing
   "añejo", "anejo", "reposado", "blanco", "joven", "cristalino",
   "single malt", "cask strength", "aged",
+  // Quality / age designators common on spirit lists
+  "hors d'age", "xo", "vsop", "vs", "napoleon",
 ]);
 
 /**
@@ -415,6 +612,12 @@ export function isWineOrSpirit(name: string, category?: string | null): boolean 
   if (WINE_CATEGORIES.has(catLower)) {
     return true;
   }
+  // Fuzzy category matches for misspellings and partial names
+  // "Champage" (typo), "Champagne Selections", "After Dinner Menu", etc.
+  if (catLower.includes("champ") && /champ(?:agne|age)/i.test(catLower)) return true;
+  if (/\b(?:after\s*dinner|digestif|digestivo|aperitif|aperitivo|cordials?|liqueurs?)\b/i.test(catLower)) return true;
+  if (/\b(?:fortified|dessert)\s*wines?\b/i.test(catLower)) return true;
+  if (/\b(?:ports?|sherr(?:y|ies)|madeira|sauternes)\b/i.test(catLower)) return true;
 
   // ── Early cocktail escape ──
   // Check before wine/spirit detection — cocktails containing wine/spirit words should pass
@@ -435,8 +638,14 @@ export function isWineOrSpirit(name: string, category?: string | null): boolean 
   }
 
   // ── Spirit detection ──
+  // Multi-word spirit keywords need substring matching
+  const MULTI_WORD_SPIRIT_KEYWORDS = [
+    "grand marnier", "triple sec", "eau de vie", "single malt",
+    "cask strength", "hors d'age", "hors d\u2019age",
+  ];
+  const hasMultiWordSpirit = MULTI_WORD_SPIRIT_KEYWORDS.some((kw) => lower.includes(kw));
   const hasSpirit = words.some((w) => SPIRIT_KEYWORDS.has(w))
-    || SPIRIT_KEYWORDS.has(lower); // multi-word spirit name match ("grand marnier")
+    || hasMultiWordSpirit;
   if (hasSpirit) {
     // Has food context? → it's a dish
     if (words.some((w) => FOOD_CONTEXT_WORDS.has(w))) return false;
@@ -464,6 +673,10 @@ export function isWineOrSpirit(name: string, category?: string | null): boolean 
 
     // Spirit word as last word ("Ketel One Vodka") → spirit listing
     if (SPIRIT_KEYWORDS.has(words[words.length - 1])) return true;
+
+    // Spirit word as second word ("Julius Marc de Galilee", "Busnel Calvados")
+    // → "Brand Spirit [Region]" pattern common for brandies/eaux de vie
+    if (words.length >= 2 && SPIRIT_KEYWORDS.has(words[1])) return true;
 
     // 2-word name with spirit word → spirit listing ("Patron Tequila")
     if (words.length <= 2) return true;

@@ -12,6 +12,22 @@ export interface RawMenuItem {
    *   restaurant is legally obligated to be accurate.
    */
   source?: "compliance_page" | "menu";
+  /** Original item name before cleanDishName() strips footnote markers */
+  nameOriginal?: string;
+  /** Calorie count extracted directly from menu HTML/photo */
+  menuCalories?: number;
+  /** Protein (g) extracted directly from menu HTML/photo */
+  menuProteinG?: number;
+  /** Carbs (g) extracted directly from menu HTML/photo */
+  menuCarbsG?: number;
+  /** Fat (g) extracted directly from menu HTML/photo */
+  menuFatG?: number;
+  /** Allergens listed on the menu for this item (e.g., ["nuts", "dairy"]) */
+  menuAllergens?: string[];
+  /** Dietary tags from menu annotations (e.g., ["V", "GF"]) */
+  menuDietaryTags?: string[];
+  /** Raw ingredients string if listed on the menu */
+  menuIngredients?: string;
 }
 
 export interface AnalyzedDish {

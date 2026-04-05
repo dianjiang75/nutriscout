@@ -28,7 +28,9 @@ export const GEMINI_FLASH = "gemini-2.5-flash";
 let _anthropic: Anthropic | null = null;
 export function getAnthropicClient(): Anthropic {
   if (!_anthropic) {
-    _anthropic = new Anthropic();
+    const key = process.env.ANTHROPIC_API_KEY;
+    if (!key) throw new Error("ANTHROPIC_API_KEY is required for dietary analysis");
+    _anthropic = new Anthropic({ apiKey: key });
   }
   return _anthropic;
 }

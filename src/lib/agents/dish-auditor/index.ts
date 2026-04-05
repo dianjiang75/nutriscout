@@ -8,10 +8,11 @@
  * All three must pass before a dish is inserted. This is the guardrail
  * that prevents "Wheelchair-accessible basin" from becoming a menu item.
  */
-import { getGeminiClient, GEMINI_FLASH } from "@/lib/ai/clients";
+import { getGeminiClient, GEMINI_FLASH, getQwenClient, QWEN_3, getDeepSeekClient, DEEPSEEK_V4 } from "@/lib/ai/clients";
 import { extractJson } from "@/lib/utils/parse-json";
 import { prisma } from "@/lib/db/client";
 import type { RawMenuItem } from "@/lib/agents/menu-crawler/types";
+import { isWineOrSpirit, isInterestingBeverage, isComboOrMealDeal, isKidsMenuItem } from "../menu-crawler/clean-dish-name";
 
 // ─── JUNK PATTERNS ──────────────────────────────────────
 // These patterns are DEFINITE non-food. If ANY match, the item is rejected immediately.
@@ -136,30 +137,62 @@ ${JSON.stringify(itemList)}
 Return ONLY a JSON array:
 [{"name":"...","is_food":true,"food_confidence":0.95,"likely_ingredients":["..."],"allergen_flags":["..."],"rejection_reason":null}]`;
 
-  try {
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    if (!text) return items.map(item => ({
-      name: item.name,
-      is_food: true, // fail-open on API error
-      food_confidence: 0.5,
-      likely_ingredients: [],
-      allergen_flags: [],
-      rejection_reason: null,
-    }));
+  // Fallback chain: Gemini Flash → Qwen → DeepSeek → fail-open
+  // PRODUCTION TARGET: Gemini Flash (best vision/structured output)
+  // MVP FALLBACK: Qwen 3 / DeepSeek V4 (cheap, text-only)
+  const fallbackChain = [
+    { name: "gemini-flash", fn: async () => {
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+      if (!text) return null;
+      return extractJson<FoodVerification[]>(text);
+    }},
+    { name: "qwen-3", fn: async () => {
+      const client = getQwenClient();
+      const r = await client.chat.completions.create({
+        model: QWEN_3, max_tokens: 8192,
+        messages: [{ role: "user", content: prompt }],
+      });
+      const text = r.choices[0]?.message?.content;
+      if (!text) return null;
+      return extractJson<FoodVerification[]>(text);
+    }},
+    { name: "deepseek-v4", fn: async () => {
+      const client = getDeepSeekClient();
+      const r = await client.chat.completions.create({
+        model: DEEPSEEK_V4, max_tokens: 8192,
+        messages: [{ role: "user", content: prompt }],
+      });
+      const text = r.choices[0]?.message?.content;
+      if (!text) return null;
+      return extractJson<FoodVerification[]>(text);
+    }},
+  ];
 
-    return extractJson<FoodVerification[]>(text);
-  } catch {
-    // Fail-open: if LLM verification fails, let format validator handle it
-    return items.map(item => ({
-      name: item.name,
-      is_food: true,
-      food_confidence: 0.5,
-      likely_ingredients: [],
-      allergen_flags: [],
-      rejection_reason: null,
-    }));
+  for (const { name, fn } of fallbackChain) {
+    try {
+      const result = await fn();
+      if (result && Array.isArray(result) && result.length > 0) {
+        if (name !== "gemini-flash") {
+          console.log(`[dish-auditor] Using ${name} for food verification (Gemini unavailable)`);
+        }
+        return result;
+      }
+    } catch (err) {
+      console.warn(`[dish-auditor] ${name} failed:`, (err as Error).message?.substring(0, 80));
+    }
   }
+
+  // All models failed — fail-open with 0.8 confidence
+  console.warn("[dish-auditor] All LLM models failed — fail-open with confidence 0.8");
+  return items.map(item => ({
+    name: item.name,
+    is_food: true,
+    food_confidence: 0.8,
+    likely_ingredients: [],
+    allergen_flags: [],
+    rejection_reason: null,
+  }));
 }
 
 // ─── AGENT C: DUPLICATE & CONSISTENCY CHECKER ───────────
@@ -222,14 +255,15 @@ export async function checkConsistency(
 
 // ─── FULL AUDIT PIPELINE ────────────────────────────────
 
-/** Item type classification — determines visibility in search and image generation */
-export type DishType = "dish" | "drink" | "side" | "condiment" | "non_food";
+/** Item type classification — matches Prisma MenuItemType enum + "non_food" for rejected items */
+export type DishType = "dish" | "dessert" | "drink" | "side" | "condiment" | "addon" | "combo" | "kids" | "unknown" | "non_food";
 
 export interface AuditResult {
   item: RawMenuItem;
   passed: boolean;
   normalizedName: string;
   dishType: DishType;
+  auditConfidence: number;
   formatResult: ValidationResult;
   foodVerification: FoodVerification | null;
   consistencyResult: ConsistencyResult | null;
@@ -237,26 +271,71 @@ export interface AuditResult {
 }
 
 /**
- * Classify an item as dish, drink, side, condiment, or non_food.
- * Only "dish" items get: dish cards, AI photos, search results, image generation.
- * Drinks/sides/condiments exist in the restaurant menu but NOT in search or photo pipeline.
+ * Classify an item into the expanded MenuItemType set.
+ * Only "dish" and "dessert" items get: dish cards, AI photos, search results, image generation.
+ * Other types exist in the restaurant menu but NOT in search or photo pipeline.
  */
 function classifyDishType(name: string, category?: string | null): DishType {
-  const lower = (name + " " + (category || "")).toLowerCase();
+  const trimmedName = name.trim();
+  const lower = (trimmedName + " " + (category || "")).toLowerCase();
+  const nameLower = trimmedName.toLowerCase();
+  const categoryLower = (category || "").toLowerCase();
 
-  // Drinks
+  // ── Desserts (check BEFORE sides so "Bread Pudding" → dessert, not side) ──
+  const DESSERT_PATTERNS = /\b(cake|pie|ice cream|gelato|tiramisu|cheesecake|brownie|cookies?|pudding|flan|mochi|churros?|crème brûlée|creme brulee|sorbet|parfait|sundae|tarts?|macarons?|baklava|dough?nuts?|donuts?|cupcakes?|panna cotta|cannoli|profiteroles?|eclairs?|beignets?|cobbler|strudel|meringue|mousse|pavlova|bread pudding|bananas foster|banana split|s'?mores|chocolate lava|crêpes?|crepes?)\b/;
+  const DESSERT_CATEGORIES = /\b(dessert|sweets|pastry|bakery|dulce)\b/;
+  if (DESSERT_PATTERNS.test(nameLower) || DESSERT_CATEGORIES.test(categoryLower)) {
+    // "Waffle" in a dessert category → dessert; standalone "Waffle" → dish (breakfast)
+    if (/\bwaffles?\b/.test(nameLower) && !DESSERT_CATEGORIES.test(categoryLower)) {
+      // Fall through — waffle without dessert context is a dish
+    } else {
+      return "dessert";
+    }
+  }
+
+  // ── Drinks ──
   if (/\b(wine|beer|cocktail|margarita|martini|sangria|mojito|prosecco|champagne|whiskey|bourbon|vodka|gin|rum|tequila|sake|soju|merlot|chardonnay|cabernet|pinot|riesling|sauvignon|rosé|malbec|tempranillo|syrah|cider|lager|ale|stout|ipa|sparkling|seltzer|lemonade|juice|smoothie|milkshake|horchata|lassi|coffee|espresso|latte|cappuccino|tea|matcha|kombucha|soda|cola)\b/.test(lower)) {
     return "drink";
   }
-  if (/^(water|ice water|sparkling water|still water|tap water)$/i.test(name.trim())) return "drink";
+  if (/^(water|ice water|sparkling water|still water|tap water)$/i.test(trimmedName)) return "drink";
   if (/\b(añejo|reposado|blanco|mezcal|amaro|grappa|digestif|aperitif)\b/.test(lower)) return "drink";
-  if (category?.toLowerCase().includes("wine") || category?.toLowerCase().includes("drink") || category?.toLowerCase().includes("beverage") || category?.toLowerCase().includes("cocktail")) return "drink";
+  if (/\b(wine|drink|beverage|cocktail)\b/.test(categoryLower)) return "drink";
+  // Use imported helpers for beverage detection
+  if (isInterestingBeverage(nameLower)) return "drink";
+  if (isWineOrSpirit(trimmedName, category)) return "drink";
 
-  // Side dishes / individual ingredients / condiments
-  if (/^(bread|rice|naan|roti|tortilla|pita|baguette|roll|biscuit)\s*(basket|service)?$/i.test(name.trim())) return "side";
-  if (/^(french fries|fries|onion rings|coleslaw|mashed potatoes|corn bread|hush puppies)$/i.test(name.trim())) return "side";
-  if (/^(dried seaweed|seaweed|pickles|kimchi|edamame|extra sauce|dipping sauce|ranch|ketchup|mayo|hot sauce|soy sauce)\s*(\(.+\))?$/i.test(name.trim())) return "condiment";
-  if (/^\d+\s*(pieces?|pcs?|oz|ml)\)?$/i.test(name.trim())) return "condiment"; // "2 Pieces", "4oz"
+  // ── Kids menu items ──
+  if (isKidsMenuItem(trimmedName)) return "kids";
+
+  // ── Combos / meal deals ──
+  if (isComboOrMealDeal(trimmedName)) return "combo";
+
+  // ── Addons (extras, upgrades, substitutions) ──
+  if (/^(add|extra|sub|substitute|upgrade|upsize|make it|with added)\s+/i.test(trimmedName)) return "addon";
+  if (/^additional\s+/i.test(trimmedName)) return "addon";
+
+  // ── Condiments (sauces, dressings — NOT edamame or standalone kimchi) ──
+  if (/^(extra sauce|dipping sauce|ranch|ketchup|mayo|hot sauce|soy sauce|tartar sauce|aioli|gravy|salsa|guacamole side|pesto)\s*(\(.+\))?$/i.test(trimmedName)) return "condiment";
+  if (/^(dried seaweed|seaweed|pickles)\s*(\(.+\))?$/i.test(trimmedName)) return "condiment";
+  if (/^\d+\s*(pieces?|pcs?|oz|ml)\)?$/i.test(trimmedName)) return "condiment"; // "2 Pieces", "4oz"
+
+  // ── Side dishes ──
+  // "Side of X" prefix → side
+  if (/^side\s+(of\s+)?/i.test(trimmedName)) return "side";
+  // Exact matches for basic carbs/starches
+  if (/^(rice|naan|roti|tortilla|pita|baguette|roll|biscuit)\s*(basket|service)?$/i.test(trimmedName)) return "side";
+  // Contains "fries" → side (catches "Truffle Fries", "Garlic Fries", "Loaded Fries")
+  if (/\bfries\b/i.test(nameLower)) return "side";
+  // Contains "bread" → side, BUT NOT "Bread Pudding" (already caught as dessert above)
+  if (/\bbread\b/i.test(nameLower) && !DESSERT_PATTERNS.test(nameLower)) return "side";
+  // Other common sides
+  if (/^(onion rings|coleslaw|mashed potatoes|hush puppies|tater tots|mac\s*(?:&|and)\s*cheese|cornbread|corn bread)$/i.test(trimmedName)) return "side";
+  // "Kimchi" as "side of kimchi" → side (caught above by "Side of" prefix)
+  // Standalone "Kimchi" on menu → condiment only if explicitly marked
+  if (/^kimchi$/i.test(trimmedName)) return "side"; // Standalone kimchi = side/appetizer, not condiment
+
+  // ── Edamame is a dish (appetizer), NOT condiment ──
+  if (/^edamame$/i.test(trimmedName)) return "dish";
 
   return "dish";
 }
@@ -285,6 +364,7 @@ export async function auditMenuItems(
         passed: false,
         normalizedName: item.name,
         dishType: "non_food",
+        auditConfidence: 0,
         formatResult: format,
         foodVerification: null,
         consistencyResult: null,
@@ -309,6 +389,7 @@ export async function auditMenuItems(
         passed: false,
         normalizedName: item.name,
         dishType: "non_food",
+        auditConfidence: v.food_confidence,
         formatResult: validateDishFormat(item),
         foodVerification: v,
         consistencyResult: null,
@@ -327,26 +408,23 @@ export async function auditMenuItems(
     const consistency = await checkConsistency(item, restaurantId);
 
     const dishType = classifyDishType(item.name, item.category);
+    const verification = verifications[formatPassed.indexOf(item)] || null;
+    const confidence = verification?.food_confidence ?? 0.8;
 
-    if (consistency.isDuplicate) {
-      results.push({
-        item,
-        passed: false,
-        normalizedName: consistency.normalizedName,
-        dishType,
-        formatResult: validateDishFormat(item),
-        foodVerification: verifications[formatPassed.indexOf(item)] || null,
-        consistencyResult: consistency,
-        rejectionReasons: ["Duplicate dish"],
-      });
+    // Duplicates are NOT rejected — re-crawls naturally find the same dishes.
+    // The pipeline will update existing records, not create new ones.
+    // Only reject if it's a duplicate WITHIN the same crawl batch (handled by dedup in index.ts).
+    if (false) {
+      // Legacy duplicate rejection — disabled. Kept for reference.
     } else {
       results.push({
         item,
         passed: true,
         normalizedName: consistency.normalizedName,
         dishType,
+        auditConfidence: confidence,
         formatResult: validateDishFormat(item),
-        foodVerification: verifications[formatPassed.indexOf(item)] || null,
+        foodVerification: verification,
         consistencyResult: consistency,
         rejectionReasons: [],
       });

@@ -1,16 +1,20 @@
 import { prisma } from "@/lib/db/client";
-import { menuSources } from "./sources";
-import { getAnthropicClient, CLAUDE_SONNET } from "@/lib/ai/clients";
+import { menuSources, extractRawAnnotations } from "./sources";
+import { getAnthropicClient, CLAUDE_SONNET, getQwenClient, QWEN_3, getDeepSeekClient, DEEPSEEK_V4 } from "@/lib/ai/clients";
 import { extractJson } from "@/lib/utils/parse-json";
-import { batchAnalyzePhotos } from "@/lib/agents/vision-analyzer";
-import type { BatchJob } from "@/lib/agents/vision-analyzer/types";
-import { cleanDishName, cleanCategoryName, cleanDescription, isDishWorthRecommending, isWineOrSpirit } from "./clean-dish-name";
+import {
+  cleanDishName, cleanCategoryName, cleanDescription,
+  isLikelyFoodItem, isWineOrSpirit, isInterestingBeverageOrCategory,
+  isComboOrMealDeal, isKidsMenuItem, isDessertItem, isCocktailOrSpecialDrink,
+} from "./clean-dish-name";
+import { normalizeName } from "@/lib/menu/archive";
 import type {
   AnalyzedDish,
   CrawlResult,
   RawMenuItem,
   RestaurantInfo,
 } from "./types";
+import type { MenuItemType } from "@/generated/prisma/client";
 
 const INGREDIENT_ANALYSIS_PROMPT = `You are a food ingredient analyst specializing in dietary restriction detection.
 
@@ -28,6 +32,13 @@ For each dish below, analyze the name and description to:
 4. Detect GLP-1 labels: set glp1_labeled=true ONLY if the restaurant explicitly labels the dish as "GLP-1 Friendly", "GLP-1 Support", or equivalent in the dish name or description. Do NOT infer this — only set true if the restaurant themselves labeled it.
 
 CRITICAL: Err on the side of caution. A false "safe" flag for someone with allergies is dangerous. If you cannot determine compliance with reasonable confidence, set the flag to null.
+
+IMPORTANT: Some dishes include "menu_allergens", "menu_dietary_tags", or "menu_ingredients" fields.
+These are RESTAURANT-STATED — the restaurant itself printed this on their menu. Treat as authoritative:
+- If menu_allergens says "contains peanuts", set nut_free=false with HIGH confidence
+- If menu_dietary_tags includes "GF", set gluten_free=true with HIGH confidence
+- If menu_ingredients lists specific items, use those as your primary ingredient source
+Your analysis should confirm and expand on restaurant-stated data, never contradict it unless clearly erroneous.
 
 Dishes to analyze:
 {dishes_json}
@@ -48,13 +59,16 @@ Return ONLY valid JSON, no markdown fences or extra text.`;
 /**
  * Regex patterns for GLP-1 labeled menu items.
  * Covers both the generic "GLP-1 Friendly" label AND chain-specific marketing terms:
- * - Shake Shack: "Good Fit Menu"
- * - Chipotle: "High Protein Menu"
+ * - Shake Shack: "Good Fit Menu" / "Good Fit"
+ * - Chipotle: "High Protein Menu" / "Protein Cup"
  * - Cheesecake Factory: "Skinnylicious"
- * - Subway, M&S, Morrisons: "GLP-1 Friendly", "GLP-1 Support"
+ * - Subway: "Protein Pocket"
+ * - Smoothie King: "GLP-1 Menu" / "GLP-1 Support Menu"
+ * - Factor (meal kits): "GLP-1 Balance"
+ * - Conagra/Nestle: USDA-approved "GLP-1 Friendly" label (no standard yet)
  * Only matches explicit restaurant labeling — never inferred from macros.
  */
-const GLP1_LABEL_PATTERN = /\bglp-?1\s*(friendly|support|approved|label|section|choice)?\b|\bgood fit\s*menu\b|\bhigh protein menu\b|\bskinnylicious\b|\bglp-?1\s*approved\b/i;
+const GLP1_LABEL_PATTERN = /\bglp-?1\s*(friendly|support|approved|label|section|choice|menu|balance)?\b|\bgood fit(\s*menu)?\b|\bhigh protein menu\b|\bskinnylicious\b|\bglp-?1\s*approved\b|\bprotein pocket\b|\bglp-?1\s*balance\b/i;
 
 /**
  * Check if a raw menu item has an explicit GLP-1 label from the restaurant.
@@ -66,13 +80,19 @@ function hasGlp1Label(item: RawMenuItem): boolean {
 
 /**
  * Analyze raw menu items for ingredients and dietary flags using an LLM.
+ *
+ * Fallback chain: Claude Sonnet → Qwen 3 → DeepSeek V4 → placeholder.
+ * Claude Sonnet is preferred for safety-critical dietary analysis, but when
+ * it's unavailable (billing, quota), cheaper models provide best-effort analysis.
+ * The Apollo Evaluator does the actual safety gate at search time regardless.
+ *
+ * Menu-scraped allergens/dietary tags are passed as context to the LLM so
+ * restaurant-stated allergen data takes priority over inference.
  */
 export async function analyzeIngredients(
   rawItems: RawMenuItem[]
 ): Promise<AnalyzedDish[]> {
   if (rawItems.length === 0) return [];
-
-  const client = getAnthropicClient();
 
   // Process in batches of 20 to avoid token limits
   const batchSize = 20;
@@ -85,6 +105,10 @@ export async function analyzeIngredients(
         name: item.name,
         description: item.description,
         category: item.category,
+        // Pass menu-scraped allergens/tags as authoritative context
+        menu_allergens: item.menuAllergens || [],
+        menu_dietary_tags: item.menuDietaryTags || [],
+        menu_ingredients: item.menuIngredients || null,
       }))
     );
 
@@ -93,66 +117,114 @@ export async function analyzeIngredients(
       dishesJson
     );
 
-    try {
-      const response = await client.messages.create({
-        model: CLAUDE_SONNET,
-        max_tokens: 4096,
-        messages: [{ role: "user", content: prompt }],
-      });
+    let parsed: AnalyzedDish[] | null = null;
+    let usedModel = "none";
 
-      const textBlock = response.content.find((b) => b.type === "text");
-      if (textBlock && textBlock.type === "text") {
-        try {
-          const parsed = extractJson<AnalyzedDish[]>(textBlock.text);
-          if (Array.isArray(parsed)) {
-            // Apply GLP-1 pattern check as a confirmation layer.
-            // If the raw item has an explicit GLP-1 label the LLM may have missed,
-            // force glp1_labeled=true regardless of LLM output.
-            for (const dishResult of parsed) {
-              const rawItem = batch.find(
-                (item) => item.name.toLowerCase() === dishResult.dish_name.toLowerCase()
-              );
-              if (rawItem && hasGlp1Label(rawItem)) {
-                dishResult.dietary_flags.glp1_labeled = true;
-              }
-            }
-            results.push(...parsed);
-          }
-        } catch (parseErr) {
-          const batchNames = batch.map((item) => item.name).join(", ");
-          console.warn(
-            `Failed to parse ingredient analysis JSON for batch at index ${i} (${batchNames}):`,
-            (parseErr as Error).message
-          );
-          // Return placeholder entries so callers know these items were attempted
-          for (const item of batch) {
-            results.push({
-              dish_name: item.name,
-              ingredients_parsed: [],
-              dietary_flags: {
-                vegan: null, vegetarian: null, gluten_free: null,
-                dairy_free: null, nut_free: null, halal: null, kosher: null,
-                glp1_labeled: false,
-              },
-              dietary_confidence: 0,
-              dietary_warnings: ["Automated dietary analysis failed — manual review needed"],
-            });
-          }
+    // Fallback chain: Claude Sonnet → Qwen → DeepSeek → placeholder
+    parsed = await tryClaudeSonnet(prompt);
+    if (parsed) { usedModel = "claude-sonnet"; }
+
+    if (!parsed) {
+      parsed = await tryOpenAICompatible(getQwenClient, QWEN_3, prompt);
+      if (parsed) { usedModel = "qwen-3"; }
+    }
+
+    if (!parsed) {
+      parsed = await tryOpenAICompatible(getDeepSeekClient, DEEPSEEK_V4, prompt);
+      if (parsed) { usedModel = "deepseek-v4"; }
+    }
+
+    if (parsed) {
+      // Apply GLP-1 pattern check as a confirmation layer
+      for (const dishResult of parsed) {
+        const rawItem = batch.find(
+          (item) => item.name.toLowerCase() === dishResult.dish_name.toLowerCase()
+        );
+        if (rawItem && hasGlp1Label(rawItem)) {
+          dishResult.dietary_flags.glp1_labeled = true;
         }
       }
-    } catch (error) {
-      console.error(
-        `Ingredient analysis failed for batch starting at index ${i}:`,
-        (error as Error).message
-      );
+      if (i === 0) {
+        console.log(`[menu-crawler] Dietary analysis using ${usedModel}`);
+      }
+      results.push(...parsed);
+    } else {
+      // All models failed — push placeholders
+      console.warn(`[menu-crawler] All LLM models failed for batch at index ${i}`);
+      for (const item of batch) {
+        results.push({
+          dish_name: item.name,
+          ingredients_parsed: [],
+          dietary_flags: {
+            vegan: null, vegetarian: null, gluten_free: null,
+            dairy_free: null, nut_free: null, halal: null, kosher: null,
+            glp1_labeled: false,
+          },
+          dietary_confidence: 0,
+          dietary_warnings: ["Automated dietary analysis failed — manual review needed"],
+        });
+      }
     }
   }
 
   return results;
 }
 
+/** Try Claude Sonnet for dietary analysis (preferred — most accurate for safety) */
+async function tryClaudeSonnet(prompt: string): Promise<AnalyzedDish[] | null> {
+  try {
+    const client = getAnthropicClient();
+    const response = await client.messages.create({
+      model: CLAUDE_SONNET,
+      max_tokens: 4096,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const textBlock = response.content.find((b) => b.type === "text");
+    if (textBlock && textBlock.type === "text") {
+      const parsed = extractJson<AnalyzedDish[]>(textBlock.text);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    return null;
+  } catch (err) {
+    console.warn(`[menu-crawler] Claude Sonnet failed:`, (err as Error).message?.substring(0, 80));
+    return null;
+  }
+}
+
+/** Try OpenAI-compatible model (Qwen, DeepSeek) for dietary analysis */
+async function tryOpenAICompatible(
+  getClient: () => ReturnType<typeof getQwenClient>,
+  model: string,
+  prompt: string
+): Promise<AnalyzedDish[] | null> {
+  try {
+    const client = getClient();
+    const response = await client.chat.completions.create({
+      model,
+      max_tokens: 8192, // Higher limit for cheap models — avoids truncated JSON
+      messages: [{ role: "user", content: prompt }],
+    });
+    const text = response.choices[0]?.message?.content;
+    if (text) {
+      const parsed = extractJson<AnalyzedDish[]>(text);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    return null;
+  } catch (err) {
+    console.warn(`[menu-crawler] ${model} failed:`, (err as Error).message?.substring(0, 80));
+    return null;
+  }
+}
+
 /**
  * Full crawl pipeline for a restaurant.
+ *
+ * 5-step flow (post-refactor):
+ *   1. Scrape — fetch raw items, clean names, filter junk via isLikelyFoodItem only
+ *   2. Store in MenuItem — upsert every item into the menu archive
+ *   3. Classify — run audit agent + pre-tag wines/combos/kids, set menuItemType
+ *   4. Promote to Dish — only dishes + desserts + interesting drinks get Dish records
+ *   5. Archive stale — items not seen this crawl get soft-archived (with circuit breaker)
  */
 export async function crawlRestaurant(
   googlePlaceId: string
@@ -161,6 +233,8 @@ export async function crawlRestaurant(
   if (!apiKey || apiKey === "placeholder") {
     throw new Error("GOOGLE_PLACES_API_KEY is not configured");
   }
+
+  const crawlStart = new Date();
 
   // Fetch restaurant details from Google Places API v2 (New)
   const { getPlaceDetails, priceLevelToNumber } = await import("@/lib/google-places/client");
@@ -193,7 +267,7 @@ export async function crawlRestaurant(
       priceLevel: priceLevelNum ?? null,
       googleRating: place.rating ?? null,
       phone: place.nationalPhoneNumber ?? null,
-      lastMenuCrawl: new Date(),
+      lastMenuCrawl: crawlStart,
     },
     create: {
       googlePlaceId,
@@ -206,13 +280,15 @@ export async function crawlRestaurant(
       googleRating: place.rating ?? null,
       phone: place.nationalPhoneNumber ?? null,
       cuisineType: extractCuisineTypes(place.types || []),
-      lastMenuCrawl: new Date(),
+      lastMenuCrawl: crawlStart,
     },
   });
 
-  // Try menu sources in priority order
+  // ═══════════════════════════════════════════════════════════
+  // STEP 1: SCRAPE — fetch raw items, clean, filter only junk
+  // ═══════════════════════════════════════════════════════════
   let rawItems: RawMenuItem[] = [];
-  let usedSource = "none";
+  let usedSource: string = "none";
 
   for (const source of menuSources) {
     const result = await source.fetch(restaurantInfo);
@@ -234,39 +310,52 @@ export async function crawlRestaurant(
     };
   }
 
-  // Clean and standardize dish names, descriptions, categories before analysis and storage
-  rawItems = rawItems.reduce<RawMenuItem[]>((acc, item) => {
+  // Extract raw annotations (dietary tags, footnote markers) BEFORE cleaning strips them
+  const annotatedItems: RawMenuItem[] = rawItems.map((item) => {
+    const annotations = extractRawAnnotations(item.name, item.description);
+    return {
+      ...item,
+      menuDietaryTags: [
+        ...(item.menuDietaryTags || []),
+        ...annotations.dietaryTags,
+      ],
+      menuAllergens: item.menuAllergens || [],
+    };
+  });
+
+  // Clean names, filter only non-food junk. Everything real passes through:
+  // sides, drinks, wine, add-ons, condiments — all stored in MenuItem.
+  // Classification happens in Step 3, NOT here.
+  const cleanedItems = annotatedItems.reduce<RawMenuItem[]>((acc, item) => {
     const cleaned = cleanDishName(item.name);
-    if (!cleaned) return acc; // skip garbage names
+    if (!cleaned) return acc; // garbage name (null, too short, no letters)
+    if (!isLikelyFoodItem(cleaned, item.description || "")) return acc; // "WiFi", "Saturday", "Live Music"
+
     const cleanedCategory = item.category ? cleanCategoryName(item.category) : null;
-
-    // Filter out items that aren't real dishes worth recommending
-    // (sides, add-ons, basic drinks, condiments, non-food items, wines, spirits, beers)
-    if (!isDishWorthRecommending(cleaned, cleanedCategory)) return acc;
-    if (isWineOrSpirit(cleaned, cleanedCategory)) return acc;
-
     const cleanedDescription = item.description
       ? cleanDescription(item.description, cleaned)
       : null;
+
     acc.push({
       ...item,
       name: cleaned,
+      nameOriginal: cleaned !== item.name ? item.name : undefined,
       category: cleanedCategory,
       description: cleanedDescription ?? "",
     });
     return acc;
   }, []);
 
-  // Deduplicate by cleaned name (case-insensitive) within same crawl
+  // Deduplicate by normalized name within same crawl
   const seen = new Set<string>();
-  rawItems = rawItems.filter((item) => {
-    const key = item.name.toLowerCase();
+  const dedupedItems = cleanedItems.filter((item) => {
+    const key = normalizeName(item.name);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
 
-  if (rawItems.length === 0) {
+  if (dedupedItems.length === 0) {
     return {
       restaurantId: restaurant.id,
       restaurantName: restaurant.name,
@@ -277,116 +366,298 @@ export async function crawlRestaurant(
     };
   }
 
-  // ─── PRE-INSERT AUDIT: 3-agent validation pipeline ─────
-  // Runs Agent A (format), Agent B (food verify), Agent C (consistency)
-  // before ANY dish enters the database. This is the guardrail that prevents
-  // garbage like "Wheelchair-accessible basin" from becoming menu items.
-  const { auditMenuItems } = await import("@/lib/agents/dish-auditor");
-  const cuisineStr = (restaurant as Record<string, unknown>).cuisineType
-    ? ((restaurant as Record<string, unknown>).cuisineType as string[]).join(", ")
-    : "";
-  const auditResults = await auditMenuItems(rawItems, restaurant.id, cuisineStr);
+  // ═══════════════════════════════════════════════════════════
+  // STEP 2: STORE IN MENUITEM — upsert every item into archive
+  // ═══════════════════════════════════════════════════════════
+  const sourceEnum = mapSourceToEnum(usedSource);
 
-  // Split results: passed items, rejected items, and non-dish items (drinks/sides)
-  const validItems = auditResults.filter(r => r.passed);
-  const rejected = auditResults.filter(r => !r.passed);
+  // Pre-tag items at scrape time (skip LLM for obvious categories).
+  // This is the fallback classification when Gemini auditor is unavailable.
+  const preTagged = dedupedItems.map((item) => {
+    let preType: MenuItemType = "unknown";
+    if (isWineOrSpirit(item.name, item.category)) preType = "drink";
+    else if (isCocktailOrSpecialDrink(item.name, item.category)) preType = "drink";
+    else if (isDessertItem(item.name, item.category)) preType = "dessert";
+    else if (isComboOrMealDeal(item.name)) preType = "combo";
+    else if (isKidsMenuItem(item.name)) preType = "kids";
+    return { item, preType };
+  });
 
-  // Dishes get full treatment (photos, search, image gen)
-  // Drinks/sides/condiments go in DB for restaurant menu pages but NOT in search/photos
-  const dishItems = validItems.filter(r => r.dishType === "dish");
-  const nonDishItems = validItems.filter(r => r.dishType !== "dish");
-
-  if (rejected.length > 0) {
-    console.log(`[menu-crawler] Rejected ${rejected.length}/${rawItems.length} items for ${restaurant.name}:`);
-    rejected.slice(0, 5).forEach(r => console.log(`  ✗ "${r.item.name}" — ${r.rejectionReasons.join(", ")}`));
-  }
-  if (nonDishItems.length > 0) {
-    console.log(`[menu-crawler] ${nonDishItems.length} non-dish items (drinks/sides) — menu-only, no photos/search`);
-  }
-
-  // Use only dish items for ingredient analysis + photo pipeline
-  // Non-dish items go directly to DB without photos or dietary analysis
-  const validRawItems = dishItems.map(r => r.item);
-
-  // Insert non-dish items directly (no photos, no dietary analysis, not searchable)
-  for (const r of nonDishItems) {
-    const raw = r.item;
-    const price = raw.price ? parsePriceString(raw.price) : null;
-    const existing = await prisma.dish.findFirst({
-      where: { restaurantId: restaurant.id, name: { equals: raw.name, mode: "insensitive" } },
-    });
-    if (!existing) {
-      await prisma.dish.create({
-        data: {
-          restaurantId: restaurant.id,
-          name: raw.name,
-          description: raw.description || null,
-          price,
-          category: raw.category || r.dishType,
-          isAvailable: false, // NOT searchable — only visible on restaurant menu page
+  // Upsert all items into MenuItem
+  const menuItemIds: string[] = [];
+  for (const { item, preType } of preTagged) {
+    const nameNorm = normalizeName(item.name);
+    try {
+      const menuItem = await prisma.menuItem.upsert({
+        where: {
+          restaurantId_nameNormalized_source: {
+            restaurantId: restaurant.id,
+            nameNormalized: nameNorm,
+            source: sourceEnum,
+          },
         },
-      }).catch(() => {});
+        create: {
+          restaurantId: restaurant.id,
+          name: item.name,
+          nameNormalized: nameNorm,
+          nameOriginal: item.nameOriginal || null,
+          description: item.description || null,
+          price: item.price ? parsePriceString(item.price) : null,
+          category: item.category || null,
+          menuItemType: preType,
+          source: sourceEnum,
+          photoUrl: item.photoUrl || null,
+          menuCalories: item.menuCalories || null,
+          menuProteinG: item.menuProteinG || null,
+          menuCarbsG: item.menuCarbsG || null,
+          menuFatG: item.menuFatG || null,
+          menuAllergens: item.menuAllergens || [],
+          menuDietaryTags: item.menuDietaryTags || [],
+          menuIngredients: item.menuIngredients || null,
+          lastSeenAt: crawlStart,
+        },
+        update: {
+          name: item.name,
+          description: item.description || null,
+          price: item.price ? parsePriceString(item.price) : null,
+          category: item.category || null,
+          photoUrl: item.photoUrl || null,
+          menuCalories: item.menuCalories || null,
+          menuProteinG: item.menuProteinG || null,
+          menuCarbsG: item.menuCarbsG || null,
+          menuFatG: item.menuFatG || null,
+          menuAllergens: item.menuAllergens || [],
+          menuDietaryTags: item.menuDietaryTags || [],
+          menuIngredients: item.menuIngredients || null,
+          lastSeenAt: crawlStart,
+          // Un-archive items that reappear on the menu
+          archivedAt: null,
+          archivedReason: null,
+        },
+      });
+      menuItemIds.push(menuItem.id);
+    } catch (err) {
+      console.warn(`[menu-crawler] Failed to upsert MenuItem "${item.name}":`, (err as Error).message);
     }
   }
 
-  // Analyze ingredients and dietary flags (only for validated items)
-  const analyzed = await analyzeIngredients(validRawItems);
+  console.log(`[menu-crawler] Step 2: Stored ${menuItemIds.length} MenuItems for ${restaurant.name}`);
 
-  // Upsert dishes into database and collect photo jobs
-  const photoJobs: BatchJob[] = [];
+  // ═══════════════════════════════════════════════════════════
+  // STEP 3: CLASSIFY — audit non-pre-tagged items via LLM
+  // ═══════════════════════════════════════════════════════════
+  // Items pre-tagged as wine/combo/kids skip the LLM auditor (save cost)
+  const itemsNeedingAudit = preTagged.filter(p => p.preType === "unknown").map(p => p.item);
+  const preTaggedMap = new Map(preTagged.map(p => [normalizeName(p.item.name), p.preType]));
 
-  for (let i = 0; i < validRawItems.length; i++) {
-    const raw = validRawItems[i];
+  let auditResults: Array<{ item: RawMenuItem; dishType: string; passed: boolean; rejectionReasons: string[]; auditConfidence?: number }> = [];
+
+  if (itemsNeedingAudit.length > 0) {
+    const { auditMenuItems } = await import("@/lib/agents/dish-auditor");
+    const cuisineStr = (restaurant as Record<string, unknown>).cuisineType
+      ? ((restaurant as Record<string, unknown>).cuisineType as string[]).join(", ")
+      : "";
+    auditResults = await auditMenuItems(itemsNeedingAudit, restaurant.id, cuisineStr);
+  }
+
+  // Update menuItemType on all MenuItems based on audit + pre-tag results
+  let classifiedCount = 0;
+  for (const { item, preType } of preTagged) {
+    const nameNorm = normalizeName(item.name);
+
+    let finalType: MenuItemType = preType;
+    let confidence: number | null = null;
+
+    if (preType === "unknown") {
+      // Look up audit result
+      const audit = auditResults.find(
+        r => normalizeName(r.item.name) === nameNorm
+      );
+      if (audit) {
+        if (!audit.passed) {
+          // Rejected by auditor — archive as junk
+          finalType = "unknown";
+          confidence = audit.auditConfidence ?? null;
+          await prisma.menuItem.updateMany({
+            where: {
+              restaurantId: restaurant.id,
+              nameNormalized: nameNorm,
+              source: sourceEnum,
+            },
+            data: {
+              menuItemType: finalType,
+              auditConfidence: confidence,
+              archivedAt: new Date(),
+              archivedReason: "junk_detected",
+            },
+          });
+          continue;
+        }
+        finalType = audit.dishType as MenuItemType;
+        confidence = audit.auditConfidence ?? null;
+      }
+    }
+
+    await prisma.menuItem.updateMany({
+      where: {
+        restaurantId: restaurant.id,
+        nameNormalized: nameNorm,
+        source: sourceEnum,
+      },
+      data: {
+        menuItemType: finalType,
+        auditConfidence: confidence,
+      },
+    });
+    classifiedCount++;
+  }
+
+  const rejected = auditResults.filter(r => !r.passed);
+  if (rejected.length > 0) {
+    console.log(`[menu-crawler] Step 3: Rejected ${rejected.length} junk items for ${restaurant.name}:`);
+    rejected.slice(0, 5).forEach(r => console.log(`  ✗ "${r.item.name}" — ${r.rejectionReasons.join(", ")}`));
+  }
+  console.log(`[menu-crawler] Step 3: Classified ${classifiedCount} items for ${restaurant.name}`);
+
+  // ═══════════════════════════════════════════════════════════
+  // STEP 4: PROMOTE TO DISH — only dishes/desserts/interesting drinks
+  // ═══════════════════════════════════════════════════════════
+  // Promotion rules:
+  //   dish    → always promoted
+  //   dessert → always promoted
+  //   drink + isInterestingBeverageOrCategory → promoted
+  //   everything else → MenuItem only (full menu)
+  const promotableItems = preTagged.filter(({ item, preType }) => {
+    const nameNorm = normalizeName(item.name);
+    // Get the final classified type (might have been updated by auditor)
+    const auditResult = auditResults.find(r => normalizeName(r.item.name) === nameNorm);
+    const finalType = (preType !== "unknown" ? preType : auditResult?.dishType) || "unknown";
+    const passed = preType !== "unknown" || (auditResult?.passed ?? false);
+
+    if (!passed) return false;
+    if (finalType === "dish" || finalType === "dessert") return true;
+    if (finalType === "drink" && isInterestingBeverageOrCategory(item.name, item.category)) return true;
+    return false;
+  });
+
+  console.log(`[menu-crawler] Step 4: Promoting ${promotableItems.length} items to Dish cards`);
+
+  // Analyze ingredients and dietary flags for promoted items only
+  const promotableRaw = promotableItems.map(p => p.item);
+  const analyzed = await analyzeIngredients(promotableRaw);
+
+  // Upsert Dish records and link MenuItem → Dish
+  const photoJobs: { dishId: string; photoUrl: string; restaurantName: string }[] = [];
+  let dishesCreated = 0;
+
+  for (const { item } of promotableItems) {
     const analysis = analyzed.find(
-      (a) => a.dish_name.toLowerCase() === raw.name.toLowerCase()
+      (a) => a.dish_name.toLowerCase() === item.name.toLowerCase()
     );
 
-    const price = raw.price ? parsePriceString(raw.price) : null;
+    const price = item.price ? parsePriceString(item.price) : null;
 
-    // Items sourced from allergen compliance pages (California SB 478, EU FIC) carry
-    // elevated dietary confidence — the restaurant is legally liable for accuracy.
-    const isCompliancePage = raw.source === "compliance_page";
+    const isCompliancePage = item.source === "compliance_page";
     const dietaryConfidence = isCompliancePage
       ? Math.max(0.95, analysis?.dietary_confidence ?? 0.95)
       : (analysis?.dietary_confidence ?? null);
 
+    // If menu already has calories/macros, use those as primary source
+    const hasMenuCalories = item.menuCalories != null;
+
     const dishData = {
-      name: raw.name,
-      description: raw.description || null,
-      price: price,
-      category: raw.category || null,
-      ingredientsRaw: raw.description || null,
+      name: item.name,
+      description: item.description || null,
+      price,
+      category: item.category || null,
+      ingredientsRaw: item.menuIngredients || item.description || null,
       ingredientsParsed: analysis?.ingredients_parsed ?? undefined,
       dietaryFlags: analysis?.dietary_flags ?? undefined,
       dietaryConfidence,
+      ...(hasMenuCalories ? {
+        caloriesMin: item.menuCalories,
+        caloriesMax: item.menuCalories,
+        macroSource: "restaurant_published" as const,
+      } : {}),
       isAvailable: true,
     };
 
-    // Check if dish already exists for this restaurant to avoid duplicates on re-crawl
-    // Use case-insensitive match so re-crawls with minor casing changes still dedup
     const existing = await prisma.dish.findFirst({
       where: {
         restaurantId: restaurant.id,
-        name: { equals: raw.name, mode: "insensitive" },
+        name: { equals: item.name, mode: "insensitive" as const },
       },
     });
 
     const dish = existing
-      ? await prisma.dish.update({
-          where: { id: existing.id },
-          data: dishData,
-        })
+      ? await prisma.dish.update({ where: { id: existing.id }, data: dishData })
       : await prisma.dish.create({
-          data: {
-            restaurantId: restaurant.id,
-            ...dishData,
-            macroSource: null,
-          },
+          data: { restaurantId: restaurant.id, ...dishData, macroSource: hasMenuCalories ? "restaurant_published" : null },
         });
 
-    // Queue photo for vision analysis if available
-    if (raw.photoUrl) {
-      photoJobs.push({ dishId: dish.id, imageUrl: raw.photoUrl });
+    dishesCreated++;
+
+    // Link MenuItem → Dish and write back parsed ingredients
+    const nameNorm = normalizeName(item.name);
+    const parsedIngredientList = analysis?.ingredients_parsed
+      ?.map((i: { name: string }) => i.name)
+      .join(", ") || null;
+
+    await prisma.menuItem.updateMany({
+      where: {
+        restaurantId: restaurant.id,
+        nameNormalized: nameNorm,
+        source: sourceEnum,
+      },
+      data: {
+        dishId: dish.id,
+        // Write back LLM-parsed ingredients to MenuItem for full menu display
+        ...(parsedIngredientList && !item.menuIngredients ? { menuIngredients: parsedIngredientList } : {}),
+      },
+    });
+
+    if (item.photoUrl) {
+      photoJobs.push({ dishId: dish.id, photoUrl: item.photoUrl, restaurantName: restaurant.name });
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // STEP 5: ARCHIVE STALE — soft-delete items not seen this crawl
+  // ═══════════════════════════════════════════════════════════
+  // CIRCUIT BREAKER: if current crawl found < 20% of previous active items,
+  // the scraper likely failed — don't archive the entire menu.
+  const previousActiveCount = await prisma.menuItem.count({
+    where: {
+      restaurantId: restaurant.id,
+      source: sourceEnum,
+      archivedAt: null,
+    },
+  });
+
+  const currentCount = dedupedItems.length;
+  const archiveThreshold = Math.max(previousActiveCount * 0.2, 3); // at least 3
+
+  if (previousActiveCount > 0 && currentCount < archiveThreshold) {
+    console.warn(
+      `[menu-crawler] CIRCUIT BREAKER: Found only ${currentCount} items vs ${previousActiveCount} previous active. ` +
+      `Skipping stale archival for ${restaurant.name} — scraper may have failed.`
+    );
+  } else {
+    // Archive items from this source that weren't seen in this crawl
+    const { count: archivedCount } = await prisma.menuItem.updateMany({
+      where: {
+        restaurantId: restaurant.id,
+        source: sourceEnum,
+        archivedAt: null,
+        lastSeenAt: { lt: crawlStart },
+      },
+      data: {
+        archivedAt: new Date(),
+        archivedReason: "menu_removed",
+      },
+    });
+    if (archivedCount > 0) {
+      console.log(`[menu-crawler] Step 5: Archived ${archivedCount} stale items for ${restaurant.name}`);
     }
   }
 
@@ -395,26 +666,68 @@ export async function crawlRestaurant(
     where: { id: restaurant.id },
     data: {
       menuSource: usedSource === "none" ? undefined : usedSource as "website" | "google_photos" | "manual",
-      lastMenuCrawl: new Date(),
+      lastMenuCrawl: crawlStart,
     },
   });
 
-  // Queue photo analysis in background (don't await — runs async)
+  // Queue photo analysis via BullMQ (unchanged from before)
   if (photoJobs.length > 0) {
-    console.log(`[menu-crawler] Queueing ${photoJobs.length} photo analysis jobs for ${restaurant.name}`);
-    batchAnalyzePhotos(photoJobs).catch((err) =>
-      console.error(`[menu-crawler] Photo batch analysis failed for ${restaurant.name} (${photoJobs.length} photos):`, (err as Error).message)
-    );
+    try {
+      const { Queue } = await import("bullmq");
+      const { redis } = await import("@/lib/cache/redis");
+      const photoQueue = new Queue("photo-analysis", {
+        connection: redis,
+        defaultJobOptions: {
+          removeOnComplete: { count: 100 },
+          removeOnFail: { count: 500 },
+        },
+      });
+      const MAX_PHOTOS_PER_CRAWL = 20;
+      const jobsToQueue = photoJobs.slice(0, MAX_PHOTOS_PER_CRAWL);
+
+      await photoQueue.addBulk(
+        jobsToQueue.map((job) => ({
+          name: `analyze-${job.dishId}`,
+          data: {
+            dishId: job.dishId,
+            photoUrl: job.photoUrl,
+            restaurantName: job.restaurantName,
+          },
+          opts: {
+            jobId: `photo-${job.dishId}`,
+            priority: 2,
+            attempts: 2,
+            backoff: { type: "exponential" as const, delay: 5000 },
+          },
+        }))
+      );
+      console.log(`[menu-crawler] Queued ${jobsToQueue.length} photo analysis jobs for ${restaurant.name}`);
+      await photoQueue.close();
+    } catch (err) {
+      console.error(`[menu-crawler] Failed to queue photo analysis:`, (err as Error).message);
+    }
   }
 
   return {
     restaurantId: restaurant.id,
     restaurantName: restaurant.name,
     menuSource: usedSource,
-    dishesFound: rawItems.length,
+    dishesFound: dedupedItems.length,
     dishesAnalyzed: analyzed.length,
     photosQueued: photoJobs.length,
   };
+}
+
+/** Map source string to Prisma MenuItemSource enum */
+function mapSourceToEnum(source: string): "website" | "google_photos" | "delivery_platform" | "compliance_page" | "manual" | "backfill" {
+  const map: Record<string, "website" | "google_photos" | "delivery_platform" | "compliance_page" | "manual" | "backfill"> = {
+    website: "website",
+    google_photos: "google_photos",
+    delivery_platform: "delivery_platform",
+    compliance_page: "compliance_page",
+    manual: "manual",
+  };
+  return map[source] || "website";
 }
 
 /**

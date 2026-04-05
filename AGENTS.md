@@ -15,10 +15,20 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Model: `GEMINI_FLASH` (Gemini Flash) for cost efficiency; Claude Haiku import is legacy/unused
 
 ### 2. Menu Crawler (`src/lib/agents/menu-crawler/`)
-- Crawls restaurant menus from 3 sources: website HTML, Google Maps photos, delivery platforms (stub)
-- Uses Claude to extract structured menu items from photos
-- Analyzes ingredients for dietary flags (vegan, GF, halal, kosher, nut-free)
+- **Two-tier storage**: MenuItem (complete menu archive) → Dish (promoted dish cards only)
+- 5-step pipeline: Scrape → Store in MenuItem → Classify → Promote to Dish → Archive stale
+- Crawls from 3 sources: website HTML, Google Maps photos, delivery platforms (stub)
+- **MenuItem table** stores EVERYTHING from the menu (sides, drinks, add-ons) with soft-delete
+- **Dish table** only gets promoted items: main dishes, desserts, interesting beverages
+- Pre-tagging at scrape time: `isWineOrSpirit()` → drink, `isDessertItem()` → dessert, `isComboOrMealDeal()` → combo, `isKidsMenuItem()` → kids
+- Items not pre-tagged go through Gemini auditor for classification; fail-open at confidence 0.8
+- Circuit breaker: if crawl returns < 20% of known items, skip stale archival (prevents scraper failure from mass-archiving)
+- Allergen extraction from HTML footnotes/legends BEFORE name cleaning strips markers
+- Nutrition extraction (calories, macros) from menu HTML when restaurant publishes them
+- Uses Claude Sonnet for dietary flag analysis on promoted dishes only (safety-critical)
 - CRITICAL: dietary flags use conservative defaults — `null` (unknown) not `true` when uncertain
+- Delete protection: Prisma middleware converts `delete`/`deleteMany` on MenuItem to soft-delete
+- `onDelete: Restrict` on Restaurant → MenuItem (prevents cascade data loss)
 
 ### 3. Review Aggregator (`src/lib/agents/review-aggregator/`)
 - Summarizes dish-specific reviews from Google and Yelp
@@ -240,3 +250,17 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Crawl area API (`/api/crawl/area`) uses `apiSuccess()` envelope — test assertions must use `body.data.restaurants_found` (not `body.restaurants_found`).
 - Discovery areas expanded to 30 total (2026-04-05): 15 Manhattan, 7 Brooklyn, 4 Queens, 4 Denver. Flushing (priority 1) is the richest new area.
 - Orchestrator geo dedup (2026-04-05): `getRestaurantIdsWithinRadius()` result cached as `geoResultsCache` to avoid double DB call per geo search.
+- **MenuItem model (2026-04-05)**: Two-tier storage — `MenuItem` (complete menu archive, soft-delete only) + `Dish` (promoted dish cards). MenuItem has `nameNormalized` for dedup, `menuAllergens`/`menuDietaryTags` from HTML scrape, `archivedAt`/`archivedReason` for soft-delete. Unique constraint: `(restaurantId, nameNormalized, source)`.
+- MenuItem `onDelete: Restrict` on Restaurant relation — prevents cascade data loss. Deactivate restaurants via `isActive: false` instead of deleting.
+- Prisma `$extends` middleware in `db/client.ts` intercepts `delete`/`deleteMany` on MenuItem model → converts to soft-delete. Hard-delete requires `hardDeleteMenuItem()` in `src/lib/menu/archive.ts`.
+- `normalizeName()` in `src/lib/menu/archive.ts`: lowercase, strip dietary tags `(V)/(GF)`, strip size modifiers `- Small/Large`, strip footnote markers `*†‡`, collapse whitespace. Used as dedup key.
+- Pre-tagging at scrape time (before auditor): `isWineOrSpirit()` → drink, `isDessertItem()` → dessert, `isCocktailOrSpecialDrink()` → drink, `isComboOrMealDeal()` → combo, `isKidsMenuItem()` → kids. Pre-tagged items skip Gemini auditor (save API cost).
+- Promotion rules: `dish` + `dessert` → always promoted. `drink` + `isInterestingBeverageOrCategory()` → promoted. Everything else → MenuItem only (full menu display).
+- `isInterestingBeverage()` expanded (2026-04-05): covers coffee, iced coffee, tea, thai iced tea, vietnamese coffee, hot chocolate, affogato, macchiato, mocha, cortado, flat white, americano, frappe, turkish coffee, irish coffee.
+- `isWineOrSpirit()` expanded (2026-04-05): calvados, armagnac, marc, pastis, pisco, fernet; dessert wines (port, madeira, sherry, marsala, sauternes, tokaji); category typo "champage" caught; "after dinner" category → drink.
+- Circuit breaker on stale archival: if crawl returns < 20% of previous active MenuItem count, skip archiving and log warning (prevents scraper failure from mass-archiving).
+- Auditor duplicate check DISABLED (2026-04-05): re-crawls naturally find the same dishes — items are updated, not rejected as duplicates. Dedup within same crawl handled by `normalizeName()` Set in `crawlRestaurant()`.
+- Auditor fail-open fixed (2026-04-05): Gemini API failure now returns `food_confidence: 0.8` (above 0.7 threshold). Previously returned 0.5 which triggered rejection gate — silently rejecting ALL items.
+- Photo matching: `src/lib/photos/match-photo.ts` — 3-strategy matching (exact name in generated-photos.json → case-insensitive match → Dice coefficient fuzzy on kebab-case slugs). Threshold 0.7. No generation — null if no match.
+- `extractRawAnnotations()` in sources.ts: captures dietary tag symbols (V, VG, GF, DF, NF, H, K) and footnote markers from raw HTML BEFORE `cleanDishName()` strips them.
+- `extractMenuAnnotations()` in sources.ts: scans HTML for allergen legend/footnote blocks and inline calorie/macro patterns. Best-effort enrichment, not blocking.

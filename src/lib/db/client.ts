@@ -43,10 +43,41 @@ function withSlowQueryLogging(client: PrismaClient): PrismaClient {
   return client;
 }
 
-export const prisma = withSlowQueryLogging(
+function withSoftDeleteProtection(client: PrismaClient) {
+  return client.$extends({
+    query: {
+      menuItem: {
+        async delete({ args }) {
+          console.warn(
+            `[Prisma SoftDelete] menuItem.delete intercepted — converting to soft-delete`,
+            { where: args.where }
+          );
+          return client.menuItem.update({
+            where: args.where,
+            data: { archivedAt: new Date(), archivedReason: "manual" },
+          });
+        },
+        async deleteMany({ args }) {
+          console.warn(
+            `[Prisma SoftDelete] menuItem.deleteMany intercepted — converting to soft-delete`,
+            { where: args.where }
+          );
+          return client.menuItem.updateMany({
+            where: args.where,
+            data: { archivedAt: new Date(), archivedReason: "manual" },
+          });
+        },
+      },
+    },
+  });
+}
+
+const baseClient = withSlowQueryLogging(
   globalForPrisma.prisma ?? createPrismaClient()
 );
 
+export const prisma = withSoftDeleteProtection(baseClient);
+
 if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+  globalForPrisma.prisma = baseClient;
 }

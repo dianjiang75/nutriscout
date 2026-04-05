@@ -12,6 +12,7 @@ import { scrapeDoorDash } from "./doordash";
 import { scrapeUberEats } from "./ubereats";
 import { matchItemToDish } from "./match-restaurant";
 import { cleanDishName, cleanCategoryName, isDishWorthRecommending, isWineOrSpirit } from "@/lib/agents/menu-crawler/clean-dish-name";
+import { normalizeName } from "@/lib/menu/archive";
 import type { DeliveryScrapeResult, DeliveryScrapedItem, PlatformScrapeResult } from "./types";
 
 /**
@@ -224,6 +225,38 @@ async function processScrapedItems(
         dishId = newDish.id;
         created++;
         existingDishes.push({ id: newDish.id, name: cleanedName });
+
+        // Also create MenuItem archive record for delivery-discovered dishes
+        const platform = data.ratings[0]?.platform || "ubereats";
+        await prisma.menuItem.upsert({
+          where: {
+            restaurantId_nameNormalized_source: {
+              restaurantId,
+              nameNormalized: normalizeName(cleanedName),
+              source: "delivery_platform",
+            },
+          },
+          create: {
+            restaurantId,
+            name: cleanedName,
+            nameNormalized: normalizeName(cleanedName),
+            description: richestItem?.description || null,
+            price: richestItem?.price || null,
+            category: richestItem?.category ? cleanCategoryName(richestItem.category) : null,
+            menuItemType: "dish",
+            source: "delivery_platform",
+            dishId: newDish.id,
+            lastSeenAt: new Date(),
+          },
+          update: {
+            description: richestItem?.description || null,
+            price: richestItem?.price || null,
+            lastSeenAt: new Date(),
+            dishId: newDish.id,
+            archivedAt: null,
+            archivedReason: null,
+          },
+        }).catch(() => {}); // Non-blocking — MenuItem is supplementary
       } catch {
         continue; // Skip if creation fails (duplicate, etc.)
       }

@@ -36,6 +36,36 @@ enum MacroSource {
   community_verified    // Community-verified values
 }
 
+// ─── MENU ITEM ENUMS ───────────────────────────────────
+
+enum MenuItemType {
+  dish        // mains, appetizers, starters, soups, salads
+  dessert     // sweets, pastries, ice cream
+  drink       // ALL beverages (basic + special)
+  side        // sides, bread, rice
+  condiment   // sauces, dressings, dips
+  addon       // extras, upgrades, substitutions
+  combo       // meal deals, combos, bundles
+  kids        // kids menu items
+  unknown     // not yet classified
+}
+
+enum MenuItemSource {
+  website
+  google_photos
+  delivery_platform
+  compliance_page
+  manual
+  backfill
+}
+
+enum ArchiveReason {
+  menu_removed
+  junk_detected
+  duplicate
+  manual
+}
+
 enum DeliveryPlatform {
   ubereats
   doordash
@@ -100,6 +130,7 @@ model Restaurant {
   updatedAt            DateTime @updatedAt @map("updated_at")
 
   dishes               Dish[]
+  menuItems            MenuItem[]
   logistics            RestaurantLogistics[]
   deliveryOptions      RestaurantDelivery[]
 
@@ -141,6 +172,7 @@ model Dish {
   updatedAt          DateTime    @updatedAt @map("updated_at")
 
   restaurant         Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  menuItems          MenuItem[]
   photos             DishPhoto[]
   reviewSummary      ReviewSummary?
   communityFeedback  CommunityFeedback[]
@@ -152,6 +184,55 @@ model Dish {
   @@index([isAvailable], map: "idx_dishes_available")
   @@index([macroSource], map: "idx_dishes_macro_source")
   @@map("dishes")
+}
+
+model MenuItem {
+  id               String          @id @default(uuid()) @db.Uuid
+  restaurantId     String          @map("restaurant_id") @db.Uuid
+  name             String          // cleaned display name
+  nameNormalized   String          @map("name_normalized") // lowercase, stripped — used for dedup
+  nameOriginal     String?         @map("name_original") // pre-translation if non-English
+  description      String?
+  price            Decimal?        @db.Decimal(8, 2)
+  category         String?         // menu section (Appetizers, Mains, etc.)
+  menuItemType     MenuItemType    @default(unknown) @map("menu_item_type")
+  source           MenuItemSource  @default(website)
+  photoUrl         String?         @map("photo_url")
+
+  // Scraped from menu (primary source — restaurant-stated, highest trust)
+  menuCalories     Int?            @map("menu_calories")
+  menuProteinG     Decimal?        @map("menu_protein_g") @db.Decimal(6, 1)
+  menuCarbsG       Decimal?        @map("menu_carbs_g") @db.Decimal(6, 1)
+  menuFatG         Decimal?        @map("menu_fat_g") @db.Decimal(6, 1)
+  menuAllergens    String[]        @default([]) @map("menu_allergens")   // e.g. ["contains peanuts", "dairy"]
+  menuDietaryTags  String[]        @default([]) @map("menu_dietary_tags") // e.g. ["V", "GF", "DF"] as printed
+  menuIngredients  String?         @map("menu_ingredients")
+
+  // Audit result
+  auditConfidence  Decimal?        @map("audit_confidence") @db.Decimal(3, 2)
+
+  // Soft delete
+  archivedAt       DateTime?       @map("archived_at")
+  archivedReason   ArchiveReason?  @map("archived_reason")
+
+  // Freshness tracking
+  firstSeenAt      DateTime        @default(now()) @map("first_seen_at")
+  lastSeenAt       DateTime        @default(now()) @map("last_seen_at")
+
+  // Link to promoted Dish (many MenuItems can point to same Dish)
+  dishId           String?         @map("dish_id") @db.Uuid
+  dish             Dish?           @relation(fields: [dishId], references: [id], onDelete: SetNull)
+  restaurant       Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  @@unique([restaurantId, nameNormalized, source], map: "uq_menu_item_dedup")
+  @@index([restaurantId, archivedAt], map: "idx_menu_items_restaurant_active")
+  @@index([restaurantId, menuItemType, archivedAt], map: "idx_menu_items_type_active")
+  @@index([dishId], map: "idx_menu_items_dish")
+  @@index([restaurantId, lastSeenAt], map: "idx_menu_items_freshness")
+  @@map("menu_items")
 }
 
 model DishPhoto {

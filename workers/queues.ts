@@ -25,6 +25,11 @@ export const deliveryScrapeQueue = new Queue("delivery-scrape", {
 });
 export const deadLetterQueue = new Queue("dead-letter", { connection, defaultJobOptions: { removeOnComplete: { count: 500 }, removeOnFail: { count: 1000 } } });
 
+// ─── Refactored pipeline queues (menu-scraper → menu-classifier → stale-archiver) ──
+export const menuScrapeQueue = new Queue("menu-scrape", { connection, defaultJobOptions });
+export const menuClassifyQueue = new Queue("menu-classify", { connection, defaultJobOptions });
+export const staleArchiveQueue = new Queue("stale-archive", { connection, defaultJobOptions });
+
 /**
  * FlowProducer for atomic job chaining across queues.
  * Use this to create parent-child job trees where children

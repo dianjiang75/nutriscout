@@ -1,0 +1,4 @@
+{
+  "corrections": [],
+  "_comment": "Add corrections here when the classifier gets items wrong. Format: { name, correctType, reason, addedBy, date }"
+}
