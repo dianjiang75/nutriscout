@@ -25,13 +25,33 @@ export const GET = withRateLimit("read", async (request: Request) => {
   const skip = (page - 1) * limit;
 
   try {
-    const where = {
-      archivedAt: null,
-      OR: [
-        { auditConfidence: { lt: 0.7 } },
-        { menuItemType: "unknown" as const },
-      ],
-    };
+    const filter = searchParams.get("filter") || "needs-review";
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let where: any;
+    if (filter === "all") {
+      // Show all active items (useful for browsing)
+      where = { archivedAt: null };
+    } else if (filter === "dish-cards") {
+      // Show only promoted dish card items
+      where = { archivedAt: null, isDishCard: true };
+    } else if (filter === "not-dish-cards") {
+      // Show items NOT promoted (sides, drinks, etc.)
+      where = { archivedAt: null, isDishCard: false, menuItemType: { not: "unknown" as const } };
+    } else {
+      // Default: items needing human review — fresh crawls with low confidence or unknown type.
+      // Excludes backfill items (auditConfidence=null + source=backfill) to keep the queue manageable.
+      where = {
+        archivedAt: null,
+        source: { not: "backfill" as const },
+        OR: [
+          { auditConfidence: { lt: 0.7 } },
+          { menuItemType: "unknown" as const },
+          { dishCardConfidence: { lt: 0.7 } },
+          { dishCardConfidence: null, isDishCard: true }, // auto-promoted without confidence score
+        ],
+      };
+    }
 
     const [items, total] = await Promise.all([
       prisma.menuItem.findMany({
