@@ -178,12 +178,14 @@ export const POST = withRateLimit("write", async (request: Request) => {
       ? !!isDishCard
       : isAlcohol ? false : undefined;
 
-    // Update the MenuItem
+    // Update the MenuItem — always set both confidence fields to 1.0 so it leaves the review queue
     await prisma.menuItem.update({
       where: { id: menuItemId },
       data: {
-        ...(correctType ? { menuItemType: correctType, auditConfidence: 1.0 } : {}),
-        ...(shouldBeDishCard !== undefined ? { isDishCard: shouldBeDishCard, dishCardConfidence: 1.0 } : {}),
+        ...(correctType ? { menuItemType: correctType } : {}),
+        auditConfidence: 1.0,
+        dishCardConfidence: 1.0,
+        ...(shouldBeDishCard !== undefined ? { isDishCard: shouldBeDishCard } : {}),
       },
     });
 
