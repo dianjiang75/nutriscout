@@ -72,12 +72,14 @@ function withSoftDeleteProtection(client: PrismaClient) {
   });
 }
 
-const baseClient = withSlowQueryLogging(
+// NOTE: withSoftDeleteProtection($extends) disabled temporarily — causes Next.js 16
+// server crashes due to Turbopack serialization issues with extended Prisma clients.
+// Delete protection is enforced at the application layer (archive.ts) instead.
+// TODO: Re-enable when Next.js/Prisma compatibility is fixed.
+export const prisma = withSlowQueryLogging(
   globalForPrisma.prisma ?? createPrismaClient()
 );
 
-export const prisma = withSoftDeleteProtection(baseClient);
-
 if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = baseClient;
+  globalForPrisma.prisma = prisma;
 }

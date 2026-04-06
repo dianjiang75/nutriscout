@@ -52,18 +52,21 @@ export default function ClassifierAuditPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [filter, setFilter] = useState("needs-review");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState(false);
 
   const fetchItems = useCallback(async (p: number, f?: string) => {
     setLoading(true);
     try {
       const filterParam = f || filter;
-      const res = await fetch(`/api/admin/audit/classifier?page=${p}&filter=${filterParam}`);
+      const res = await fetch(`/api/audit-classifier?page=${p}&filter=${filterParam}`);
       if (res.ok) {
         const json = await res.json();
         const data = json.data || json;
         setItems(data.items || []);
         setTotal(data.total || 0);
         setPage(data.page || p);
+        setSelected(new Set());
       }
     } finally {
       setLoading(false);
@@ -74,16 +77,34 @@ export default function ClassifierAuditPage() {
     fetchItems(1, filter);
   }, [filter, fetchItems]);
 
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function selectAll() {
+    if (selected.size === items.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(items.map((i) => i.id)));
+    }
+  }
+
   async function handleClassify(itemId: string, correctType: string) {
     setSubmitting(itemId);
     try {
-      const res = await fetch("/api/admin/audit/classifier", {
+      const res = await fetch("/api/audit-classifier", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ menuItemId: itemId, correctType }),
       });
       if (res.ok) {
         setItems((prev) => prev.filter((i) => i.id !== itemId));
+        setSelected((prev) => { const n = new Set(prev); n.delete(itemId); return n; });
         setReviewed((r) => r + 1);
         setTotal((t) => Math.max(0, t - 1));
       }
@@ -96,19 +117,48 @@ export default function ClassifierAuditPage() {
     if (!confirm("Remove this item from the menu? It will be archived as junk.")) return;
     setSubmitting(itemId);
     try {
-      const res = await fetch("/api/admin/audit/classifier", {
+      const res = await fetch("/api/audit-classifier", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ menuItemId: itemId, action: "reject" }),
       });
       if (res.ok) {
         setItems((prev) => prev.filter((i) => i.id !== itemId));
+        setSelected((prev) => { const n = new Set(prev); n.delete(itemId); return n; });
         setReviewed((r) => r + 1);
         setTotal((t) => Math.max(0, t - 1));
       }
     } finally {
       setSubmitting(null);
     }
+  }
+
+  async function handleBulkAction(action: string) {
+    if (selected.size === 0) return;
+    const ids = Array.from(selected);
+    const label = action === "reject" ? "reject" : `classify as ${action}`;
+    if (!confirm(`${label} ${ids.length} selected items?`)) return;
+
+    setBulkAction(true);
+    let success = 0;
+    for (const id of ids) {
+      try {
+        const body = action === "reject"
+          ? { menuItemId: id, action: "reject" }
+          : { menuItemId: id, correctType: action };
+        const res = await fetch("/api/audit-classifier", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (res.ok) success++;
+      } catch { /* skip failed */ }
+    }
+    setItems((prev) => prev.filter((i) => !selected.has(i.id)));
+    setReviewed((r) => r + success);
+    setTotal((t) => Math.max(0, t - success));
+    setSelected(new Set());
+    setBulkAction(false);
   }
 
   return (
@@ -121,7 +171,7 @@ export default function ClassifierAuditPage() {
           </a>
           <h1 className="text-2xl font-bold">Classifier Audit</h1>
           <p className="text-muted-foreground mt-1">
-            Review and correct item classifications. Click a type button, search Google, or reject junk.
+            Check items to select, then bulk-apply a type. Or click individual buttons. All corrections are saved as training data.
           </p>
           <div className="flex gap-4 mt-3 text-sm">
             <span className="font-semibold text-primary">{reviewed} reviewed</span>
@@ -130,7 +180,7 @@ export default function ClassifierAuditPage() {
         </div>
 
         {/* Filter tabs */}
-        <div className="flex gap-1 mb-6 p-1 bg-muted/50 rounded-lg w-fit">
+        <div className="flex gap-1 mb-4 p-1 bg-muted/50 rounded-lg w-fit">
           {FILTERS.map((f) => (
             <button
               key={f.value}
@@ -146,7 +196,54 @@ export default function ClassifierAuditPage() {
           ))}
         </div>
 
-        {/* Loading state */}
+        {/* Bulk action bar */}
+        {selected.size > 0 && (
+          <div className="sticky top-0 z-10 bg-card border border-border rounded-xl p-3 mb-4 shadow-lg flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold mr-2">{selected.size} selected</span>
+            <div className="w-px h-5 bg-border" />
+            {MENU_TYPES.map((type) => (
+              <button
+                key={type.value}
+                disabled={bulkAction}
+                onClick={() => handleBulkAction(type.value)}
+                className={`text-xs px-2.5 py-1 rounded-lg font-medium border border-border hover:bg-muted transition-all disabled:opacity-50`}
+              >
+                {type.label}
+              </button>
+            ))}
+            <div className="w-px h-5 bg-border" />
+            <button
+              disabled={bulkAction}
+              onClick={() => handleBulkAction("reject")}
+              className="text-xs px-2.5 py-1 rounded-lg font-medium border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-50"
+            >
+              Reject All
+            </button>
+            <button
+              onClick={() => setSelected(new Set())}
+              className="text-xs px-2.5 py-1 rounded-lg text-muted-foreground hover:text-foreground ml-auto"
+            >
+              Clear
+            </button>
+          </div>
+        )}
+
+        {/* Select all */}
+        {items.length > 0 && (
+          <div className="flex items-center gap-2 mb-3">
+            <label className="flex items-center gap-2 cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+              <input
+                type="checkbox"
+                checked={selected.size === items.length && items.length > 0}
+                onChange={selectAll}
+                className="rounded border-border"
+              />
+              Select all on this page
+            </label>
+          </div>
+        )}
+
+        {/* Loading */}
         {loading && items.length === 0 && (
           <div className="space-y-4">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -155,7 +252,7 @@ export default function ClassifierAuditPage() {
           </div>
         )}
 
-        {/* Empty state */}
+        {/* Empty */}
         {!loading && items.length === 0 && (
           <div className="text-center py-16">
             <div className="text-4xl mb-4">&#10003;</div>
@@ -169,13 +266,22 @@ export default function ClassifierAuditPage() {
           {items.map((item) => {
             const badge = getTypeBadge(item.menuItemType);
             const isSubmitting = submitting === item.id;
+            const isSelected = selected.has(item.id);
             return (
               <div
                 key={item.id}
-                className={`border border-border rounded-xl p-4 bg-card transition-opacity ${isSubmitting ? "opacity-50" : ""}`}
+                className={`border rounded-xl p-4 bg-card transition-all ${
+                  isSubmitting ? "opacity-50" : ""
+                } ${isSelected ? "border-primary ring-2 ring-primary/20" : "border-border"}`}
               >
-                {/* Top row: name + badges */}
-                <div className="flex items-start justify-between gap-3 mb-2">
+                {/* Top row: checkbox + name + badges */}
+                <div className="flex items-start gap-3 mb-2">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleSelect(item.id)}
+                    className="mt-1 rounded border-border shrink-0"
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-base truncate">{item.name}</h3>
@@ -184,7 +290,6 @@ export default function ClassifierAuditPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="shrink-0 text-xs px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                        title="Search Google Images"
                       >
                         Search
                       </a>
@@ -208,8 +313,8 @@ export default function ClassifierAuditPage() {
                   </div>
                 </div>
 
-                {/* Meta row */}
-                <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                {/* Meta */}
+                <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3 ml-7">
                   <span>{item.restaurantName}</span>
                   {item.category && (
                     <>
@@ -226,7 +331,7 @@ export default function ClassifierAuditPage() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex flex-wrap gap-1.5 items-center">
+                <div className="flex flex-wrap gap-1.5 items-center ml-7">
                   {MENU_TYPES.map((type) => (
                     <button
                       key={type.value}
@@ -241,11 +346,7 @@ export default function ClassifierAuditPage() {
                       {type.label}
                     </button>
                   ))}
-
-                  {/* Separator */}
                   <div className="w-px h-5 bg-border mx-1" />
-
-                  {/* Reject button */}
                   <button
                     disabled={isSubmitting}
                     onClick={() => handleReject(item.id)}
@@ -281,6 +382,12 @@ export default function ClassifierAuditPage() {
             </button>
           </div>
         )}
+
+        {/* Training data info */}
+        <div className="mt-8 p-4 bg-muted/30 rounded-xl text-xs text-muted-foreground">
+          <p><strong>Training data:</strong> Every correction is saved to <code>src/lib/agents/menu-classifier/corrections.json</code></p>
+          <p className="mt-1">This file is read by the classifier evaluator and nightly improvement agent to learn from your corrections.</p>
+        </div>
       </div>
     </div>
   );
