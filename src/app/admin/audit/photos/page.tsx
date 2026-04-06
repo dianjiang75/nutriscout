@@ -30,7 +30,7 @@ export default function PhotoAuditPage() {
   const fetchItems = useCallback(async (p: number, f: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/audit/photos?page=${p}&filter=${f}&limit=50`);
+      const res = await fetch(`/api/audit-photos?page=${p}&filter=${f}&limit=50`);
       if (res.ok) {
         const json = await res.json();
         const data = json.data || json;
@@ -50,7 +50,7 @@ export default function PhotoAuditPage() {
   async function handleAction(photoId: string, dishId: string, action: string) {
     setSubmitting(photoId);
     try {
-      const res = await fetch("/api/admin/audit/photos", {
+      const res = await fetch("/api/audit-photos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ photoId, dishId, action }),
