@@ -1,4 +1,2957 @@
 {
-  "corrections": [],
+  "corrections": [
+    {
+      "menuItemId": "81ad52ff-bdc1-4149-aaf4-9d647f5632d1",
+      "name": "Château de Saint Cosmé 'Le Poste', Gigondas, '12",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:03.451Z"
+    },
+    {
+      "menuItemId": "45f895bb-b923-49c8-8d1f-4ac46383c948",
+      "name": "Château Mourgues du Grès, Costières de Nîmes, '16",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:06.079Z"
+    },
+    {
+      "menuItemId": "85bdbe80-fa6f-49de-96db-eee99adc9bb5",
+      "name": "Yves Cuilleron 'Les Chaillets', Condrieu, '13",
+      "previousType": "alcohol",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:12.835Z"
+    },
+    {
+      "menuItemId": "118a2de8-4dee-49f5-97c3-d7ec9708b89d",
+      "name": "Château Franc-Maillet 'Cuvée Jean Baptiste', Pomerol, '06",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:17.120Z"
+    },
+    {
+      "menuItemId": "84265bd4-babf-46f1-b205-df2612f7a48f",
+      "name": "Zenato, Amarone della Valpolicella Classico, Veneto, '11",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:18.801Z"
+    },
+    {
+      "menuItemId": "9a4e1167-9fc9-4f66-9530-14803a5c75d1",
+      "name": "Château Lassègue, Grand Cru Saint-Émilion, '11",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:19.906Z"
+    },
+    {
+      "menuItemId": "d622061f-f437-473b-a9a5-d8b63e4dd592",
+      "name": "Bone Dry Cider",
+      "previousType": "alcohol",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:25.003Z"
+    },
+    {
+      "menuItemId": "2daa988b-ecdc-49b1-b9e4-8fcf13c1a133",
+      "name": "St.Agrestis Amaro Falso or Phony Negroni",
+      "previousType": "alcohol",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:25.602Z"
+    },
+    {
+      "menuItemId": "b97bbb19-3b4a-4041-a4e7-883d8fd0ec79",
+      "name": "Prunotto 2020",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:27.506Z"
+    },
+    {
+      "menuItemId": "f6acaa0e-fae4-4327-868f-ff99d884053b",
+      "name": "L'Imperfetto Valpolicella Classico 2022, Buglioni",
+      "previousType": "alcohol",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:28.498Z"
+    },
+    {
+      "menuItemId": "45842e4f-5543-466b-a6fb-bbd57ba0c3ca",
+      "name": "Valtellina Superiore Ortensio Lando, Luca Faccinelli 2015",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:29.633Z"
+    },
+    {
+      "menuItemId": "dfd6bf88-bef5-48ce-a5c7-1a26a45d3fcb",
+      "name": "Valtellina Superiore Inferno, Nino Negri 2019",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:30.185Z"
+    },
+    {
+      "menuItemId": "afca7703-d92c-4a6e-9b57-3c928cb14b89",
+      "name": "Barbacarlo, Barbacarlo 2015",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:30.629Z"
+    },
+    {
+      "menuItemId": "813da711-3ce6-4e7a-a76b-1ca6a517eda4",
+      "name": "Istine Classico 2022",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:31.616Z"
+    },
+    {
+      "menuItemId": "a3238d6f-f3ff-44ca-849b-e189a7019173",
+      "name": "Giasco, La Ganghija 2017",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:33.835Z"
+    },
+    {
+      "menuItemId": "ef1a3ca1-3289-4fb2-b7b0-c91d2068e1cd",
+      "name": "Chianti Classico",
+      "previousType": "alcohol",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:35.341Z"
+    },
+    {
+      "menuItemId": "e22b4c48-ee66-4898-82f6-d209a6dd3b9b",
+      "name": "Cerassuolo Di Vittoria Classico COS 2019",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:38.246Z"
+    },
+    {
+      "menuItemId": "316e37e8-8ef9-437a-bfaf-f09ea9d41c4e",
+      "name": "Nubiola, Pelissero 2019",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:39.113Z"
+    },
+    {
+      "menuItemId": "4f9d7679-97b6-47c6-a38d-29f4a1ba76ce",
+      "name": "Soave Classico",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:40.580Z"
+    },
+    {
+      "menuItemId": "e05c27f6-ef14-41f3-b676-7ac54b32bc00",
+      "name": "Bloody maria",
+      "previousType": "dish",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:06:54.671Z"
+    },
+    {
+      "menuItemId": "1c8de4fe-ffda-4632-bc7f-bd01ffa5ea55",
+      "name": "Grapefruit mimosa",
+      "previousType": "dish",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:07:13.097Z"
+    },
+    {
+      "menuItemId": "28b63b78-14fd-49e3-a25a-30889ba47e77",
+      "name": "Bloody mezcal",
+      "previousType": "dish",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:07:16.732Z"
+    },
+    {
+      "menuItemId": "9bfa0764-cbcf-457c-943a-5a7fc8009234",
+      "name": "Watermelon mimosa",
+      "previousType": "dish",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:07:18.849Z"
+    },
+    {
+      "menuItemId": "27fc97de-ad53-497d-a69d-4cf380cd19f7",
+      "name": "Sangria roja",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:07:19.491Z"
+    },
+    {
+      "menuItemId": "64fcec26-5958-452f-bda0-98a47161252f",
+      "name": "Bloody mary",
+      "previousType": "dish",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:07:20.435Z"
+    },
+    {
+      "menuItemId": "610c28c5-2a61-4c78-8f94-3d0f5b87d993",
+      "name": "Gift Cards",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:07:36.826Z"
+    },
+    {
+      "menuItemId": "d3c260f0-8f97-44f5-9cec-31334a24d84d",
+      "name": "About Us",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:07:39.889Z"
+    },
+    {
+      "menuItemId": "44f639a6-c178-419d-b680-43a8100c91bf",
+      "name": "Jobs",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:07:41.836Z"
+    },
+    {
+      "menuItemId": "91e30016-20ab-46bc-9fd0-e1fa3bd36592",
+      "name": "Press",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:07:43.805Z"
+    },
+    {
+      "menuItemId": "861d4e91-eaab-463f-b13a-9afb0b613864",
+      "name": "Home",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:07:45.699Z"
+    },
+    {
+      "menuItemId": "98a62e3e-35ba-4665-b39b-e1f472b9eebc",
+      "name": "Hours & Location",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:07:48.052Z"
+    },
+    {
+      "menuItemId": "0fc4e8ec-3f8a-49f2-af08-f33b2c50c25d",
+      "name": "Menus",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:07:49.919Z"
+    },
+    {
+      "menuItemId": "e71f8500-7b9d-4ec1-8202-90d28368cd49",
+      "name": "Bakery",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:07:51.737Z"
+    },
+    {
+      "menuItemId": "6fc842db-e61e-4ecc-8ed7-6f6014c30546",
+      "name": "Bios",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:07:53.727Z"
+    },
+    {
+      "menuItemId": "02fb01ab-5a2a-4853-b96c-89196d73b4e9",
+      "name": "Curried Pumpkin Soup",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:01.248Z"
+    },
+    {
+      "menuItemId": "f74cdfb8-6d5e-456d-8e56-5f5fdcb530e1",
+      "name": "Chocolate Diva",
+      "previousType": "dessert",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:02.152Z"
+    },
+    {
+      "menuItemId": "2ccae1b9-fed2-42b1-a029-e6e8f13c4149",
+      "name": "Oro Blanco",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:09.125Z"
+    },
+    {
+      "menuItemId": "1495401a-f47f-471c-a215-088bec475039",
+      "name": "Spagliato",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:11.778Z"
+    },
+    {
+      "menuItemId": "8bab17cf-fa2a-4213-a790-d9e24276bf33",
+      "name": "Venetian Manhattan",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:13.260Z"
+    },
+    {
+      "menuItemId": "5a5596b5-0958-45b6-b255-71fe0ff2afcc",
+      "name": "Our Martini",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:14.071Z"
+    },
+    {
+      "menuItemId": "3861b7e0-575d-4845-90f7-b911ae959f9c",
+      "name": "Spritz",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:15.780Z"
+    },
+    {
+      "menuItemId": "c43cd542-2478-4353-ae47-83db1ffb416f",
+      "name": "Negroni Bianco",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:17.082Z"
+    },
+    {
+      "menuItemId": "58b6b614-454e-4fcd-95c6-f372bad93335",
+      "name": "Gnocchi Pomodoro",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:25.839Z"
+    },
+    {
+      "menuItemId": "a14ecc1c-1ce1-4817-a486-3097ed5d61d1",
+      "name": "Rockette",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:29.282Z"
+    },
+    {
+      "menuItemId": "2bd031b0-30ce-4463-980b-ef3b342a27c1",
+      "name": "Hot Coffee & Espresso",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:33.527Z"
+    },
+    {
+      "menuItemId": "72a957dd-68ed-43d2-b6b3-6bf3905dc3d0",
+      "name": "Pizza Veggie ADDS",
+      "previousType": "dish",
+      "correctType": "addon",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:38.560Z"
+    },
+    {
+      "menuItemId": "37fd9e47-4d6b-4a1e-8f40-75cd3aa5aa76",
+      "name": "Pizza Protein Adds",
+      "previousType": "dish",
+      "correctType": "addon",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:40.729Z"
+    },
+    {
+      "menuItemId": "93b76080-97f2-463f-b9c5-aed211aa1a9f",
+      "name": "Penne Vodka",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:44.294Z"
+    },
+    {
+      "menuItemId": "cf9ce9e8-9f15-47c3-99b3-8f9e9579dd11",
+      "name": "Soup & Salad",
+      "previousType": "dish",
+      "correctType": "combo",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:48.531Z"
+    },
+    {
+      "menuItemId": "b349e30a-cdff-4168-9dff-a2c777c128fb",
+      "name": "Slamburger & Beer",
+      "previousType": "dish",
+      "correctType": "combo",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:53.009Z"
+    },
+    {
+      "menuItemId": "ab9b4d69-a89d-4f89-8dfd-f34ad2dc0774",
+      "name": "French Onion",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:55.499Z"
+    },
+    {
+      "menuItemId": "b6c31eeb-cbfa-4583-88a5-cf57d9f1d30e",
+      "name": "Dressings",
+      "previousType": "dish",
+      "correctType": "condiment",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:08:57.504Z"
+    },
+    {
+      "menuItemId": "c2b80b1f-93f5-4a5b-a16e-306398436137",
+      "name": "Cauliflower Bites",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:03.559Z"
+    },
+    {
+      "menuItemId": "354805b5-fe53-49ed-acd6-280d888782d4",
+      "name": "Cannellini Beans, Grape Tomato, Dandelion",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:10.534Z"
+    },
+    {
+      "menuItemId": "c395ebbe-5a57-4c9d-82ba-40d96f2531da",
+      "name": "Pork Tenderloin Milanese",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:12.614Z"
+    },
+    {
+      "menuItemId": "18e95f9a-e809-4e46-bfc8-95a031b78ee4",
+      "name": "Half Panini & Half Salad",
+      "previousType": "dish",
+      "correctType": "combo",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:13.599Z"
+    },
+    {
+      "menuItemId": "cc551e34-606e-439b-a124-07ab5eec432e",
+      "name": "Eggplant Parmigiana",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:14.958Z"
+    },
+    {
+      "menuItemId": "02606ffd-6e8a-40e5-8dd8-0507d8fc24df",
+      "name": "Chicken Milanese",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:16.043Z"
+    },
+    {
+      "menuItemId": "59fa8da0-947b-45d0-8a5e-e4bf7ccac423",
+      "name": "Paloma",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:20.558Z"
+    },
+    {
+      "menuItemId": "3c6be8f7-86e2-432b-b352-891152d8d429",
+      "name": "Negroni Classico",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:22.251Z"
+    },
+    {
+      "menuItemId": "9cdba477-3cfa-4d4c-b556-3878104a154e",
+      "name": "Aperol Spritz",
+      "previousType": "alcohol",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:23.347Z"
+    },
+    {
+      "menuItemId": "0f691ef6-04ea-45b7-a09a-26d1796b2f13",
+      "name": "Negroni Bianco",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:24.708Z"
+    },
+    {
+      "menuItemId": "6e74c0bb-fa12-42f7-894c-66a88972a52b",
+      "name": "Negroni Sbagliato",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:26.145Z"
+    },
+    {
+      "menuItemId": "182ad448-703e-47a5-9f3e-62c72fa1a067",
+      "name": "Industry Sour",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:29.434Z"
+    },
+    {
+      "menuItemId": "2ff957a5-a546-484b-b59e-740cf2282fdc",
+      "name": "5 Napkin Maki Roll Platter",
+      "previousType": "drink",
+      "correctType": "combo",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:37.725Z"
+    },
+    {
+      "menuItemId": "69f77337-2506-4ef5-8231-836c5dca03fa",
+      "name": "Caramelized Pineapple Mule",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:41.269Z"
+    },
+    {
+      "menuItemId": "6b86d7ff-05e8-481e-a46c-880ad0d48468",
+      "name": "Wine & Cocktail List",
+      "previousType": "drink",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:45.511Z"
+    },
+    {
+      "menuItemId": "1fcfed11-08e3-435f-9387-40baa14d2336",
+      "name": "Martini Happy Hour",
+      "previousType": "drink",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:47.752Z"
+    },
+    {
+      "menuItemId": "d3204802-8f00-47e0-961a-342328227005",
+      "name": "St.Agrestis Phony Negroni",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:48.556Z"
+    },
+    {
+      "menuItemId": "cd6482c8-33d2-485a-837f-9667e3b437fd",
+      "name": "Bistro Steak",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:09:57.140Z"
+    },
+    {
+      "menuItemId": "6583d07c-e89e-419d-966b-fad7dec9de28",
+      "name": "5N Manhattan",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:02.238Z"
+    },
+    {
+      "menuItemId": "15aff54f-845e-4dc8-b632-da99048fe4e4",
+      "name": "Classic Cheese",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:08.807Z"
+    },
+    {
+      "menuItemId": "4bd7512a-7db0-4a6b-bfd7-921164cf62d4",
+      "name": "Cocoa Negroni",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:13.362Z"
+    },
+    {
+      "menuItemId": "bd7d0aa1-70dc-40e9-8925-87d133ec247f",
+      "name": "Bittersweet Citrus Spritz",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:14.867Z"
+    },
+    {
+      "menuItemId": "fc338886-a299-42f4-8ed8-c74529247919",
+      "name": "Passionfruit Spritzer",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:16.361Z"
+    },
+    {
+      "menuItemId": "17493a95-d1a0-4766-8616-b94e42fb0123",
+      "name": "Coffee",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:24.264Z"
+    },
+    {
+      "menuItemId": "99a90e5d-194e-4e11-aacb-ffa5d3f21889",
+      "name": "Latte",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:24.804Z"
+    },
+    {
+      "menuItemId": "10a07b9c-5bab-4be7-808f-331ca4cac97a",
+      "name": "Americano",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:25.295Z"
+    },
+    {
+      "menuItemId": "e4412ce7-55f1-4ec2-be76-4e658067bc25",
+      "name": "Negroni",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:26.340Z"
+    },
+    {
+      "menuItemId": "f6707af5-e5d2-45b2-b544-2cc02736fb51",
+      "name": "Cappuccino",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:27.335Z"
+    },
+    {
+      "menuItemId": "467e86d1-702d-4be6-92a6-3fa662c065d0",
+      "name": "The Spritz",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:28.221Z"
+    },
+    {
+      "menuItemId": "2f0ba449-c520-437b-9667-6b50d19ddf7a",
+      "name": "Classic Shrimp Cocktail",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:30.283Z"
+    },
+    {
+      "menuItemId": "2b870dd3-2e19-4326-bcce-92be2ba30e84",
+      "name": "Espresso Martini",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:36.634Z"
+    },
+    {
+      "menuItemId": "b58c09da-4da3-4f9c-827d-288f8d607d26",
+      "name": "Classic",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:41.631Z"
+    },
+    {
+      "menuItemId": "36dab874-f721-4ccc-9782-ca2c89d2a9db",
+      "name": "Espresso",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:44.449Z"
+    },
+    {
+      "menuItemId": "5cda9ba9-7f25-4a3d-bf9d-6ffbea5063b2",
+      "name": "Hot & Sour Soup",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:49.378Z"
+    },
+    {
+      "menuItemId": "7f55a702-2289-401d-bd90-94a23d7c16c5",
+      "name": "Pan Fried Sweet Cake W. Water Chestnut \"ma Tei Gao\"",
+      "previousType": "dessert",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:10:57.196Z"
+    },
+    {
+      "menuItemId": "7224e555-c275-4584-a0b5-f59e0e4ee72e",
+      "name": "Sweet and Sour Chicken",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:01.102Z"
+    },
+    {
+      "menuItemId": "00709eba-ef39-4787-80c6-09ff5ca68a98",
+      "name": "Steamed Sticky Rice Dumpling",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:10.159Z"
+    },
+    {
+      "menuItemId": "f54fcfb4-aad2-4df6-8295-7ba9e282e612",
+      "name": "Steamed Shrimp Dumpling \"har Gow\"",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:12.224Z"
+    },
+    {
+      "menuItemId": "de97d202-cec0-4bec-9883-8acc41efe346",
+      "name": "Steamed Pork Bun",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:13.348Z"
+    },
+    {
+      "menuItemId": "d11818da-cbf4-41ad-9cd5-05fd9e54d6f3",
+      "name": "Steamed Green Leek Dumpling",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:20.147Z"
+    },
+    {
+      "menuItemId": "5f5aa312-fda3-413c-a946-8437bd241db3",
+      "name": "Steamed Bean Curd Skin Roll",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:21.637Z"
+    },
+    {
+      "menuItemId": "780bc2c8-d7f3-4e54-acc7-9dc668979a77",
+      "name": "Steamed Spare Ribs",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:22.691Z"
+    },
+    {
+      "menuItemId": "9ded82d7-ca7f-40f2-aeb0-3186fbdb6c97",
+      "name": "Steamed Chiu Chao Dumpling",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:23.265Z"
+    },
+    {
+      "menuItemId": "47197068-2e9e-4d41-b837-b55081a86d54",
+      "name": "Steamed Sticky Rice W. Pork in Lotus Leaf",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:24.815Z"
+    },
+    {
+      "menuItemId": "3ee072bc-6251-409a-97e2-4c1647b7c7f1",
+      "name": "Steamed Beef Ball",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:26.882Z"
+    },
+    {
+      "menuItemId": "b5d1439b-c557-4b53-b2e1-18cf53b77707",
+      "name": "Mango Pudding",
+      "previousType": "dessert",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:28.851Z"
+    },
+    {
+      "menuItemId": "61f41b74-5e67-4291-a58a-0c314cb79f3e",
+      "name": "Coffee Jelly",
+      "previousType": "drink",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:30.492Z"
+    },
+    {
+      "menuItemId": "c61f9921-59bc-4871-8329-85f428e951b4",
+      "name": "Turnip Cake",
+      "previousType": "dessert",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:34.251Z"
+    },
+    {
+      "menuItemId": "8a782fcb-d484-405a-9ecd-c3a66c2af6a1",
+      "name": "Domaine Leroy 'Grand Cru', Chambertin-Clos de Bèze, '81",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:37.651Z"
+    },
+    {
+      "menuItemId": "b22cb45f-2959-4b1d-b54c-6e2617561cb0",
+      "name": "Scallop (Hotate)",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:45.465Z"
+    },
+    {
+      "menuItemId": "9d86e22b-fca5-427f-87e9-45051c4a4bb7",
+      "name": "Chef Garden Salad",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:46.939Z"
+    },
+    {
+      "menuItemId": "88f12705-ce5e-4836-bb76-2148e4fb2ed6",
+      "name": "Seared Salmon",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:48.322Z"
+    },
+    {
+      "menuItemId": "caae515e-3f88-4a7f-846b-9b5851646437",
+      "name": "Ceretto 'Bricco Rocche', Barolo, Piedmont, '99",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:50.721Z"
+    },
+    {
+      "menuItemId": "ca7e7778-bae1-44e9-a66f-095c01825fde",
+      "name": "Viña Sastre, Ribera del Duero, '17",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:52.102Z"
+    },
+    {
+      "menuItemId": "5c9d7095-ae1e-4812-95b5-5ac32d3b07d3",
+      "name": "Tenuta di Trinoro, Tuscany, '06",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:11:57.602Z"
+    },
+    {
+      "menuItemId": "6e5c8425-35cb-4f5c-8bf5-9be472b88b3b",
+      "name": "Vega Sicilia 'Unico', Ribera del Duero, '91",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:01.265Z"
+    },
+    {
+      "menuItemId": "cedd388b-59d1-4f20-bcdc-a7fe8478af33",
+      "name": "Daily Catch",
+      "previousType": "dish",
+      "correctType": "combo",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:10.707Z"
+    },
+    {
+      "menuItemId": "5c6c1ac0-c60a-446c-a503-828ffd40b345",
+      "name": "Sea Bass",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:12.441Z"
+    },
+    {
+      "menuItemId": "033a6acc-af33-42b8-b329-465bb0ca83f3",
+      "name": "Villa Creek Cellars 'Willow Creek Cuvée', Paso Robles, '11",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:13.843Z"
+    },
+    {
+      "menuItemId": "cc9ca062-fbc5-441b-bd75-f4b0c2e8d977",
+      "name": "Decugnano dei Barbi 2011, Il Rosso",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:20.181Z"
+    },
+    {
+      "menuItemId": "039d6114-2cc5-46de-8665-e7130bc91f44",
+      "name": "Etna Brut Gaudensius, Firriato",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:22.338Z"
+    },
+    {
+      "menuItemId": "3cce7cac-a6d3-4a8b-b2ac-b66f712508e1",
+      "name": "Duo 2021, Enrico Marcato (Veneto)",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:23.571Z"
+    },
+    {
+      "menuItemId": "9dc75f1a-3ee6-4296-9e21-5491e27ba71d",
+      "name": "Val Delle Rose 2019",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:24.772Z"
+    },
+    {
+      "menuItemId": "2c507bf6-a28b-4e62-92f9-a18968d480f8",
+      "name": "Fumin, Grosjean 2008",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:25.444Z"
+    },
+    {
+      "menuItemId": "e526cc3f-6939-426d-8f86-697fdba5595d",
+      "name": "Aglianico Satyricon, Luigi Tecce 2021",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:27.514Z"
+    },
+    {
+      "menuItemId": "6c3b0b1b-6d77-4ae0-9a43-c99e2d686af0",
+      "name": "Pecorino 2021, Marramiero",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:30.279Z"
+    },
+    {
+      "menuItemId": "c57a1949-5e37-43cd-9e76-97dd1b686001",
+      "name": "Roberto Voerzio 'Brunate', Barolo, Piedmont, '99",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:31.920Z"
+    },
+    {
+      "menuItemId": "bd29d6be-a7f2-4398-a5ad-215619d747b6",
+      "name": "The Great Escape",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:39.976Z"
+    },
+    {
+      "menuItemId": "b0e2a7e8-069c-4f28-8c4e-d3d5d6900f06",
+      "name": "Shrimp (Ebi)",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:41.868Z"
+    },
+    {
+      "menuItemId": "15ed38d0-6f91-48e7-a859-9aeea86aab87",
+      "name": "Salmon",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:45.963Z"
+    },
+    {
+      "menuItemId": "032fa252-41eb-4ee4-9348-9003cd9ad878",
+      "name": "Mareneve, Federico Graziani 2017",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:47.626Z"
+    },
+    {
+      "menuItemId": "4da37e62-5ea8-4558-9536-1aae9da099eb",
+      "name": "Ghemme 2019, Il Chiosso",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:48.696Z"
+    },
+    {
+      "menuItemId": "d53a40b6-c729-4ef9-a4f4-b51311a2c74a",
+      "name": "Domaine les Ondines, Vacqueyras, '15",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:51.038Z"
+    },
+    {
+      "menuItemId": "af837b6a-5dba-4079-a235-a96268a3b5a0",
+      "name": "Querceto di Castillina 2011, Sei Gran Selezione",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:55.004Z"
+    },
+    {
+      "menuItemId": "02764db4-b5e4-40e6-8b42-29b3b07a0632",
+      "name": "Santa Cristini in Pilli, Fattoria Ambra 2015",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:12:58.306Z"
+    },
+    {
+      "menuItemId": "a8686956-66ec-4e48-bd0f-6844cf5d49a4",
+      "name": "Zonin 2018",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:40:01.212Z"
+    },
+    {
+      "menuItemId": "321a6a75-4540-499f-930e-3f4cd5986ed5",
+      "name": "Sahara Old Fashioned",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:40:37.215Z"
+    },
+    {
+      "menuItemId": "d54d93d9-69d0-4c95-9b6b-c7ca3bf98536",
+      "name": "Labneh Cheesecake",
+      "previousType": "dessert",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:40:40.571Z"
+    },
+    {
+      "menuItemId": "6c4c220d-98f8-4697-95af-aab8d5b9f615",
+      "name": "Flourless Chocolate Cake",
+      "previousType": "dessert",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:40:41.762Z"
+    },
+    {
+      "menuItemId": "05d26cdc-4a14-4d9e-9dbc-3a9376863204",
+      "name": "Cinnamon Halvah French Toast",
+      "previousType": "dessert",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:40:43.892Z"
+    },
+    {
+      "menuItemId": "3b9492ac-6e7e-4d78-951b-9b1ba560f1c0",
+      "name": "PERSIANegroni",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:40:47.910Z"
+    },
+    {
+      "menuItemId": "f1fe138e-70ff-4e93-868c-5e17a2863cbb",
+      "name": "Reishi Shakerato",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:40:52.483Z"
+    },
+    {
+      "menuItemId": "d4989df0-9dd4-4c1e-bdb1-2d6a3c44a1b2",
+      "name": "Caramelized Pineapple Margarita",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:40:56.244Z"
+    },
+    {
+      "menuItemId": "880f28f7-11d4-4d14-af70-afa7ceb3cda9",
+      "name": "Frozen Watermelon Margarita",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:40:58.873Z"
+    },
+    {
+      "menuItemId": "de972952-4932-4efb-81bb-a97b0b144199",
+      "name": "Hand-Spun Milkshakes",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:41:01.608Z"
+    },
+    {
+      "menuItemId": "1577da58-894f-4c1f-aa07-6723bcedd757",
+      "name": "Smoky Paloma",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:41:03.618Z"
+    },
+    {
+      "menuItemId": "136cd9d3-b441-4fa4-ac4d-5ed411f3297c",
+      "name": "Frozen Margaritas",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:41:07.879Z"
+    },
+    {
+      "menuItemId": "bf95d31a-f429-4665-9259-7e243c93d573",
+      "name": "Hangar Steak Skewer",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:41:21.471Z"
+    },
+    {
+      "menuItemId": "51f3940b-24e9-4125-a751-d044bff2f6e6",
+      "name": "Silan",
+      "previousType": "dessert",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:41:23.610Z"
+    },
+    {
+      "menuItemId": "5a8a8800-84f1-4e78-aee2-308488265617",
+      "name": "\"Malabi\" Panna Cotta",
+      "previousType": "dessert",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:41:26.543Z"
+    },
+    {
+      "menuItemId": "2517eae0-549a-4ebc-83fb-3ff3988f0431",
+      "name": "Bittersweet Citrus Spritz",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:41:46.384Z"
+    },
+    {
+      "menuItemId": "6e92e48c-7964-45bf-9605-cf65db8c3640",
+      "name": "Classic",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:41:55.625Z"
+    },
+    {
+      "menuItemId": "190fd797-8fb3-46fc-a8f9-ccfca4ff076f",
+      "name": "Dagon Sour",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:41:58.262Z"
+    },
+    {
+      "menuItemId": "a209560f-ec19-4543-9dcf-3ba0d9e834f0",
+      "name": "Levantine Espresso Martini",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:41:59.766Z"
+    },
+    {
+      "menuItemId": "b6ea5a85-f037-4027-aee3-d904f5e199ea",
+      "name": "Hanger Steak",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:04.141Z"
+    },
+    {
+      "menuItemId": "d2856de9-fc6b-4147-90fc-2beb62239f9c",
+      "name": "Strawberry Mule",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:09.251Z"
+    },
+    {
+      "menuItemId": "78c4e297-9f84-492d-a0d6-8e16a666b5f7",
+      "name": "Cucumber Spritz",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:16.326Z"
+    },
+    {
+      "menuItemId": "c913a634-bc7e-46ad-b0eb-a623dcb6e59c",
+      "name": "Classic Eggs Benedict",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:19.777Z"
+    },
+    {
+      "menuItemId": "5beb21d9-0519-4e9b-87e7-eeb940b34d2f",
+      "name": "Ice Creams & Sorbets",
+      "previousType": "dessert",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:23.903Z"
+    },
+    {
+      "menuItemId": "6073bbb4-562e-4ba3-8fc8-3a7c6d7091e6",
+      "name": "Mediterranean Margarita",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:26.577Z"
+    },
+    {
+      "menuItemId": "d41ebdc7-5af8-472e-9a28-aa45729681c3",
+      "name": "Pomegranate-Hibiscus Iced Tea",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:35.168Z"
+    },
+    {
+      "menuItemId": "6e0c0403-fb98-4dca-901f-7b8cbfed2a4e",
+      "name": "Midtown Manhattan No. 3",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:36.988Z"
+    },
+    {
+      "menuItemId": "5b7b847b-c3f1-40e3-8f1b-05b6a6c64dca",
+      "name": "Matcha-Yuzu Arnold Palmer",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:40.012Z"
+    },
+    {
+      "menuItemId": "1c921eb3-7e6e-494e-b7c8-2458c27a80f5",
+      "name": "Cucumber Mule",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:40.756Z"
+    },
+    {
+      "menuItemId": "bab3f267-5b30-48d9-89fc-b318473faeee",
+      "name": "Yuzu Gimlet",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:43.414Z"
+    },
+    {
+      "menuItemId": "f74ad7fc-2ce2-44af-8c71-898b9fedec54",
+      "name": "Ice Cream",
+      "previousType": "dessert",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:44.713Z"
+    },
+    {
+      "menuItemId": "90a1db37-af73-41cd-9eef-94cfb77e37f9",
+      "name": "The Mule",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:51.437Z"
+    },
+    {
+      "menuItemId": "3f6a4967-a34d-4eef-8d5d-88fd55987251",
+      "name": "Matcha Latte",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:52.797Z"
+    },
+    {
+      "menuItemId": "dd501856-88ce-412c-9a1e-776fd998b176",
+      "name": "Available at the Bar",
+      "previousType": "drink",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:55.811Z"
+    },
+    {
+      "menuItemId": "302aaccf-7dfd-44e7-b446-15f6f8cde104",
+      "name": "Classic Sea Salt",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:57.945Z"
+    },
+    {
+      "menuItemId": "96744c8a-82ef-47ce-97e0-411a6e0a1c73",
+      "name": "Hot Chocolate",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:42:59.444Z"
+    },
+    {
+      "menuItemId": "71e2db1e-8985-4314-ac80-7f4766ef7a5d",
+      "name": "Devil's Layer Cake",
+      "previousType": "dessert",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:00.695Z"
+    },
+    {
+      "menuItemId": "c9f3dbdc-355b-4d8f-8a64-80bf106ff9db",
+      "name": "Strawberry Pie",
+      "previousType": "dessert",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:01.499Z"
+    },
+    {
+      "menuItemId": "698f6d12-2f11-41d7-8910-2c78b18d60cc",
+      "name": "Sorbet",
+      "previousType": "dessert",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:03.641Z"
+    },
+    {
+      "menuItemId": "d952893e-8c5d-4608-a2fe-240bc92fec04",
+      "name": "Latte Cocktail",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:06.407Z"
+    },
+    {
+      "menuItemId": "afa963b0-f086-41f3-9e59-4458e08942cb",
+      "name": "Italian Martini",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:10.767Z"
+    },
+    {
+      "menuItemId": "e65da8dd-8eee-46c7-96f8-13e67fd0124d",
+      "name": "All Day Spritz",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:16.987Z"
+    },
+    {
+      "menuItemId": "25a5380a-4dcc-4d17-87ee-5b16c420c8f6",
+      "name": "And Late Night Daily 10pm",
+      "previousType": "drink",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:22.750Z"
+    },
+    {
+      "menuItemId": "3063bbdd-b510-4baf-b262-a251f45c3e35",
+      "name": "Mocha",
+      "previousType": "drink",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:26.386Z"
+    },
+    {
+      "menuItemId": "bebec934-4175-43d8-aff8-dcb9e2e9a515",
+      "name": "Salt + Vinegar Martini and three oysters",
+      "previousType": "drink",
+      "correctType": "combo",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:34.141Z"
+    },
+    {
+      "menuItemId": "ae71284d-7630-4c83-948a-252ce89c1125",
+      "name": "Walnut Old Fashioned",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:37.225Z"
+    },
+    {
+      "menuItemId": "f86c4f15-d503-43fd-9a0e-90b17f67ff59",
+      "name": "The Royale Platter",
+      "previousType": "drink",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:40.460Z"
+    },
+    {
+      "menuItemId": "cb0f1851-bf6a-4f26-8a13-c68d7b62a993",
+      "name": "New York Sour",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:42.715Z"
+    },
+    {
+      "menuItemId": "93e0e378-63c0-4b1f-9914-a5d8c6677817",
+      "name": "Sticky Toffee Pudding",
+      "previousType": "dessert",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:44.936Z"
+    },
+    {
+      "menuItemId": "fa52a9b0-5e73-485b-b495-a981bdd39cfb",
+      "name": "Rosé Sangria",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:49.802Z"
+    },
+    {
+      "menuItemId": "3ddab036-d237-41b4-82a4-0a38710a620e",
+      "name": "Sunset Paloma",
+      "previousType": "drink",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:50.386Z"
+    },
+    {
+      "menuItemId": "f27e4de4-0875-449a-8fcf-94eca9a31d21",
+      "name": "Pecorino, Barone di Valforte 2023 (Abruzzo)",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:54.126Z"
+    },
+    {
+      "menuItemId": "e36fdbb3-f6b5-4106-8906-01940052b525",
+      "name": "Quadrio Valtellina Superiore 2021, Nino Negri (Lombardia)",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:54.832Z"
+    },
+    {
+      "menuItemId": "42609f2f-9aa3-442d-a0ee-736da925eabc",
+      "name": "Roero Arneis 2023, Deltetto (Piemonte)",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:56.523Z"
+    },
+    {
+      "menuItemId": "7eb9cbd0-b550-4ffd-8f37-ed7be4f40f43",
+      "name": "Sangiovese, I Perazzi 2022, La Mozza (Toscana)",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:43:58.100Z"
+    },
+    {
+      "menuItemId": "ed3e094d-c6e1-473b-a75a-2f064393a71a",
+      "name": "Verdicchio di Matelica 2021, Fontezoppa (Marche)",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:00.768Z"
+    },
+    {
+      "menuItemId": "c0a878ea-e7d5-45da-976f-17bc5f35e377",
+      "name": "Sangiovese, Terre de la Custodia 2023 (Umbria)",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:03.147Z"
+    },
+    {
+      "menuItemId": "12b1db75-6f86-4f92-a805-26b9a21777e7",
+      "name": "Barbaresco",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:08.281Z"
+    },
+    {
+      "menuItemId": "ec678a15-447f-40c8-867d-6b2ef2467f25",
+      "name": "Blanc de Blancs, Schramsberg 2014",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:09.383Z"
+    },
+    {
+      "menuItemId": "82c84d83-f374-4551-9bfe-e8de961335ff",
+      "name": "Doc",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:13.732Z"
+    },
+    {
+      "menuItemId": "2575520a-07c5-48d6-b9b6-98012b55922a",
+      "name": "Docg",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:15.912Z"
+    },
+    {
+      "menuItemId": "62b78a2b-6f98-423d-b367-e1b4a00ea5fa",
+      "name": "Rouge de Vallee, La Kiuva 2019",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:17.481Z"
+    },
+    {
+      "menuItemId": "74c9f9e2-1bf9-4114-9cae-d8fd38f33ac3",
+      "name": "Calabrone 2008, Bastianich",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:25.112Z"
+    },
+    {
+      "menuItemId": "8d9f1295-ed86-4e5b-a019-344280e5be4d",
+      "name": "Boca Il Rosso delle Donne, Conti 2017",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:27.090Z"
+    },
+    {
+      "menuItemId": "e52b1f08-b80b-4d64-bd4f-7bb706bcec9e",
+      "name": "Carmenere Riserva, Inama 2012",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:34.569Z"
+    },
+    {
+      "menuItemId": "af284307-d574-4f3e-bab3-6a6855f4817b",
+      "name": "Granato, Foradori 2003",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:38.533Z"
+    },
+    {
+      "menuItemId": "40f5a4c9-23ba-439f-b557-d063d7fb5fc2",
+      "name": "Il Rosso dell'Abazia, Serafini & Vidotto 2009",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:41.043Z"
+    },
+    {
+      "menuItemId": "5437a09d-24d4-4a9e-9ed2-930a3c7bdf4d",
+      "name": "Lagrein 2021, Elena Welch",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:43.445Z"
+    },
+    {
+      "menuItemId": "ade52945-1413-434e-9f39-e78729444512",
+      "name": "Langhe Nebbiolo, Mascarello 2021",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:45.127Z"
+    },
+    {
+      "menuItemId": "10f4975a-0c2f-4908-bea0-d3a38e818895",
+      "name": "Soave Original Vintage Edition, Bertani 2021",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:51.000Z"
+    },
+    {
+      "menuItemId": "88f9f3d7-e441-4c10-b63c-10f8614a28dc",
+      "name": "Travaglini Gattinara 2021",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:51.809Z"
+    },
+    {
+      "menuItemId": "2202ca49-dfc0-4fea-bb0f-8ab74527dc38",
+      "name": "Calabrone 2016, Bastianich",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:54.509Z"
+    },
+    {
+      "menuItemId": "36a055e6-f02d-4b65-9861-3c17bc50ae06",
+      "name": "Campofiorin, Masi 2019",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:55.705Z"
+    },
+    {
+      "menuItemId": "d9c452ea-8ce4-44af-89c6-32bf683229a6",
+      "name": "Cantina di Negrar 2018",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:57.221Z"
+    },
+    {
+      "menuItemId": "9669c567-0ace-4209-baa1-9803863e4846",
+      "name": "Cuvee 2002, Staves",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:44:58.515Z"
+    },
+    {
+      "menuItemId": "22d0ec03-1af8-4589-961e-b0e154796828",
+      "name": "Fumanelli, Octavius 2010",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:00.891Z"
+    },
+    {
+      "menuItemId": "4653a405-f196-4185-84b4-aa6c5ccb54b1",
+      "name": "Langhe Nebbiolo, Poderi Luigi Einaudi 2022",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:03.876Z"
+    },
+    {
+      "menuItemId": "b74f57b2-9ccf-4911-884a-fadf24d8d9dc",
+      "name": "Siro Pacenti 2020",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:08.829Z"
+    },
+    {
+      "menuItemId": "84d9dc35-ea28-4b87-b573-78afd5e262bf",
+      "name": "Il Lussurioso, Buglioni 2019",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:10.071Z"
+    },
+    {
+      "menuItemId": "05dcd08f-520b-46f2-a552-e4eb57620231",
+      "name": "Teroldego Indulgente, Redondèl 2018",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:15.167Z"
+    },
+    {
+      "menuItemId": "a3d7be17-0f98-4aef-a3a1-c7296f966734",
+      "name": "Balifico 2018, Castello di Volpaia",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:16.833Z"
+    },
+    {
+      "menuItemId": "818ef3c3-a55e-4604-a485-9f087b1b6fee",
+      "name": "Vespa Rosso, Bastianich 2015",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:17.501Z"
+    },
+    {
+      "menuItemId": "af1c181b-0a45-4750-85ee-8d357d21ada1",
+      "name": "Conti Costanti 2019",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:25.825Z"
+    },
+    {
+      "menuItemId": "108ec0b8-cece-4dc9-bb78-39dcec56a953",
+      "name": "Fattoria La Ripa Riserva 2010",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:27.255Z"
+    },
+    {
+      "menuItemId": "6c4f6c1c-e1cd-443c-8216-e9094b95222a",
+      "name": "Pelagrilli, Siro Pacenti 2017",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:35.394Z"
+    },
+    {
+      "menuItemId": "5dc704a9-757a-464a-bca5-50375535cc93",
+      "name": "Fontodi 2015",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:38.543Z"
+    },
+    {
+      "menuItemId": "c0958733-471e-45ac-82d5-98f93c775f7b",
+      "name": "La Poderina 2018",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:41.177Z"
+    },
+    {
+      "menuItemId": "be0a3210-e0ca-4771-a845-19f6bc5700c3",
+      "name": "Col D'Orcia 2020",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:45.292Z"
+    },
+    {
+      "menuItemId": "a47904d1-f47b-423f-86ae-df13331aaba3",
+      "name": "Castello Monterinaldi 2022",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:46.107Z"
+    },
+    {
+      "menuItemId": "d844a365-bf46-4e15-93ba-b1613f9489ff",
+      "name": "Montsclapade, Dorigo 2011",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:52.410Z"
+    },
+    {
+      "menuItemId": "9db7c11d-33e1-4bb0-9f28-133353d7e559",
+      "name": "Paxxo 2013, Accordino",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:53.085Z"
+    },
+    {
+      "menuItemId": "87ea5fb8-e337-4d85-aa02-da352ca8850f",
+      "name": "Rosso Veneto Kairos, Zýme 2019",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:54.834Z"
+    },
+    {
+      "menuItemId": "a533b8a8-0785-46a1-aa5b-c53440bd177c",
+      "name": "Rosso Veronese Testal 2012, Nicolis",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:56.497Z"
+    },
+    {
+      "menuItemId": "2865f185-fb1d-4d15-9c2d-4427cb805345",
+      "name": "Refosco, Redentore 2014",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:57.229Z"
+    },
+    {
+      "menuItemId": "68adf324-a99c-4091-ac53-27022fa0ef2e",
+      "name": "Canalicchio di Sopra 2020",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:45:58.546Z"
+    },
+    {
+      "menuItemId": "a91d8af3-ffa9-4e89-9258-6211d02479a1",
+      "name": "Casaloste Riserva 2019",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:46:01.034Z"
+    },
+    {
+      "menuItemId": "23508e1a-6faa-4da2-93fc-ce430466cca1",
+      "name": "Capezzana 2013",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:46:04.039Z"
+    },
+    {
+      "menuItemId": "9ce054a6-44a5-40ba-bd40-03128d9f7258",
+      "name": "Il Poggione 2018",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:46:08.984Z"
+    },
+    {
+      "menuItemId": "153b7d6f-948d-41f2-be21-88b823469ef5",
+      "name": "Conti Costanti 2017",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:46:11.021Z"
+    },
+    {
+      "menuItemId": "025cb0ae-bfd2-467f-8866-dd4765a9e216",
+      "name": "Castelli Martinozzi 2019",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:46:17.188Z"
+    },
+    {
+      "menuItemId": "010fdcc4-0e2e-4617-9011-5653007cc40e",
+      "name": "Carema Etichetta Bianca, Luigi Ferrando 2019",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:46:18.043Z"
+    },
+    {
+      "menuItemId": "56ca0b39-6132-4bbc-9cfa-7e68ab482dab",
+      "name": "The Smith Burger",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:46:23.277Z"
+    },
+    {
+      "menuItemId": "a6f62275-bc19-4e19-a38b-cb8f9fba0fb2",
+      "name": "Sugar Snap Chicken",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:46:26.615Z"
+    },
+    {
+      "menuItemId": "1e95cd18-20f1-40b9-8514-0ba4b257b1c4",
+      "name": "Miso Salmon",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:46:27.274Z"
+    },
+    {
+      "menuItemId": "8f0ed56d-30bb-4e32-994b-e211aa6fb92c",
+      "name": "Dark Chocolate Pot de Crème",
+      "previousType": "dish",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:46:35.624Z"
+    },
+    {
+      "menuItemId": "8e08751e-2d43-43d3-8ebf-98ccbf187eec",
+      "name": "English Muffin",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:46:38.733Z"
+    },
+    {
+      "menuItemId": "5ba5cca8-4455-48ef-8d0f-ea01b6ef292d",
+      "name": "short rib MAFALDINE",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:46:42.561Z"
+    },
+    {
+      "menuItemId": "77ef05c4-41a0-484d-99c3-dd2fb22a473d",
+      "name": "Puffer Petite",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:46:46.402Z"
+    },
+    {
+      "menuItemId": "e7e81d75-3a80-455b-a8b4-caea42c13407",
+      "name": "Grilled Branzino",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:46:47.602Z"
+    },
+    {
+      "menuItemId": "a726ab98-e81e-41a7-8a07-e0e4c1c5542b",
+      "name": "Thursday",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:46:56.062Z"
+    },
+    {
+      "menuItemId": "fc7e96d6-ccad-4f67-beba-a8118281f927",
+      "name": "Ranchero Scramble",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:01.856Z"
+    },
+    {
+      "menuItemId": "52742197-a771-41d9-bd6b-2d662d1a746d",
+      "name": "Chicken MIlanese",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:02.461Z"
+    },
+    {
+      "menuItemId": "dbd5bc4f-8350-48c2-9bd9-5d825e4b2e02",
+      "name": "Smokeshow",
+      "previousType": "dish",
+      "correctType": "alcohol",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:04.066Z"
+    },
+    {
+      "menuItemId": "d227ea4c-7f7d-40fd-88ad-2f6265a40972",
+      "name": "Friday",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:08.922Z"
+    },
+    {
+      "menuItemId": "8e6b9754-b3bb-4905-82f9-744a4bcce42e",
+      "name": "Tuesday",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:11.728Z"
+    },
+    {
+      "menuItemId": "477a3aed-3ede-4ff9-8b1c-f931a0318a36",
+      "name": "Monday",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:15.030Z"
+    },
+    {
+      "menuItemId": "864a04e1-8d8d-43f8-8bbd-8853ad21ea4e",
+      "name": "Wednesday",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:17.657Z"
+    },
+    {
+      "menuItemId": "0a5c7596-4306-43c3-9e0d-cd34c320c284",
+      "name": "Avocado",
+      "previousType": "dish",
+      "correctType": "side",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:23.901Z"
+    },
+    {
+      "menuItemId": "89c79e30-884f-4566-a6a8-81b9cc5349c7",
+      "name": "Steel Cut Oatmeal",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:26.556Z"
+    },
+    {
+      "menuItemId": "ab88659b-9b40-4f0c-a230-7e4e22dba54a",
+      "name": "The Grand",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:29.260Z"
+    },
+    {
+      "menuItemId": "42d15fab-04d8-4bf8-92f1-fa8614889f05",
+      "name": "NY Strip",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:29.758Z"
+    },
+    {
+      "menuItemId": "101f8b8f-fbe4-4ba2-a0d4-de088f19d1b5",
+      "name": "French Dip",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:31.327Z"
+    },
+    {
+      "menuItemId": "dd85bdc3-8a92-424b-90e3-9ee2858f54d2",
+      "name": "Pot of Mussels",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:32.185Z"
+    },
+    {
+      "menuItemId": "9846098d-a11a-4f9a-8996-974ac8cdf2c6",
+      "name": "Filet Mignon",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:32.805Z"
+    },
+    {
+      "menuItemId": "cf3cc4d8-aeeb-4de9-bb5c-9b5c9c9475b5",
+      "name": "Sunday",
+      "previousType": "dish",
+      "action": "rejected",
+      "reason": "human audit — not a real menu item",
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:42.310Z"
+    },
+    {
+      "menuItemId": "d2f4861f-c575-4a70-a644-ea4c431ab25a",
+      "name": "Marinated Shrimp",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:45.834Z"
+    },
+    {
+      "menuItemId": "14e2c3fc-ab64-4250-a473-f63a77ab3c3b",
+      "name": "Country Pork Chop",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:46.892Z"
+    },
+    {
+      "menuItemId": "9ca0f04c-f3d1-47e7-8e09-e641cdba07cd",
+      "name": "Eggs Florentine",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:47.896Z"
+    },
+    {
+      "menuItemId": "270312fb-4a5d-47e6-be81-7fd02e7764b0",
+      "name": "Fried chicken nuggets",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:49.034Z"
+    },
+    {
+      "menuItemId": "c277c7f6-f5d2-4e65-88dc-3514fb3ded9d",
+      "name": "Toast",
+      "previousType": "dish",
+      "correctType": "side",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:47:59.838Z"
+    },
+    {
+      "menuItemId": "ca4fb671-3348-4312-abc0-eab269266441",
+      "name": "Passion Fruit Cooler",
+      "previousType": "dish",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:02.701Z"
+    },
+    {
+      "menuItemId": "a7b6ca68-a986-4afd-a261-f1052a894e56",
+      "name": "Apple Smoked Bacon",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:06.357Z"
+    },
+    {
+      "menuItemId": "43ce0397-f6ff-4bdd-aee3-c57904c2f0c3",
+      "name": "Truffled Mushroom Arancini",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:08.575Z"
+    },
+    {
+      "menuItemId": "d818cba1-4aee-45c4-b6e9-d479b16b0b11",
+      "name": "The Royale",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:10.790Z"
+    },
+    {
+      "menuItemId": "1f9d02ea-662d-4e87-b7ad-d44bc2d85e62",
+      "name": "Mac + Cheese",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:13.973Z"
+    },
+    {
+      "menuItemId": "93e0922c-1209-4e30-9f8c-0bbea716e029",
+      "name": "Half Dozen Oysters",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:15.496Z"
+    },
+    {
+      "menuItemId": "0cbcd796-746c-4fa4-b85d-399a963d5590",
+      "name": "Quarter Pounder",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:18.110Z"
+    },
+    {
+      "menuItemId": "0276e7ba-d1f2-4455-a7b5-8a7261fc33f9",
+      "name": "Orange / Grapefruit",
+      "previousType": "dish",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:25.980Z"
+    },
+    {
+      "menuItemId": "75082f58-8cde-4f29-b84a-cf2abdbec1e7",
+      "name": "Roasted Salmon",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:28.030Z"
+    },
+    {
+      "menuItemId": "07e34f44-2ae7-4577-b8f5-082a7cb0666c",
+      "name": "Crispy Chicken Paillard",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:31.979Z"
+    },
+    {
+      "menuItemId": "28dd1d10-dd3f-4f47-a8ef-d1ab41e214e2",
+      "name": "Breakfast Sandwich",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:33.491Z"
+    },
+    {
+      "menuItemId": "3fdab498-fc25-4790-9b78-d884064a2ac2",
+      "name": "Skirt",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:34.125Z"
+    },
+    {
+      "menuItemId": "1e925a79-ac3e-42ce-9bec-118c43ed6c57",
+      "name": "Grilled Chicken",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:34.773Z"
+    },
+    {
+      "menuItemId": "469d9aa5-ab83-45b0-94da-81c245c6cdd0",
+      "name": "Bone-in ribeye",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:35.372Z"
+    },
+    {
+      "menuItemId": "990b97ea-a028-42b6-86d5-e565513fa706",
+      "name": "Oyster Sampler",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:42.613Z"
+    },
+    {
+      "menuItemId": "7f89982d-821a-4b1c-9339-3841b83b849d",
+      "name": "The Deluxe",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:46.028Z"
+    },
+    {
+      "menuItemId": "b0a20146-dac5-4519-b875-667c62ad5159",
+      "name": "Maple Chicken Sausage",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:47.648Z"
+    },
+    {
+      "menuItemId": "930c9b92-eb79-466d-8e0c-50da1004526f",
+      "name": "Burger royale",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:48.723Z"
+    },
+    {
+      "menuItemId": "445a1d4c-befd-449d-8139-e195a50597d8",
+      "name": "Kale + Quinoa",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:48:49.839Z"
+    },
+    {
+      "menuItemId": "77ab5046-350d-4954-9529-7c6c0a8811e8",
+      "name": "Pancakes",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:04.361Z"
+    },
+    {
+      "menuItemId": "e9e24146-11ef-4033-bf31-9c5b2e2f911e",
+      "name": "The Chopped",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:05.238Z"
+    },
+    {
+      "menuItemId": "23cb360c-0b54-46e8-97c3-02f8e78fa90c",
+      "name": "Buddha's Delight",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:15.599Z"
+    },
+    {
+      "menuItemId": "23dd6414-af61-4f5a-91cd-4da8ad2cd2a4",
+      "name": "Egg Drop Soup",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:16.565Z"
+    },
+    {
+      "menuItemId": "f3a38704-7adc-404d-bf82-885ba9cbf27c",
+      "name": "Double Boil Chicken Soup",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:18.286Z"
+    },
+    {
+      "menuItemId": "18cfa6fb-1e77-4405-9248-ed9b0c80a381",
+      "name": "Salt Baked Cod Fish with Onion & Green Pepper",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:20.401Z"
+    },
+    {
+      "menuItemId": "92d4b502-d33f-42a0-8013-d35a3189a092",
+      "name": "DEEP FRIED CRISPY CHICKEN (Half)",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:23.048Z"
+    },
+    {
+      "menuItemId": "5e1b7169-e7ed-4d47-bc7b-f99b2010c2a3",
+      "name": "Wonton with Spicy Peanut Sauce",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:26.219Z"
+    },
+    {
+      "menuItemId": "eaec672f-934c-4cd2-9232-0f1e0a6a3f4d",
+      "name": "Coconut Jelly",
+      "previousType": "dish",
+      "correctType": "dessert",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:27.452Z"
+    },
+    {
+      "menuItemId": "5044789b-99b7-44e6-b329-9efcc2aaabaf",
+      "name": "Smoked Fish",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:28.840Z"
+    },
+    {
+      "menuItemId": "64a4620f-d8a0-4821-b58a-6294f3bbc729",
+      "name": "Pork / Beef / Lamb",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:33.334Z"
+    },
+    {
+      "menuItemId": "74f342b5-e859-49d2-a003-b8a04def3dff",
+      "name": "Sesame Seed Rice Ball \"jin Dui\"",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:34.264Z"
+    },
+    {
+      "menuItemId": "29b49369-25fd-4cda-a353-fe1b4c3a02d5",
+      "name": "Chicken with Mixed Vegetable",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:36.639Z"
+    },
+    {
+      "menuItemId": "c7fde13d-0ab2-4833-8906-290149d416d4",
+      "name": "Crispy Durian Pastry",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:40.501Z"
+    },
+    {
+      "menuItemId": "d7004f34-64e0-4239-989b-e19aaec5e2d6",
+      "name": "Pig Feet",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:41.417Z"
+    },
+    {
+      "menuItemId": "3dfdb3c9-c13d-4934-a5eb-5a67f79ff41a",
+      "name": "Lobster / Crab Any Style s/p",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:44.553Z"
+    },
+    {
+      "menuItemId": "c93a7501-1694-42eb-9b5c-3f18e9fbd2f6",
+      "name": "Stir-Fried String Beans",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:47.445Z"
+    },
+    {
+      "menuItemId": "59aa9bc3-75fc-4ceb-a3e2-7da8969b61f6",
+      "name": "Sticky Pork Dumpling \"ham Sui Gok\"",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:48.331Z"
+    },
+    {
+      "menuItemId": "12cce037-811a-4acd-a37c-b84e535ccd94",
+      "name": "Sesame Roll",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:49.840Z"
+    },
+    {
+      "menuItemId": "ae053d4d-2015-4f5c-9776-42bce2cdd37a",
+      "name": "Pineapple Bun",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:49:50.889Z"
+    },
+    {
+      "menuItemId": "9f684d75-57a2-4c0e-a6d7-26020500b14b",
+      "name": "Beef Tripe",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:04.571Z"
+    },
+    {
+      "menuItemId": "6804b272-ea00-4ee7-9961-f61efe14695d",
+      "name": "Beef Rice Roll",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:05.368Z"
+    },
+    {
+      "menuItemId": "3f0a88be-00cd-43bf-83d5-127f1c47324f",
+      "name": "Bon to Go Box",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:29.489Z"
+    },
+    {
+      "menuItemId": "d2785c74-a810-4c2e-aa6e-78a0b53d9e86",
+      "name": "Truffle",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:33.539Z"
+    },
+    {
+      "menuItemId": "6628cb4b-44b2-4d39-8024-46a081206da1",
+      "name": "Tavern Onion Ring Tower",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:35.795Z"
+    },
+    {
+      "menuItemId": "29fc7c16-9717-41ef-8180-ec91617f5eae",
+      "name": "Vegan Cauliflower Bites",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:37.639Z"
+    },
+    {
+      "menuItemId": "e5dc6937-fe92-418b-8ba5-c6c1012f378b",
+      "name": "Soup of the day",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:43.438Z"
+    },
+    {
+      "menuItemId": "dbebd79b-cc42-4c6d-be5a-47aacf9440e1",
+      "name": "Spicy Avocado",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:44.439Z"
+    },
+    {
+      "menuItemId": "bebf0b56-f373-49d7-a433-78119cc631d4",
+      "name": "Grilled Chicken",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:45.652Z"
+    },
+    {
+      "menuItemId": "2033bdb1-3b33-4bb8-aad8-12b2fde26cc1",
+      "name": "Tavern Onion Rings",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:46.403Z"
+    },
+    {
+      "menuItemId": "544707dd-ace3-440b-9efb-b9b4d509ef24",
+      "name": "Date",
+      "previousType": "dish",
+      "correctType": "drink",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:50.953Z"
+    },
+    {
+      "menuItemId": "a1095881-dc0b-4087-97ec-413a2e859e09",
+      "name": "Spicy Cheddar",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:53.207Z"
+    },
+    {
+      "menuItemId": "801851c6-fe08-4251-a3cd-2a578e2fea04",
+      "name": "Fried Squid Ring",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:54.400Z"
+    },
+    {
+      "menuItemId": "d5e0a39c-6897-4261-b128-f610f475a78f",
+      "name": "Braised Bean Curd",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:55.088Z"
+    },
+    {
+      "menuItemId": "292c8160-2968-4056-9537-98b23c333070",
+      "name": "Lobster Dumpling",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:55.682Z"
+    },
+    {
+      "menuItemId": "bb25916b-ee01-41e3-a9ad-74ecbf19f5f4",
+      "name": "Abalone with Chicken in Clay Pot",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:56.954Z"
+    },
+    {
+      "menuItemId": "c383156f-db37-428a-b7e1-ca2f1810e76a",
+      "name": "Fried Shrimp Ball",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:50:58.252Z"
+    },
+    {
+      "menuItemId": "864d4e6c-ab35-4496-a121-03627692b07e",
+      "name": "Seafood Delight in Nest",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:51:00.043Z"
+    },
+    {
+      "menuItemId": "2e337543-07d1-4c51-b116-c40c7a0ad6c9",
+      "name": "Shrimp Rice Noodles \"har Cheung\"",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:51:01.027Z"
+    },
+    {
+      "menuItemId": "89792d0e-8cf8-4db5-9e10-d050165fa4b5",
+      "name": "Swan Dumpling",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:51:02.150Z"
+    },
+    {
+      "menuItemId": "1d6d17e3-a190-4da3-94b5-160e1a790744",
+      "name": "Minced Chicken Meat with Lettuce Taco",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:51:04.827Z"
+    },
+    {
+      "menuItemId": "39c7795f-82bb-45ab-b1c7-8f61ecfd743d",
+      "name": "House Special Mix Mushroom Soup",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:51:05.878Z"
+    },
+    {
+      "menuItemId": "acfc024c-d0ec-4015-9456-bb1ca55771d9",
+      "name": "Minced Beef with Egg White Soup",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:51:30.457Z"
+    },
+    {
+      "menuItemId": "2392d0c1-dcbd-449f-ab79-d93fafcac402",
+      "name": "Cuttle Fish Taco Ball",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:51:34.426Z"
+    },
+    {
+      "menuItemId": "42720fc3-e7cf-4a1a-a04e-8c94917ae4e8",
+      "name": "Wonton Soup",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:51:36.156Z"
+    },
+    {
+      "menuItemId": "13cf6f5b-153b-4d71-ab5b-0474fdc4684d",
+      "name": "Pan Fried Pork Dumpling \"guo Tie\"",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:51:37.962Z"
+    },
+    {
+      "menuItemId": "9a0ecb6b-af31-4a50-b81f-5927c774f862",
+      "name": "E-Fu Noodle with Vegetable",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:51:43.579Z"
+    },
+    {
+      "menuItemId": "8cd1047d-32b7-4c2c-a157-b5d300802d16",
+      "name": "ROASTED DUCK (Order)",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:51:45.848Z"
+    },
+    {
+      "menuItemId": "691deada-95fb-4fc4-9ac7-3fe6a042e718",
+      "name": "Pan Fried Whole Flounder",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:51:46.688Z"
+    },
+    {
+      "menuItemId": "c3c0b63e-77da-484e-bf88-9f9a5d551e94",
+      "name": "Orange Flavor Beef",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:51:47.563Z"
+    },
+    {
+      "menuItemId": "aeeb0abc-ded2-47a5-a724-cee64f42a0e7",
+      "name": "Bacon Roll",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:51:51.192Z"
+    },
+    {
+      "menuItemId": "ba2b45b6-1a95-4788-894f-6142f2c9c4ac",
+      "name": "Sticky Rice",
+      "previousType": "dish",
+      "correctType": "dish",
+      "reason": null,
+      "addedBy": "human_audit",
+      "date": "2026-04-05T23:51:54.331Z"
+    }
+  ],
   "_comment": "Add corrections here when the classifier gets items wrong. Format: { name, correctType, reason, addedBy, date }"
 }
